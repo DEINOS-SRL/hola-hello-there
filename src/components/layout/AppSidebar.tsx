@@ -293,7 +293,7 @@ export function AppSidebar() {
     }
   }, [allExpanded, expandAll, collapseAll]);
 
-  // Keyboard shortcut: Cmd/Ctrl + B para toggle sidebar, Cmd/Ctrl + Shift + E para toggle módulos, Cmd/Ctrl + / para buscar
+  // Keyboard shortcut: Cmd/Ctrl + B para toggle sidebar, Cmd/Ctrl + Shift + E para toggle módulos, Cmd/Ctrl + / para buscar, Cmd/Ctrl + P para fijar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl/Cmd + B para toggle sidebar
@@ -317,11 +317,16 @@ export function AppSidebar() {
           searchInputRef.current?.focus();
         }, 100);
       }
+      // Ctrl/Cmd + P para toggle fijar sidebar
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        togglePinned();
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [collapsed, handleSetCollapsed, toggleAllModules]);
+  }, [collapsed, handleSetCollapsed, toggleAllModules, togglePinned]);
 
   // Filtrar módulos según permisos del usuario
   // Excluir "Configuración" que ahora es item fijo del footer
@@ -680,11 +685,19 @@ export function AppSidebar() {
             "flex items-center gap-2 overflow-hidden transition-all duration-300 ease-in-out",
             collapsed && "justify-center w-full"
           )}>
-            <div className={cn(
-              "rounded-lg bg-primary flex items-center justify-center shrink-0 transition-all duration-300 ease-in-out",
-              collapsed ? "h-10 w-10" : "h-9 w-9"
-            )}>
-              <span className="text-primary-foreground font-bold text-sm">DC</span>
+            <div className="relative">
+              <div className={cn(
+                "rounded-lg bg-primary flex items-center justify-center shrink-0 transition-all duration-300 ease-in-out",
+                collapsed ? "h-10 w-10" : "h-9 w-9"
+              )}>
+                <span className="text-primary-foreground font-bold text-sm">DC</span>
+              </div>
+              {/* Indicador de fijado */}
+              {pinned && (
+                <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary border-2 border-sidebar flex items-center justify-center animate-scale-in">
+                  <Pin className="h-2 w-2 text-primary-foreground" />
+                </div>
+              )}
             </div>
             <div className={cn(
               "min-w-0 transition-all duration-300 ease-in-out overflow-hidden",
