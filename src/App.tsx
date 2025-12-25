@@ -14,6 +14,7 @@ import Usuarios from "./pages/seguridad/Usuarios";
 import Empresas from "./pages/seguridad/Empresas";
 import Roles from "./pages/seguridad/Roles";
 import Aplicaciones from "./pages/seguridad/Aplicaciones";
+import SeguridadIndex from "./pages/seguridad/Index";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/modulos" element={<ProtectedRoute><Modulos /></ProtectedRoute>} />
       <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
+      <Route path="/seguridad" element={<ProtectedRoute><SeguridadIndex /></ProtectedRoute>} />
       <Route path="/seguridad/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
       <Route path="/seguridad/empresas" element={<ProtectedRoute><Empresas /></ProtectedRoute>} />
       <Route path="/seguridad/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
