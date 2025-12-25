@@ -94,17 +94,42 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: { height: "0", opacity: "0" },
+          to: { height: "var(--radix-accordion-content-height)", opacity: "1" },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          from: { height: "var(--radix-accordion-content-height)", opacity: "1" },
+          to: { height: "0", opacity: "0" },
+        },
+        "collapsible-down": {
+          from: { height: "0", opacity: "0", transform: "translateY(-4px)" },
+          to: { height: "var(--radix-collapsible-content-height)", opacity: "1", transform: "translateY(0)" },
+        },
+        "collapsible-up": {
+          from: { height: "var(--radix-collapsible-content-height)", opacity: "1", transform: "translateY(0)" },
+          to: { height: "0", opacity: "0", transform: "translateY(-4px)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-up": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.6" },
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "accordion-down": "accordion-down 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
+        "accordion-up": "accordion-up 0.2s cubic-bezier(0.32, 0.72, 0, 1)",
+        "collapsible-down": "collapsible-down 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+        "collapsible-up": "collapsible-up 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
+        "fade-in": "fade-in 0.5s ease-out",
+        "slide-up": "slide-up 0.3s ease-out",
+        "pulse-soft": "pulse-soft 2s ease-in-out infinite",
       },
     },
   },
