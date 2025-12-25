@@ -23,6 +23,7 @@ import Aplicaciones from "./modules/security/pages/Aplicaciones";
 import Empleados from "./modules/employees/pages/Empleados";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -57,9 +58,9 @@ function AppRoutes() {
   
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/modulos" element={<ProtectedRoute><Modulos /></ProtectedRoute>} />
       <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
