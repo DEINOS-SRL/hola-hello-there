@@ -53,6 +53,9 @@ const configMenuItems = [
 ];
 
 const SIDEBAR_COLLAPSED_KEY = 'dnscloud-sidebar-collapsed';
+const SIDEBAR_MIN_WIDTH = 68;
+const SIDEBAR_MAX_WIDTH = 260;
+const SIDEBAR_COLLAPSE_THRESHOLD = 120;
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(() => {
@@ -60,6 +63,8 @@ export function AppSidebar() {
     return stored === 'true';
   });
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragWidth, setDragWidth] = useState<number | null>(null);
   const { user, empresa, isAdmin } = useAuth();
   const { hasAnyPermission } = usePermissions();
   const location = useLocation();
@@ -72,6 +77,46 @@ export function AppSidebar() {
     setCollapsed(value);
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(value));
   }, []);
+
+  // Handle drag resize
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragWidth(collapsed ? SIDEBAR_MIN_WIDTH : SIDEBAR_MAX_WIDTH);
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, e.clientX));
+      setDragWidth(newWidth);
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      setIsDragging(false);
+      const finalWidth = e.clientX;
+      
+      if (finalWidth < SIDEBAR_COLLAPSE_THRESHOLD) {
+        handleSetCollapsed(true);
+      } else {
+        handleSetCollapsed(false);
+      }
+      setDragWidth(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isDragging, handleSetCollapsed]);
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
@@ -379,14 +424,35 @@ export function AppSidebar() {
     );
   };
 
+  // Calculate actual width during drag
+  const sidebarWidth = isDragging && dragWidth !== null 
+    ? dragWidth 
+    : (collapsed ? SIDEBAR_MIN_WIDTH : SIDEBAR_MAX_WIDTH);
+
   return (
     <aside 
       className={cn(
-        "bg-sidebar border-r border-sidebar-border flex flex-col sticky top-0 h-screen",
-        "transition-[width] duration-300 ease-in-out",
-        collapsed ? "w-[68px]" : "w-[260px]"
+        "bg-sidebar flex flex-col sticky top-0 h-screen relative",
+        !isDragging && "transition-[width] duration-300 ease-in-out"
       )}
+      style={{ width: sidebarWidth }}
     >
+      {/* Drag handle en el borde derecho */}
+      <div
+        onMouseDown={handleMouseDown}
+        className={cn(
+          "absolute right-0 top-0 bottom-0 w-1 cursor-col-resize z-50 group",
+          "hover:bg-primary/30 active:bg-primary/50 transition-colors duration-150",
+          isDragging && "bg-primary/50"
+        )}
+      >
+        {/* Línea visual del borde */}
+        <div className={cn(
+          "absolute right-0 top-0 bottom-0 w-px bg-sidebar-border transition-all duration-150",
+          "group-hover:w-0.5 group-hover:bg-primary/50",
+          isDragging && "w-0.5 bg-primary"
+        )} />
+      </div>
       {/* Header con logo y empresa */}
       <div className="p-3 border-b border-sidebar-border overflow-hidden">
         <div className="flex items-center justify-between">
