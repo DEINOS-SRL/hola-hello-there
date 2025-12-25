@@ -24,6 +24,7 @@ export type Database = {
           link_documentos: string | null
           nombre: string
           prd_documento: string | null
+          repositorio: string | null
           ruta: string | null
           updated_at: string | null
         }
@@ -36,6 +37,7 @@ export type Database = {
           link_documentos?: string | null
           nombre: string
           prd_documento?: string | null
+          repositorio?: string | null
           ruta?: string | null
           updated_at?: string | null
         }
@@ -48,6 +50,7 @@ export type Database = {
           link_documentos?: string | null
           nombre?: string
           prd_documento?: string | null
+          repositorio?: string | null
           ruta?: string | null
           updated_at?: string | null
         }
