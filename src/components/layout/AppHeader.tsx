@@ -1,4 +1,4 @@
-import { Bell, Search, ChevronDown, LogOut, User, Settings, Moon, Sun } from 'lucide-react';
+import { Bell, Search, ChevronDown, LogOut, User, Settings, Moon, Sun, Check, MessageSquare, AlertCircle, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,70 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'message';
+  read: boolean;
+  createdAt: Date;
+}
+
+// Mock notifications - en producción vendrían de la base de datos
+const mockNotifications: Notification[] = [
+  {
+    id: '1',
+    title: 'Nuevo usuario registrado',
+    message: 'Juan Pérez se ha unido al sistema',
+    type: 'info',
+    read: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 5), // 5 min ago
+  },
+  {
+    id: '2',
+    title: 'Tarea completada',
+    message: 'El reporte mensual ha sido generado exitosamente',
+    type: 'success',
+    read: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
+  },
+  {
+    id: '3',
+    title: 'Alerta de seguridad',
+    message: 'Se detectó un intento de acceso desde una ubicación desconocida',
+    type: 'warning',
+    read: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+  },
+  {
+    id: '4',
+    title: 'Nuevo mensaje',
+    message: 'María García te ha enviado un mensaje',
+    type: 'message',
+    read: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+  },
+];
+
+const notificationIcons = {
+  info: Info,
+  success: Check,
+  warning: AlertCircle,
+  message: MessageSquare,
+};
+
+const notificationColors = {
+  info: 'text-blue-500 bg-blue-500/10',
+  success: 'text-green-500 bg-green-500/10',
+  warning: 'text-amber-500 bg-amber-500/10',
+  message: 'text-primary bg-primary/10',
+};
 
 function ThemeToggleIcon() {
   const { theme, setTheme } = useTheme();
@@ -44,6 +109,99 @@ function ThemeToggleIcon() {
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  );
+}
+
+function NotificationsDropdown() {
+  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5 text-muted-foreground" />
+          {unreadCount > 0 && (
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+            >
+              {unreadCount}
+            </Badge>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80 bg-popover">
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>Notificaciones</span>
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-primary hover:text-primary/80"
+              onClick={markAllAsRead}
+            >
+              Marcar todas como leídas
+            </Button>
+          )}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <ScrollArea className="h-[300px]">
+          {notifications.length === 0 ? (
+            <div className="p-4 text-center text-muted-foreground text-sm">
+              No tienes notificaciones
+            </div>
+          ) : (
+            notifications.map((notification) => {
+              const Icon = notificationIcons[notification.type];
+              const colorClass = notificationColors[notification.type];
+              
+              return (
+                <DropdownMenuItem
+                  key={notification.id}
+                  className={`flex items-start gap-3 p-3 cursor-pointer ${
+                    !notification.read ? 'bg-muted/50' : ''
+                  }`}
+                  onClick={() => markAsRead(notification.id)}
+                >
+                  <div className={`p-2 rounded-full ${colorClass}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className={`text-sm leading-none ${!notification.read ? 'font-medium' : ''}`}>
+                      {notification.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(notification.createdAt, { addSuffix: true, locale: es })}
+                    </p>
+                  </div>
+                  {!notification.read && (
+                    <div className="h-2 w-2 rounded-full bg-primary mt-1.5" />
+                  )}
+                </DropdownMenuItem>
+              );
+            })
+          )}
+        </ScrollArea>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="justify-center text-primary cursor-pointer">
+          Ver todas las notificaciones
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -74,19 +232,7 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-3">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5 text-muted-foreground" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Notificaciones</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <NotificationsDropdown />
 
         <ThemeToggleIcon />
 
