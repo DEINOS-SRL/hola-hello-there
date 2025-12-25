@@ -20,7 +20,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     mainScrollRef,
     `dnscloud-main-scroll:${location.pathname}`,
     [location.pathname],
-    { enabled: preservarScroll, debug: true },
+    { enabled: preservarScroll },
   );
 
   return (
