@@ -226,7 +226,7 @@ export function AppSidebar() {
                 <ModuleIcon className="h-5 w-5" />
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" className="font-medium">
+            <TooltipContent side="right" className="font-medium z-[100] bg-popover border border-border shadow-lg">
               <p className="font-semibold mb-1">{modulo.nombre}</p>
               <div className="space-y-1">
                 {modulo.hijos.map(hijo => (
