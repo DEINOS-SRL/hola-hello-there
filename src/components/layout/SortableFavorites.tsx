@@ -16,6 +16,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  DragOverEvent,
   DragOverlay,
 } from '@dnd-kit/core';
 import {
@@ -45,6 +46,9 @@ interface SortableFavoriteItemProps {
   isActive: boolean;
   onRemove: (moduloId: string) => void;
   isRemoving: boolean;
+  isOverBefore?: boolean;
+  isOverAfter?: boolean;
+  isDraggingAny?: boolean;
 }
 
 function SortableFavoriteItem({ 
@@ -53,6 +57,9 @@ function SortableFavoriteItem({
   isActive,
   onRemove,
   isRemoving,
+  isOverBefore,
+  isOverAfter,
+  isDraggingAny,
 }: SortableFavoriteItemProps) {
   const {
     attributes,
@@ -81,10 +88,21 @@ function SortableFavoriteItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group/fav relative flex items-center transition-all duration-200",
+        "group/fav relative flex flex-col transition-all duration-200",
         isDragging && "opacity-30 scale-95"
       )}
     >
+      {/* Drop indicator - línea superior */}
+      <div 
+        className={cn(
+          "absolute -top-[3px] left-0 right-0 h-[2px] rounded-full transition-all duration-150",
+          isOverBefore 
+            ? "bg-primary shadow-[0_0_8px_2px_hsl(var(--primary)/0.5)]" 
+            : "bg-transparent"
+        )}
+      />
+      
+      <div className="relative flex items-center">
       {/* Drag handle */}
       {!collapsed && (
         <button
@@ -128,6 +146,17 @@ function SortableFavoriteItem({
           </TooltipContent>
         </Tooltip>
       )}
+      </div>
+      
+      {/* Drop indicator - línea inferior (solo para el último elemento) */}
+      <div 
+        className={cn(
+          "absolute -bottom-[3px] left-0 right-0 h-[2px] rounded-full transition-all duration-150",
+          isOverAfter 
+            ? "bg-primary shadow-[0_0_8px_2px_hsl(var(--primary)/0.5)]" 
+            : "bg-transparent"
+        )}
+      />
     </div>
   );
 }
@@ -180,6 +209,7 @@ export function SortableFavorites({
   const location = useLocation();
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -197,11 +227,17 @@ export function SortableFavorites({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    setOverId(null);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    setOverId(event.over?.id as string | null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+    setOverId(null);
 
     if (over && active.id !== over.id) {
       const oldIndex = favoritos.findIndex(f => f.id === active.id);
@@ -248,20 +284,36 @@ export function SortableFavorites({
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
         <div className="space-y-0.5">
-          {favoritos.map(fav => (
-            <SortableFavoriteItem
-              key={fav.id}
-              fav={fav}
-              collapsed={collapsed}
-              isActive={isActive(fav.modulo.ruta)}
-              onRemove={onRemove}
-              isRemoving={isRemoving}
-            />
-          ))}
+          {favoritos.map((fav, index) => {
+            // Determinar si mostrar indicador arriba o abajo
+            const activeIndex = activeId ? favoritos.findIndex(f => f.id === activeId) : -1;
+            const overIndex = overId ? favoritos.findIndex(f => f.id === overId) : -1;
+            const currentIndex = index;
+            
+            // Mostrar línea arriba si estamos sobre este elemento y venimos de abajo
+            const isOverBefore = overId === fav.id && activeIndex > overIndex;
+            // Mostrar línea abajo si estamos sobre este elemento y venimos de arriba
+            const isOverAfter = overId === fav.id && activeIndex < overIndex;
+            
+            return (
+              <SortableFavoriteItem
+                key={fav.id}
+                fav={fav}
+                collapsed={collapsed}
+                isActive={isActive(fav.modulo.ruta)}
+                onRemove={onRemove}
+                isRemoving={isRemoving}
+                isOverBefore={isOverBefore}
+                isOverAfter={isOverAfter}
+                isDraggingAny={!!activeId}
+              />
+            );
+          })}
         </div>
       </SortableContext>
       
