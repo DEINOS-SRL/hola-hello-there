@@ -437,7 +437,16 @@ export function AppSidebar() {
             >
               <div className="flex items-center gap-3">
                 <Bookmark className="h-4 w-4 shrink-0" />
-                {!collapsed && <span>Favoritos</span>}
+                {!collapsed && (
+                  <span className="flex items-center gap-2">
+                    Favoritos
+                    {favoritos.length > 0 && (
+                      <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-primary/15 text-primary">
+                        {favoritos.length}
+                      </span>
+                    )}
+                  </span>
+                )}
               </div>
               {!collapsed && (
                 <ChevronRight 
