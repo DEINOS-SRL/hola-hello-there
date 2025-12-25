@@ -33,16 +33,27 @@ import OperacionPartesEquipos from '@/modules/operacion/pages/PartesEquipos';
 
 // Mapeo de rutas a componentes implementados
 const implementedRoutes: Record<string, React.ComponentType> = {
+  // Configuración y Administración (antes Seguridad)
+  '/configuracion': Configuracion,
+  '/configuracion/administracion': SeguridadIndex,
+  '/configuracion/administracion/usuarios': Usuarios,
+  '/configuracion/administracion/empresas': Empresas,
+  '/configuracion/administracion/roles': Roles,
+  '/configuracion/administracion/modulos': ModulosAdmin,
+  // Legacy routes - mantener compatibilidad
   '/seguridad': SeguridadIndex,
   '/seguridad/usuarios': Usuarios,
   '/seguridad/empresas': Empresas,
   '/seguridad/roles': Roles,
   '/seguridad/modulos': ModulosAdmin,
+  // RRHH
   '/rrhh': RRHHIndex,
   '/rrhh/empleados': RRHHEmpleados,
   '/rrhh/asistencia': RRHHAsistencia,
+  // Conocimiento
   '/conocimiento': ConocimientoIndex,
   '/conocimiento/sgi': ConocimientoSGI,
+  // Operación
   '/operacion': OperacionIndex,
   '/operacion/movimientos': OperacionMovimientos,
   '/operacion/partes-equipos': OperacionPartesEquipos,
@@ -66,8 +77,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
-// Rutas estáticas del sistema
-const staticPaths = ['/dashboard', '/modulos', '/perfil', '/configuracion', '/login', '/reset-password', '/'];
+// Rutas estáticas del sistema (configuracion ahora es dinámica)
+const staticPaths = ['/dashboard', '/modulos', '/perfil', '/login', '/reset-password', '/'];
 
 export function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -104,7 +115,6 @@ export function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/modulos" element={<ProtectedRoute><Modulos /></ProtectedRoute>} />
       <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
-      <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
       
       {/* Rutas dinámicas de módulos desde BD */}
       {dynamicRoutes.map(({ path, component: Component }) => (
