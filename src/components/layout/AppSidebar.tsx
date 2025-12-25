@@ -849,43 +849,26 @@ export function AppSidebar() {
           <NavItem item={{ name: 'Dashboard', href: '/dashboard', icon: Home }} icon={Home} />
         </div>
 
-        {/* Favoritos - Collapsible section like HubSpot */}
-        <Collapsible open={favoritosExpanded} onOpenChange={setFavoritosExpanded}>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <CollapsibleTrigger asChild>
-                <button
+        {/* Favoritos - Con popover cuando está colapsado igual que los módulos */}
+        {collapsed ? (
+          // Modo colapsado: mostrar icono con Tooltip que muestra los favoritos
+          favoritos.length > 0 && (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <div 
                   className={cn(
-                    "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm mt-1",
-                    "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    "flex items-center justify-center p-2 rounded-md cursor-pointer",
+                    "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                    favoritos.some(fav => {
+                      const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
+                        modulosArbol.flatMap(m => m.hijos).find(h => h.id === fav.modulo_id);
+                      return modulo && isActive(modulo.ruta);
+                    }) && "bg-primary/10 text-primary"
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <Bookmark className="h-4 w-4 shrink-0" />
-                    <span className={cn(
-                      "flex items-center gap-2 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden",
-                      collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-                    )}>
-                      Favoritos
-                      {favoritos.length > 0 && (
-                        <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-primary/15 text-primary">
-                          {favoritos.length}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  <ChevronRight 
-                    className={cn(
-                      "h-4 w-4 transition-all duration-300 ease-in-out",
-                      favoritosExpanded && "rotate-90",
-                      collapsed ? "w-0 opacity-0" : "w-4 opacity-100"
-                    )} 
-                  />
-                </button>
-              </CollapsibleTrigger>
-            </TooltipTrigger>
-            {/* Tooltip con submódulos cuando está colapsado */}
-            {!favoritosExpanded && favoritos.length > 0 && !collapsed && (
+                  <Bookmark className="h-5 w-5" />
+                </div>
+              </TooltipTrigger>
               <TooltipContent 
                 side="right" 
                 sideOffset={8} 
@@ -924,33 +907,105 @@ export function AppSidebar() {
                   })}
                 </div>
               </TooltipContent>
-            )}
-          </Tooltip>
-          <CollapsibleContent className="data-[state=open]:animate-none data-[state=closed]:animate-none">
-            {isLoadingFavoritos ? (
-              <div className="flex items-center justify-center py-2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            ) : favoritos.length === 0 ? (
-              <p className="text-xs text-sidebar-foreground/50 px-3 py-2 italic">
-                {!collapsed && 'Sin favoritos aún'}
-              </p>
-            ) : (
-              <div className={cn(
-                "mt-0.5",
-                !collapsed && "ml-[22px] pl-4 border-l-2 border-sidebar-border"
-              )}>
-                <SortableFavorites
-                  favoritos={favoritos}
-                  collapsed={collapsed}
-                  onReorder={reorderFavoritos}
-                  onRemove={toggleFavorito}
-                  isRemoving={isRemoving}
-                />
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
+            </Tooltip>
+          )
+        ) : (
+          // Modo expandido: sección colapsable con lista de favoritos
+          <Collapsible open={favoritosExpanded} onOpenChange={setFavoritosExpanded}>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <CollapsibleTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm mt-1",
+                      "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Bookmark className="h-4 w-4 shrink-0" />
+                      <span className="flex items-center gap-2">
+                        Favoritos
+                        {favoritos.length > 0 && (
+                          <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-primary/15 text-primary">
+                            {favoritos.length}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <ChevronRight 
+                      className={cn(
+                        "h-4 w-4 transition-transform duration-200",
+                        favoritosExpanded && "rotate-90"
+                      )} 
+                    />
+                  </button>
+                </CollapsibleTrigger>
+              </TooltipTrigger>
+              {/* Tooltip con favoritos cuando está colapsado el grupo */}
+              {!favoritosExpanded && favoritos.length > 0 && (
+                <TooltipContent 
+                  side="right" 
+                  sideOffset={8} 
+                  className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in min-w-[180px]"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bookmark className="h-4 w-4 text-primary" />
+                    <p className="font-semibold text-sm text-foreground">Favoritos</p>
+                  </div>
+                  <div className="border-t border-border/50 mb-2" />
+                  <div className="space-y-0.5">
+                    {favoritos.map(fav => {
+                      const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
+                        modulosArbol.flatMap(m => m.hijos).find(h => h.id === fav.modulo_id);
+                      if (!modulo) return null;
+                      const FavIcon = getIconByName(modulo.icono);
+                      return (
+                        <RouterNavLink 
+                          key={fav.id} 
+                          to={modulo.ruta}
+                          className={cn(
+                            "flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all duration-200",
+                            "hover:bg-accent hover:text-accent-foreground",
+                            isActive(modulo.ruta) 
+                              ? "bg-primary/10 text-primary font-medium border-l-2 border-primary pl-1.5" 
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          <FavIcon className={cn(
+                            "h-3.5 w-3.5 shrink-0",
+                            isActive(modulo.ruta) ? "text-primary" : "text-muted-foreground"
+                          )} />
+                          {modulo.nombre}
+                        </RouterNavLink>
+                      );
+                    })}
+                  </div>
+                </TooltipContent>
+              )}
+            </Tooltip>
+            <CollapsibleContent className="data-[state=open]:animate-none data-[state=closed]:animate-none">
+              {isLoadingFavoritos ? (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : favoritos.length === 0 ? (
+                <p className="text-xs text-sidebar-foreground/50 px-3 py-2 italic">
+                  Sin favoritos aún
+                </p>
+              ) : (
+                <div className="mt-0.5 ml-[22px] pl-4 border-l-2 border-sidebar-border">
+                  <SortableFavorites
+                    favoritos={favoritos}
+                    collapsed={collapsed}
+                    onReorder={reorderFavoritos}
+                    onRemove={toggleFavorito}
+                    isRemoving={isRemoving}
+                  />
+                </div>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
         {/* Separador */}
         <div className="border-t border-sidebar-border my-2" />
