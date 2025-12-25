@@ -495,14 +495,24 @@ export function AppSidebar() {
             "transition-all duration-300 ease-in-out overflow-hidden",
             collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
           )}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleSetCollapsed(true)}
-              className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
-            >
-              <PanelLeftClose className="h-4 w-4" />
-            </Button>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleSetCollapsed(true)}
+                  className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                <span>Colapsar menú</span>
+                <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                  ⌘B
+                </kbd>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </div>
@@ -524,7 +534,10 @@ export function AppSidebar() {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-            Expandir menú
+            <span>Expandir menú</span>
+            <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+              ⌘B
+            </kbd>
           </TooltipContent>
         </Tooltip>
       </div>
