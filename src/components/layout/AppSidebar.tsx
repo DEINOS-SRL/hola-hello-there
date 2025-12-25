@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
+import { NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { 
   Home, 
@@ -13,6 +13,10 @@ import {
   PanelLeft,
   LayoutGrid as DefaultIcon,
   Loader2,
+  UserCog,
+  Building2,
+  Users,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +27,7 @@ import { SortableFavorites } from './SortableFavorites';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // Función para obtener icono dinámicamente por nombre
 const getIconByName = (iconName: string): LucideIcon => {
@@ -39,8 +44,11 @@ const mainMenuItems = [
   { name: 'Favoritos', href: '#favoritos', icon: Bookmark, isSection: true },
 ];
 
-// Items del footer (ya no incluye Configuración que ahora es módulo dinámico)
-const footerItems: { name: string; href: string; icon: LucideIcon }[] = [];
+// Submenús de Configuración
+const configMenuItems = [
+  { name: 'Administración', href: '/configuracion/administracion', icon: UserCog, description: 'Usuarios, roles y permisos' },
+  { name: 'Perfil', href: '/perfil', icon: Users, description: 'Mi perfil de usuario' },
+];
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -76,38 +84,41 @@ export function AppSidebar() {
   };
 
   // Filtrar módulos según permisos del usuario
+  // Excluir "Configuración" que ahora es item fijo del footer
   const getVisibleModules = (): ModuloConHijos[] => {
-    return modulosArbol.filter(modulo => {
-      if (isAdmin) return true;
-      
-      // Verificar permisos del módulo padre
-      if (modulo.permisos_requeridos && modulo.permisos_requeridos.length > 0) {
-        if (!hasAnyPermission(modulo.permisos_requeridos)) {
-          return false;
+    return modulosArbol
+      .filter(modulo => modulo.ruta !== '/configuracion') // Excluir Configuración del listado dinámico
+      .filter(modulo => {
+        if (isAdmin) return true;
+        
+        // Verificar permisos del módulo padre
+        if (modulo.permisos_requeridos && modulo.permisos_requeridos.length > 0) {
+          if (!hasAnyPermission(modulo.permisos_requeridos)) {
+            return false;
+          }
         }
-      }
-      
-      // Si tiene hijos, verificar que al menos uno sea accesible
-      if (modulo.hijos.length > 0) {
-        return modulo.hijos.some(hijo => {
+        
+        // Si tiene hijos, verificar que al menos uno sea accesible
+        if (modulo.hijos.length > 0) {
+          return modulo.hijos.some(hijo => {
+            if (!hijo.permisos_requeridos || hijo.permisos_requeridos.length === 0) {
+              return true;
+            }
+            return hasAnyPermission(hijo.permisos_requeridos);
+          });
+        }
+        
+        return true;
+      }).map(modulo => ({
+        ...modulo,
+        hijos: modulo.hijos.filter(hijo => {
+          if (isAdmin) return true;
           if (!hijo.permisos_requeridos || hijo.permisos_requeridos.length === 0) {
             return true;
           }
           return hasAnyPermission(hijo.permisos_requeridos);
-        });
-      }
-      
-      return true;
-    }).map(modulo => ({
-      ...modulo,
-      hijos: modulo.hijos.filter(hijo => {
-        if (isAdmin) return true;
-        if (!hijo.permisos_requeridos || hijo.permisos_requeridos.length === 0) {
-          return true;
-        }
-        return hasAnyPermission(hijo.permisos_requeridos);
-      })
-    }));
+        })
+      }));
   };
 
   const visibleModules = getVisibleModules();
@@ -503,11 +514,77 @@ export function AppSidebar() {
       </nav>
 
       {/* Footer con Settings y Help */}
-      <div className="p-2 border-t border-sidebar-border space-y-0.5">
-        {footerItems.map(item => (
-          <NavItem key={item.href} item={item} icon={item.icon} />
-        ))}
+      <div className="p-2 border-t border-sidebar-border space-y-1">
+        {/* Configuración con Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            {collapsed ? (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex items-center justify-center w-full p-2 rounded-md transition-all duration-200",
+                      "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                      location.pathname.startsWith('/configuracion') && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <Settings className="h-5 w-5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  Configuración
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <button
+                className={cn(
+                  "flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-all duration-200",
+                  "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  location.pathname.startsWith('/configuracion') && "bg-primary/10 text-primary font-medium"
+                )}
+              >
+                <Settings className="h-4 w-4" />
+                <span>Configuración</span>
+                <ChevronRight className="h-4 w-4 ml-auto" />
+              </button>
+            )}
+          </PopoverTrigger>
+          <PopoverContent 
+            side="right" 
+            align="end"
+            sideOffset={8}
+            className="w-64 p-0 bg-primary text-primary-foreground border-0 shadow-xl rounded-lg"
+          >
+            <div className="p-4 border-b border-primary-foreground/20">
+              <h3 className="font-semibold text-base">Configuración</h3>
+            </div>
+            <div className="p-2 space-y-1">
+              {configMenuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <RouterNavLink
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
+                      "text-primary-foreground/90 hover:bg-primary-foreground/10",
+                      location.pathname.startsWith(item.href) && "bg-primary-foreground/15 text-primary-foreground"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-sm font-medium">{item.name}</span>
+                      <span className="block text-xs text-primary-foreground/70">{item.description}</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-primary-foreground/50" />
+                  </RouterNavLink>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
         
+        {/* Ayuda y Soporte */}
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
