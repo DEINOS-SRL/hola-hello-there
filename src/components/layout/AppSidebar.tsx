@@ -1,54 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
+import * as LucideIcons from 'lucide-react';
 import { 
   Home, 
   LayoutGrid,
   ChevronRight,
   LucideIcon,
-  Shield,
-  Users,
-  Building2,
-  Truck,
-  ArrowLeftRight,
-  ClipboardList,
-  BadgeCheck,
-  AppWindow,
-  Key,
   Settings,
   HelpCircle,
   PanelLeftClose,
   PanelLeft,
-  Workflow,
-  Briefcase,
-  Clock,
-  UserCheck,
+  LayoutGrid as DefaultIcon,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/core/security/permissions';
-import { moduleRegistry } from '@/app/moduleRegistry';
+import { useModulosDB, type ModuloConHijos } from '@/modules/security/hooks/useModulos';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import type { ModuleNavItem } from '@/shared/types/module';
 
-// Mapa de iconos por nombre de string
-const iconMap: Record<string, LucideIcon> = {
-  Home,
-  LayoutGrid,
-  Shield,
-  Users,
-  Building2,
-  Truck,
-  ArrowLeftRight,
-  ClipboardList,
-  BadgeCheck,
-  AppWindow,
-  Key,
-  Workflow,
-  Clock,
-  UserCheck,
+// Función para obtener icono dinámicamente por nombre
+const getIconByName = (iconName: string): LucideIcon => {
+  const icon = (LucideIcons as Record<string, unknown>)[iconName];
+  if (icon && typeof icon === 'function') {
+    return icon as LucideIcon;
+  }
+  return DefaultIcon;
 };
 
 // Items fijos del menú principal
@@ -64,12 +43,26 @@ const footerItems = [
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedModules, setExpandedModules] = useState<string[]>(['security']);
+  const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const { user, empresa, isAdmin } = useAuth();
   const { hasAnyPermission } = usePermissions();
   const location = useLocation();
+  const { arbol: modulosArbol, isLoading } = useModulosDB();
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
+
+  // Expandir automáticamente el módulo activo
+  useEffect(() => {
+    if (modulosArbol.length > 0) {
+      const activeModuleId = modulosArbol.find(m => 
+        isActive(m.ruta) || m.hijos.some(h => isActive(h.ruta))
+      )?.id;
+      
+      if (activeModuleId && !expandedModules.includes(activeModuleId)) {
+        setExpandedModules(prev => [...prev, activeModuleId]);
+      }
+    }
+  }, [location.pathname, modulosArbol]);
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules(prev => 
@@ -79,103 +72,73 @@ export function AppSidebar() {
     );
   };
 
-  // Filtrar módulos según permisos del usuario y aplanar children
-  const getVisibleModules = () => {
-    return moduleRegistry
-      .filter(module => {
-        if (isAdmin) return true;
-        const hasAccessToAnyItem = module.navItems.some(item => {
-          if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
+  // Filtrar módulos según permisos del usuario
+  const getVisibleModules = (): ModuloConHijos[] => {
+    return modulosArbol.filter(modulo => {
+      if (isAdmin) return true;
+      
+      // Verificar permisos del módulo padre
+      if (modulo.permisos_requeridos && modulo.permisos_requeridos.length > 0) {
+        if (!hasAnyPermission(modulo.permisos_requeridos)) {
+          return false;
+        }
+      }
+      
+      // Si tiene hijos, verificar que al menos uno sea accesible
+      if (modulo.hijos.length > 0) {
+        return modulo.hijos.some(hijo => {
+          if (!hijo.permisos_requeridos || hijo.permisos_requeridos.length === 0) {
             return true;
           }
-          return hasAnyPermission(item.requiredPermissions);
+          return hasAnyPermission(hijo.permisos_requeridos);
         });
-        return hasAccessToAnyItem;
+      }
+      
+      return true;
+    }).map(modulo => ({
+      ...modulo,
+      hijos: modulo.hijos.filter(hijo => {
+        if (isAdmin) return true;
+        if (!hijo.permisos_requeridos || hijo.permisos_requeridos.length === 0) {
+          return true;
+        }
+        return hasAnyPermission(hijo.permisos_requeridos);
       })
-      .map(module => {
-        // Aplanar items con children
-        const flattenedItems: ModuleNavItem[] = [];
-        module.navItems.forEach(item => {
-          if (item.children && item.children.length > 0) {
-            // Si tiene children, usar los children como items
-            item.children.forEach(child => {
-              if (isAdmin || !child.requiredPermissions || hasAnyPermission(child.requiredPermissions)) {
-                flattenedItems.push(child);
-              }
-            });
-          } else {
-            if (isAdmin || !item.requiredPermissions || hasAnyPermission(item.requiredPermissions)) {
-              flattenedItems.push(item);
-            }
-          }
-        });
-        
-        return {
-          moduleId: module.moduleId,
-          moduleName: module.name,
-          items: flattenedItems
-        };
-      })
-      .filter(section => section.items.length > 0);
+    }));
   };
 
   const visibleModules = getVisibleModules();
 
-  // Obtener icono del módulo
-  const getModuleIcon = (moduleId: string): LucideIcon => {
-    const iconMapping: Record<string, LucideIcon> = {
-      'security': Shield,
-      'employees': Users,
-      'rrhh': Briefcase,
-      'equipos': Truck,
-      'operacion': Workflow,
-      'partes-diarios': ClipboardList,
-      'habilitaciones': BadgeCheck,
-    };
-    return iconMapping[moduleId] || Shield;
-  };
-
   // Verificar si algún item del módulo está activo
-  const isModuleActive = (moduleId: string) => {
-    const module = visibleModules.find(m => m.moduleId === moduleId);
-    if (!module) return false;
-    return module.items.some(item => isActive(item.path));
+  const isModuleActive = (modulo: ModuloConHijos) => {
+    if (isActive(modulo.ruta)) return true;
+    return modulo.hijos.some(hijo => isActive(hijo.ruta));
   };
-
-  const initials = user 
-    ? `${user.nombre?.charAt(0) || ''}${user.apellido?.charAt(0) || ''}`.toUpperCase()
-    : 'U';
 
   const NavItem = ({ 
     item, 
     icon,
-    indent = false 
   }: { 
-    item: { name: string; href: string; icon?: LucideIcon } | ModuleNavItem; 
+    item: { name: string; href: string; icon?: LucideIcon };
     icon?: LucideIcon;
-    indent?: boolean;
   }) => {
-    const isNavItem = 'href' in item;
-    const href = isNavItem ? item.href : item.path;
-    const name = isNavItem ? item.name : item.label;
-    const IconComponent = icon || (isNavItem ? item.icon : iconMap[item.icon || ''] || Shield);
-    const active = isActive(href);
+    const IconComponent = icon || item.icon || DefaultIcon;
+    const active = isActive(item.href);
 
     const content = (
       <RouterNavLink
-        to={href}
+        to={item.href}
         className={cn(
           "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm",
           "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
           active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
         )}
       >
-        {/* Indicador de punto activo en la línea */}
         {active && (
           <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
         )}
-        {IconComponent && <IconComponent className="h-4 w-4 shrink-0" />}
-        {!collapsed && <span>{name}</span>}
+        <IconComponent className="h-4 w-4 shrink-0" />
+        {!collapsed && <span>{item.name}</span>}
       </RouterNavLink>
     );
 
@@ -184,7 +147,46 @@ export function AppSidebar() {
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
           <TooltipContent side="right" className="font-medium">
-            {name}
+            {item.name}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return content;
+  };
+
+  const ModuloNavItem = ({ 
+    modulo,
+  }: { 
+    modulo: ModuloConHijos;
+  }) => {
+    const IconComponent = getIconByName(modulo.icono);
+    const active = isActive(modulo.ruta);
+
+    const content = (
+      <RouterNavLink
+        to={modulo.ruta}
+        className={cn(
+          "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm",
+          "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+          active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+        )}
+      >
+        {active && (
+          <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
+        )}
+        <IconComponent className="h-4 w-4 shrink-0" />
+        {!collapsed && <span>{modulo.nombre}</span>}
+      </RouterNavLink>
+    );
+
+    if (collapsed) {
+      return (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>{content}</TooltipTrigger>
+          <TooltipContent side="right" className="font-medium">
+            {modulo.nombre}
           </TooltipContent>
         </Tooltip>
       );
@@ -194,21 +196,21 @@ export function AppSidebar() {
   };
 
   const ModuleGroup = ({ 
-    moduleId, 
-    moduleName, 
-    items,
-    icon: ModuleIcon 
+    modulo,
   }: { 
-    moduleId: string; 
-    moduleName: string; 
-    items: ModuleNavItem[];
-    icon: LucideIcon;
+    modulo: ModuloConHijos;
   }) => {
-    const isExpanded = expandedModules.includes(moduleId);
-    const hasActiveItem = isModuleActive(moduleId);
+    const isExpanded = expandedModules.includes(modulo.id);
+    const hasActiveItem = isModuleActive(modulo);
+    const ModuleIcon = getIconByName(modulo.icono);
+    const tieneHijos = modulo.hijos.length > 0;
+
+    // Si no tiene hijos, mostrar como link directo
+    if (!tieneHijos) {
+      return <ModuloNavItem modulo={modulo} />;
+    }
 
     if (collapsed) {
-      // En modo colapsado, mostrar solo el icono del módulo
       return (
         <div className="space-y-0.5">
           <Tooltip delayDuration={0}>
@@ -219,24 +221,24 @@ export function AppSidebar() {
                   "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                   hasActiveItem && "bg-primary/10 text-primary"
                 )}
-                onClick={() => toggleModule(moduleId)}
+                onClick={() => toggleModule(modulo.id)}
               >
                 <ModuleIcon className="h-5 w-5" />
               </div>
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium">
-              <p className="font-semibold mb-1">{moduleName}</p>
+              <p className="font-semibold mb-1">{modulo.nombre}</p>
               <div className="space-y-1">
-                {items.map(item => (
+                {modulo.hijos.map(hijo => (
                   <RouterNavLink 
-                    key={item.path} 
-                    to={item.path}
+                    key={hijo.id} 
+                    to={hijo.ruta}
                     className={cn(
                       "block text-sm py-1 hover:text-primary",
-                      isActive(item.path) && "text-primary font-medium"
+                      isActive(hijo.ruta) && "text-primary font-medium"
                     )}
                   >
-                    {item.label}
+                    {hijo.nombre}
                   </RouterNavLink>
                 ))}
               </div>
@@ -247,7 +249,7 @@ export function AppSidebar() {
     }
 
     return (
-      <Collapsible open={isExpanded} onOpenChange={() => toggleModule(moduleId)}>
+      <Collapsible open={isExpanded} onOpenChange={() => toggleModule(modulo.id)}>
         <CollapsibleTrigger asChild>
           <button
             className={cn(
@@ -258,7 +260,7 @@ export function AppSidebar() {
           >
             <div className="flex items-center gap-3">
               <ModuleIcon className="h-4 w-4 shrink-0" />
-              <span>{moduleName}</span>
+              <span>{modulo.nombre}</span>
             </div>
             <ChevronRight 
               className={cn(
@@ -275,8 +277,8 @@ export function AppSidebar() {
               ? "border-primary hover:border-primary/80" 
               : "border-sidebar-border hover:border-primary/40"
           )}>
-            {items.map(item => (
-              <NavItem key={item.path} item={item} />
+            {modulo.hijos.map(hijo => (
+              <ModuloNavItem key={hijo.id} modulo={hijo} />
             ))}
           </div>
         </CollapsibleContent>
@@ -358,22 +360,23 @@ export function AppSidebar() {
         {/* Separador */}
         <div className="border-t border-sidebar-border my-2" />
 
-        {/* Módulos expandibles */}
+        {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
           {!collapsed && (
             <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider px-3 py-1">
               Módulos
             </p>
           )}
-          {visibleModules.map(section => (
-            <ModuleGroup
-              key={section.moduleId}
-              moduleId={section.moduleId}
-              moduleName={section.moduleName}
-              items={section.items}
-              icon={getModuleIcon(section.moduleId)}
-            />
-          ))}
+          
+          {isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            visibleModules.map(modulo => (
+              <ModuleGroup key={modulo.id} modulo={modulo} />
+            ))
+          )}
         </div>
       </nav>
 
