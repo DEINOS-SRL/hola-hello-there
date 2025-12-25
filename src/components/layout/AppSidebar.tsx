@@ -131,7 +131,7 @@ export function AppSidebar() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navScrollRef = useRef<HTMLElement>(null);
 
-  useScrollRestoration(navScrollRef, SIDEBAR_NAV_SCROLL_KEY, [location.pathname], { enabled: preservarScroll, debug: true });
+  useScrollRestoration(navScrollRef, SIDEBAR_NAV_SCROLL_KEY, [location.pathname], { enabled: preservarScroll });
 
   // Búsqueda con debounce y persistencia en sessionStorage
   const [moduleSearchInput, setModuleSearchInput] = useState(() => {
