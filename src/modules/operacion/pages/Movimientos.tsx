@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useMovimientos } from '../hooks/useMovimientos';
 import { MovimientoModal } from '../components/MovimientoModal';
+import { useActionParam } from '@/hooks/useActionParam';
 import type { Movimiento, MovimientoInsert, EstadoMovimiento } from '../types';
 
 const estadoColors: Record<EstadoMovimiento, string> = {
@@ -44,6 +45,16 @@ export default function Movimientos() {
   const [selectedMovimiento, setSelectedMovimiento] = useState<Movimiento | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [movimientoToDelete, setMovimientoToDelete] = useState<string | null>(null);
+
+  // Detectar ?action=new para abrir modal automáticamente
+  const handleAction = useCallback((action: string) => {
+    if (action === 'new') {
+      setSelectedMovimiento(null);
+      setModalOpen(true);
+    }
+  }, []);
+
+  useActionParam({ onAction: handleAction });
 
   const filteredMovimientos = movimientos.filter((mov) => {
     const matchesSearch =
