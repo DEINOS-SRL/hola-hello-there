@@ -68,13 +68,19 @@ export default function Empleados() {
     isUpdating,
   } = useEmpleados();
 
-  // Detectar ?action=new para abrir modal automáticamente
-  const handleAction = useCallback((action: string) => {
+  // Detectar ?action=new o ?action=edit&id=xxx para abrir modal automáticamente
+  const handleAction = useCallback((action: string, id?: string) => {
     if (action === 'new') {
       setEditingEmpleado(null);
       setModalOpen(true);
+    } else if (action === 'edit' && id) {
+      const empleado = empleados.find(e => e.id === id);
+      if (empleado) {
+        setEditingEmpleado(empleado);
+        setModalOpen(true);
+      }
     }
-  }, []);
+  }, [empleados]);
 
   useActionParam({ onAction: handleAction });
 
