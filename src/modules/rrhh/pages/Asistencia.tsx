@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { rrhhClient } from '../services/rrhhClient';
+import { RegistrarAsistenciaModal } from '../components/RegistrarAsistenciaModal';
 import type { Asistencia, Permiso, TipoAsistencia, EstadoPermiso } from '../types/asistencia';
 
 const tipoAsistenciaConfig: Record<TipoAsistencia, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -41,6 +42,7 @@ const estadoPermisoConfig: Record<EstadoPermiso, { label: string; variant: 'defa
 export default function AsistenciaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState('registros');
+  const [showRegistrarModal, setShowRegistrarModal] = useState(false);
 
   // Fetch asistencias del día
   const { data: asistencias = [], isLoading: loadingAsistencias } = useQuery({
@@ -108,12 +110,19 @@ export default function AsistenciaPage() {
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowRegistrarModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Registrar
           </Button>
         </div>
       </div>
+
+      {/* Modal para registrar asistencia */}
+      <RegistrarAsistenciaModal
+        open={showRegistrarModal}
+        onOpenChange={setShowRegistrarModal}
+        selectedDate={selectedDate}
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -218,7 +227,7 @@ export default function AsistenciaPage() {
                 <div className="text-center py-8 text-muted-foreground">
                   <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No hay registros de asistencia para este día</p>
-                  <Button variant="outline" className="mt-4">
+                  <Button variant="outline" className="mt-4" onClick={() => setShowRegistrarModal(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Agregar registro
                   </Button>
