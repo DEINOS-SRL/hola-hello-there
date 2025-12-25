@@ -142,7 +142,7 @@ function SortableFavoriteItem({
               <Bookmark className="h-3.5 w-3.5 fill-current" />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right" className="text-xs">
+          <TooltipContent side="right" sideOffset={8} className="text-xs z-[9999]">
             Quitar de favoritos
           </TooltipContent>
         </Tooltip>
@@ -254,7 +254,7 @@ export function SortableFavorites({
   if (collapsed) {
     // En modo colapsado, mostrar sin drag and drop
     return (
-      <div className="space-y-0.5">
+      <div className="space-y-1 flex flex-col items-center">
         {favoritos.map(fav => {
           const IconComponent = getIconByName(fav.modulo.icono);
           const active = isActive(fav.modulo.ruta);
@@ -265,7 +265,7 @@ export function SortableFavorites({
                 <RouterNavLink
                   to={fav.modulo.ruta}
                   className={cn(
-                    "flex items-center justify-center p-2 rounded-md transition-all duration-200",
+                    "flex items-center justify-center w-10 h-10 rounded-md transition-all duration-200",
                     "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                     active && "bg-primary text-primary-foreground"
                   )}
@@ -273,7 +273,7 @@ export function SortableFavorites({
                   <IconComponent className="h-4 w-4" />
                 </RouterNavLink>
               </TooltipTrigger>
-              <TooltipContent side="right" className="font-medium">
+              <TooltipContent side="right" sideOffset={8} className="font-medium z-[9999]">
                 {fav.modulo.nombre}
               </TooltipContent>
             </Tooltip>

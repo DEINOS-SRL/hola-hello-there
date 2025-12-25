@@ -162,7 +162,7 @@ export function AppSidebar() {
       return (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
-          <TooltipContent side="right" className="font-medium">
+          <TooltipContent side="right" sideOffset={8} className="font-medium z-[9999]">
             {item.name}
           </TooltipContent>
         </Tooltip>
@@ -223,7 +223,7 @@ export function AppSidebar() {
                 <Bookmark className={cn("h-3.5 w-3.5", isFav && "fill-yellow-500")} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
+            <TooltipContent side="right" sideOffset={8} className="text-xs z-[9999]">
               {isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
             </TooltipContent>
           </Tooltip>
@@ -235,7 +235,7 @@ export function AppSidebar() {
       return (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
-          <TooltipContent side="right" className="font-medium">
+          <TooltipContent side="right" sideOffset={8} className="font-medium z-[9999]">
             {modulo.nombre}
           </TooltipContent>
         </Tooltip>
@@ -283,7 +283,7 @@ export function AppSidebar() {
                 <ModuleIcon className="h-5 w-5" />
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" className="font-medium z-[100] bg-popover border border-border shadow-lg">
+            <TooltipContent side="right" sideOffset={8} className="font-medium z-[9999] bg-popover border border-border shadow-lg">
               <p className="font-semibold mb-1">{modulo.nombre}</p>
               <div className="space-y-1">
                 {modulo.hijos.map(hijo => (
@@ -346,7 +346,7 @@ export function AppSidebar() {
                   <Bookmark className={cn("h-3.5 w-3.5", isFav && "fill-yellow-500")} />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="text-xs">
+              <TooltipContent side="right" sideOffset={8} className="text-xs z-[9999]">
                 {isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
               </TooltipContent>
             </Tooltip>
@@ -423,7 +423,7 @@ export function AppSidebar() {
                 <PanelLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side="right" sideOffset={8} className="z-[9999]">
               Expandir menú
             </TooltipContent>
           </Tooltip>
