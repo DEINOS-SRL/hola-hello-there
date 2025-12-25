@@ -23,9 +23,6 @@ import ModulosAdmin from "./modules/security/pages/Modulos";
 import RRHHIndex from "./modules/rrhh/pages/Index";
 import RRHHEmpleados from "./modules/rrhh/pages/Empleados";
 import RRHHAsistencia from "./modules/rrhh/pages/Asistencia";
-// Importar páginas del módulo de Conocimiento
-import ConocimientoIndex from "./modules/conocimiento/pages/Index";
-import ConocimientoSGI from "./modules/conocimiento/pages/SGI";
 // Legacy route (redirect)
 import Empleados from "./modules/employees/pages/Empleados";
 import ResetPassword from "./pages/ResetPassword";
@@ -82,9 +79,6 @@ function AppRoutes() {
       <Route path="/rrhh" element={<ProtectedRoute><RRHHIndex /></ProtectedRoute>} />
       <Route path="/rrhh/empleados" element={<ProtectedRoute><RRHHEmpleados /></ProtectedRoute>} />
       <Route path="/rrhh/asistencia" element={<ProtectedRoute><RRHHAsistencia /></ProtectedRoute>} />
-      {/* Rutas del módulo de Conocimiento */}
-      <Route path="/conocimiento" element={<ProtectedRoute><ConocimientoIndex /></ProtectedRoute>} />
-      <Route path="/conocimiento/sgi" element={<ProtectedRoute><ConocimientoSGI /></ProtectedRoute>} />
       {/* Redirect legacy empleados route */}
       <Route path="/empleados" element={<Navigate to="/rrhh/empleados" replace />} />
       <Route path="*" element={<NotFound />} />
