@@ -8,10 +8,25 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { RolModal } from '@/components/modals/RolModal';
 
 export default function Roles() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingRol, setEditingRol] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [rolToDelete, setRolToDelete] = useState<any>(null);
   const { toast } = useToast();
 
   const { data: roles, isLoading, error, refetch } = useQuery({
@@ -19,38 +34,31 @@ export default function Roles() {
     queryFn: async () => {
       const { data: rolesData, error: rolesError } = await supabase
         .from('seg_roles')
-        .select(`
-          *,
-          seg_empresas(nombre)
-        `)
+        .select(`*, seg_empresas(nombre)`)
         .order('nombre', { ascending: true });
 
       if (rolesError) throw rolesError;
 
-      // Get permission counts per role
-      const { data: permCounts, error: permError } = await supabase
+      const { data: permCounts } = await supabase
         .from('seg_rol_permiso')
         .select('rol_id');
-
-      if (permError) throw permError;
 
       const counts: Record<string, number> = {};
       permCounts?.forEach(p => {
         counts[p.rol_id] = (counts[p.rol_id] || 0) + 1;
       });
 
-      return rolesData?.map(r => ({
-        ...r,
-        permisos_count: counts[r.id] || 0
-      }));
+      return rolesData?.map(r => ({ ...r, permisos_count: counts[r.id] || 0 }));
     },
   });
 
-  const deleteRol = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!rolToDelete) return;
+    
     const { error } = await supabase
       .from('seg_roles')
       .delete()
-      .eq('id', id);
+      .eq('id', rolToDelete.id);
 
     if (error) {
       toast({ title: 'Error', description: 'No se pudo eliminar el rol', variant: 'destructive' });
@@ -58,6 +66,18 @@ export default function Roles() {
       toast({ title: 'Éxito', description: 'Rol eliminado' });
       refetch();
     }
+    setDeleteDialogOpen(false);
+    setRolToDelete(null);
+  };
+
+  const openEditModal = (rol: any) => {
+    setEditingRol(rol);
+    setModalOpen(true);
+  };
+
+  const openCreateModal = () => {
+    setEditingRol(null);
+    setModalOpen(true);
   };
 
   const filtered = roles?.filter(r => 
@@ -80,7 +100,9 @@ export default function Roles() {
           <h1 className="text-2xl font-bold">Roles</h1>
           <p className="text-muted-foreground">Gestiona los roles y permisos</p>
         </div>
-        <Button><Plus className="mr-2 h-4 w-4" />Nuevo Rol</Button>
+        <Button onClick={openCreateModal}>
+          <Plus className="mr-2 h-4 w-4" />Nuevo Rol
+        </Button>
       </div>
 
       <Card>
@@ -144,13 +166,16 @@ export default function Roles() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditModal(rol)}>
                             <Edit className="mr-2 h-4 w-4" />Editar
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             className="text-destructive"
-                            onClick={() => deleteRol(rol.id)}
+                            onClick={() => {
+                              setRolToDelete(rol);
+                              setDeleteDialogOpen(true);
+                            }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />Eliminar
                           </DropdownMenuItem>
@@ -164,6 +189,30 @@ export default function Roles() {
           )}
         </CardContent>
       </Card>
+
+      <RolModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        rol={editingRol}
+        onSuccess={refetch}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar rol?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el rol "{rolToDelete?.nombre}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

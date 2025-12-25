@@ -8,10 +8,25 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { AplicacionModal } from '@/components/modals/AplicacionModal';
 
 export default function Aplicaciones() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingApp, setEditingApp] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [appToDelete, setAppToDelete] = useState<any>(null);
   const { toast } = useToast();
 
   const { data: aplicaciones, isLoading, error, refetch } = useQuery({
@@ -21,7 +36,6 @@ export default function Aplicaciones() {
         .from('seg_aplicaciones')
         .select('*')
         .order('nombre', { ascending: true });
-
       if (error) throw error;
       return data;
     },
@@ -41,11 +55,13 @@ export default function Aplicaciones() {
     }
   };
 
-  const deleteApp = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!appToDelete) return;
+    
     const { error } = await supabase
       .from('seg_aplicaciones')
       .delete()
-      .eq('id', id);
+      .eq('id', appToDelete.id);
 
     if (error) {
       toast({ title: 'Error', description: 'No se pudo eliminar la aplicación', variant: 'destructive' });
@@ -53,6 +69,18 @@ export default function Aplicaciones() {
       toast({ title: 'Éxito', description: 'Aplicación eliminada' });
       refetch();
     }
+    setDeleteDialogOpen(false);
+    setAppToDelete(null);
+  };
+
+  const openEditModal = (app: any) => {
+    setEditingApp(app);
+    setModalOpen(true);
+  };
+
+  const openCreateModal = () => {
+    setEditingApp(null);
+    setModalOpen(true);
   };
 
   const filtered = aplicaciones?.filter(a => 
@@ -75,7 +103,9 @@ export default function Aplicaciones() {
           <h1 className="text-2xl font-bold">Aplicaciones</h1>
           <p className="text-muted-foreground">Gestiona los módulos de la plataforma</p>
         </div>
-        <Button><Plus className="mr-2 h-4 w-4" />Nueva Aplicación</Button>
+        <Button onClick={openCreateModal}>
+          <Plus className="mr-2 h-4 w-4" />Nueva Aplicación
+        </Button>
       </div>
 
       <Card>
@@ -139,7 +169,7 @@ export default function Aplicaciones() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditModal(app)}>
                             <Edit className="mr-2 h-4 w-4" />Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleAppStatus(app.id, app.activa || false)}>
@@ -152,7 +182,10 @@ export default function Aplicaciones() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             className="text-destructive"
-                            onClick={() => deleteApp(app.id)}
+                            onClick={() => {
+                              setAppToDelete(app);
+                              setDeleteDialogOpen(true);
+                            }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />Eliminar
                           </DropdownMenuItem>
@@ -166,6 +199,30 @@ export default function Aplicaciones() {
           )}
         </CardContent>
       </Card>
+
+      <AplicacionModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        aplicacion={editingApp}
+        onSuccess={refetch}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar aplicación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la aplicación "{appToDelete?.nombre}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
