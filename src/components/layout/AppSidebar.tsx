@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { 
@@ -116,6 +116,9 @@ export function AppSidebar() {
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
   
+  // Ref para el input de búsqueda
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
   // Búsqueda con debounce y persistencia en sessionStorage
   const [moduleSearchInput, setModuleSearchInput] = useState(() => {
     return sessionStorage.getItem(SIDEBAR_SEARCH_KEY) || '';
@@ -123,12 +126,18 @@ export function AppSidebar() {
   const [moduleSearch, setModuleSearch] = useState(() => {
     return sessionStorage.getItem(SIDEBAR_SEARCH_KEY) || '';
   });
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Debounce del término de búsqueda
+  // Debounce del término de búsqueda con indicador de carga
   useEffect(() => {
+    if (moduleSearchInput !== moduleSearch) {
+      setIsSearching(true);
+    }
+    
     const timer = setTimeout(() => {
       setModuleSearch(moduleSearchInput);
       sessionStorage.setItem(SIDEBAR_SEARCH_KEY, moduleSearchInput);
+      setIsSearching(false);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
@@ -138,11 +147,13 @@ export function AppSidebar() {
   const clearSearch = useCallback(() => {
     setModuleSearchInput('');
     setModuleSearch('');
+    setIsSearching(false);
     sessionStorage.removeItem(SIDEBAR_SEARCH_KEY);
   }, []);
 
   // Shortcut key para mostrar en tooltips
   const shortcutModules = isMac ? '⌘⇧E' : 'Ctrl+Shift+E';
+  const shortcutSearch = isMac ? '⌘/' : 'Ctrl+/';
 
   // Persistir estado colapsado en localStorage
   const handleSetCollapsed = useCallback((value: boolean) => {
@@ -261,7 +272,7 @@ export function AppSidebar() {
     }
   }, [allExpanded, expandAll, collapseAll]);
 
-  // Keyboard shortcut: Cmd/Ctrl + B para toggle sidebar, Cmd/Ctrl + Shift + E para toggle módulos
+  // Keyboard shortcut: Cmd/Ctrl + B para toggle sidebar, Cmd/Ctrl + Shift + E para toggle módulos, Cmd/Ctrl + / para buscar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl/Cmd + B para toggle sidebar
@@ -273,6 +284,17 @@ export function AppSidebar() {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
         toggleAllModules();
+      }
+      // Ctrl/Cmd + / para enfocar búsqueda de módulos
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+        e.preventDefault();
+        if (collapsed) {
+          handleSetCollapsed(false);
+        }
+        // Pequeño delay para asegurar que el sidebar esté expandido
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 100);
       }
     };
 
@@ -585,9 +607,9 @@ export function AppSidebar() {
             </Tooltip>
           )}
         </div>
-        <CollapsibleContent className="mt-0.5 overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+        <CollapsibleContent className="mt-0.5 overflow-hidden">
           <div className={cn(
-            "relative ml-[22px] pl-4 border-l-2 space-y-0.5 transition-all duration-300 ease-out",
+            "relative ml-[22px] pl-4 border-l-2 space-y-0.5",
             hasActiveItem 
               ? "border-primary hover:border-primary/80" 
               : "border-sidebar-border hover:border-primary/40"
@@ -745,7 +767,7 @@ export function AppSidebar() {
               />
             </button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="animate-accordion-down data-[state=closed]:animate-accordion-up">
+          <CollapsibleContent className="overflow-hidden">
             {isLoadingFavoritos ? (
               <div className="flex items-center justify-center py-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -811,10 +833,15 @@ export function AppSidebar() {
           {!collapsed && visibleModules.length > 3 && (
             <div className="px-2 pb-1 space-y-1">
               <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                {isSearching ? (
+                  <Loader2 className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-primary animate-spin" />
+                ) : (
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                )}
                 <Input
+                  ref={searchInputRef}
                   type="text"
-                  placeholder="Buscar módulos..."
+                  placeholder={`Buscar... (${shortcutSearch})`}
                   value={moduleSearchInput}
                   onChange={(e) => setModuleSearchInput(e.target.value)}
                   onKeyDown={(e) => {
