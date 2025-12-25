@@ -11,8 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { usePreferenciasGlobal } from '@/contexts/PreferenciasContext';
 import { segClient } from '@/modules/security/services/segClient';
 import { 
   fetchNotificaciones, 
@@ -41,6 +40,7 @@ export function NotificationsDropdown() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { formatRelativeTime } = usePreferenciasGlobal();
 
   const unreadCount = notifications.filter(n => !n.leida).length;
 
@@ -219,7 +219,7 @@ export function NotificationsDropdown() {
                       {notification.mensaje}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: es })}
+                      {formatRelativeTime(notification.created_at)}
                     </p>
                   </div>
                   {!notification.leida && (
