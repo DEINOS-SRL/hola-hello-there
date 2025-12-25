@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Key, MoreHorizontal, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, Key, MoreHorizontal, Edit, Trash2, Loader2, Eye } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { RolModal } from '@/components/modals/RolModal';
+import { VerPermisosModal } from '@/components/modals/VerPermisosModal';
 
 export default function Roles() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,6 +28,8 @@ export default function Roles() {
   const [editingRol, setEditingRol] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rolToDelete, setRolToDelete] = useState<any>(null);
+  const [permisosModalOpen, setPermisosModalOpen] = useState(false);
+  const [rolForPermisos, setRolForPermisos] = useState<any>(null);
   const { toast } = useToast();
 
   const { data: roles, isLoading, error, refetch } = useQuery({
@@ -78,6 +81,11 @@ export default function Roles() {
   const openCreateModal = () => {
     setEditingRol(null);
     setModalOpen(true);
+  };
+
+  const openPermisosModal = (rol: any) => {
+    setRolForPermisos(rol);
+    setPermisosModalOpen(true);
   };
 
   const filtered = roles?.filter((r: any) => 
@@ -155,9 +163,14 @@ export default function Roles() {
                       {rol.descripcion || '-'}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{rol.permisos_count} permisos</Badge>
+                      <Badge 
+                        variant="secondary" 
+                        className="cursor-pointer hover:bg-secondary/80 transition-colors"
+                        onClick={() => openPermisosModal(rol)}
+                      >
+                        {rol.permisos_count} permisos
+                      </Badge>
                     </TableCell>
-                    <TableCell>{rol.empresas?.nombre || 'Global'}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -166,6 +179,9 @@ export default function Roles() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openPermisosModal(rol)}>
+                            <Eye className="mr-2 h-4 w-4" />Ver Permisos
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openEditModal(rol)}>
                             <Edit className="mr-2 h-4 w-4" />Editar
                           </DropdownMenuItem>
@@ -195,6 +211,12 @@ export default function Roles() {
         onOpenChange={setModalOpen}
         rol={editingRol}
         onSuccess={refetch}
+      />
+
+      <VerPermisosModal
+        open={permisosModalOpen}
+        onOpenChange={setPermisosModalOpen}
+        rol={rolForPermisos}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
