@@ -1061,7 +1061,7 @@ export function AppSidebar() {
             collapsed ? "h-0 opacity-0 py-0 overflow-hidden" : "h-auto opacity-100"
           )}>
             <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider whitespace-nowrap">
-              Módulos
+              Secciones/Módulos
             </p>
             {collapsibleModuleIds.length > 0 && (
               <Tooltip delayDuration={0}>
