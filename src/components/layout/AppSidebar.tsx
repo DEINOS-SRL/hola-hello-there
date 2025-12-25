@@ -263,7 +263,9 @@ export function AppSidebar() {
         <CollapsibleContent className="mt-0.5 animate-accordion-down data-[state=closed]:animate-accordion-up">
           <div className={cn(
             "relative ml-[22px] pl-4 border-l-2 space-y-0.5 transition-all duration-300 ease-out",
-            hasActiveItem ? "border-primary" : "border-sidebar-border"
+            hasActiveItem 
+              ? "border-primary hover:border-primary/80" 
+              : "border-sidebar-border hover:border-primary/40"
           )}>
             {items.map(item => (
               <NavItem key={item.path} item={item} />
