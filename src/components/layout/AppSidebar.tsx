@@ -614,18 +614,28 @@ export function AppSidebar() {
             </TooltipTrigger>
             {/* Tooltip con submódulos cuando está colapsado */}
             {!isExpanded && modulo.hijos.length > 0 && (
-              <TooltipContent side="right" sideOffset={8} className="z-[9999] bg-popover border border-border shadow-lg p-2">
-                <p className="font-semibold text-sm mb-2">{modulo.nombre}</p>
-                <div className="space-y-1">
+              <TooltipContent 
+                side="right" 
+                sideOffset={8} 
+                className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in"
+              >
+                <p className="font-semibold text-sm mb-2 text-foreground">{modulo.nombre}</p>
+                <div className="space-y-0.5">
                   {modulo.hijos.map(hijo => (
                     <RouterNavLink 
                       key={hijo.id} 
                       to={hijo.ruta}
                       className={cn(
-                        "block text-sm py-1 px-2 rounded hover:bg-accent hover:text-accent-foreground transition-colors",
-                        isActive(hijo.ruta) && "text-primary font-medium"
+                        "flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all duration-200",
+                        "hover:bg-accent hover:text-accent-foreground",
+                        isActive(hijo.ruta) 
+                          ? "bg-primary/10 text-primary font-medium border-l-2 border-primary pl-1.5" 
+                          : "text-muted-foreground hover:text-foreground"
                       )}
                     >
+                      {isActive(hijo.ruta) && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-soft" />
+                      )}
                       {hijo.nombre}
                     </RouterNavLink>
                   ))}
@@ -861,9 +871,13 @@ export function AppSidebar() {
             </TooltipTrigger>
             {/* Tooltip con submódulos cuando está colapsado */}
             {!favoritosExpanded && favoritos.length > 0 && !collapsed && (
-              <TooltipContent side="right" sideOffset={8} className="z-[9999] bg-popover border border-border shadow-lg p-2">
-                <p className="font-semibold text-sm mb-2">Favoritos</p>
-                <div className="space-y-1">
+              <TooltipContent 
+                side="right" 
+                sideOffset={8} 
+                className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in"
+              >
+                <p className="font-semibold text-sm mb-2 text-foreground">Favoritos</p>
+                <div className="space-y-0.5">
                   {favoritos.map(fav => {
                     const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
                       modulosArbol.flatMap(m => m.hijos).find(h => h.id === fav.modulo_id);
@@ -873,10 +887,16 @@ export function AppSidebar() {
                         key={fav.id} 
                         to={modulo.ruta}
                         className={cn(
-                          "block text-sm py-1 px-2 rounded hover:bg-accent hover:text-accent-foreground transition-colors",
-                          isActive(modulo.ruta) && "text-primary font-medium"
+                          "flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all duration-200",
+                          "hover:bg-accent hover:text-accent-foreground",
+                          isActive(modulo.ruta) 
+                            ? "bg-primary/10 text-primary font-medium border-l-2 border-primary pl-1.5" 
+                            : "text-muted-foreground hover:text-foreground"
                         )}
                       >
+                        {isActive(modulo.ruta) && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-soft" />
+                        )}
                         {modulo.nombre}
                       </RouterNavLink>
                     );
