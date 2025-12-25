@@ -7,53 +7,65 @@
 @import "@fontsource/plus-jakarta-sans/600.css";
 @import "@fontsource/plus-jakarta-sans/700.css";
 
-/* DNSCloud Design System - HubSpot inspired */
+/* DNSCloud Design System - Aesthetic Clinic Theme */
+/* Colores: #FFFFFF, #F0FDFA, #22C55E + grises elegantes */
+/* Tipografía: Plus Jakarta Sans */
 
 @layer base {
   :root {
+    /* Base - Blancos y fondos */
     --background: 0 0% 100%;
-    --foreground: 220 13% 18%;
+    --foreground: 222 47% 11%;
 
+    /* Cards */
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 18%;
+    --card-foreground: 222 47% 11%;
 
+    /* Popovers */
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 18%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 168 76% 42%;
+    /* Primary - Verde #22C55E (HSL: 142 71% 45%) */
+    --primary: 142 71% 45%;
     --primary-foreground: 0 0% 100%;
 
+    /* Secondary - Teal claro #F0FDFA (HSL: 166 76% 97%) */
     --secondary: 166 76% 97%;
-    --secondary-foreground: 168 76% 32%;
+    --secondary-foreground: 160 84% 25%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    /* Muted - Grises elegantes */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
+    /* Accent - Verde suave */
     --accent: 166 76% 97%;
-    --accent-foreground: 168 76% 32%;
+    --accent-foreground: 160 84% 25%;
 
+    /* Success */
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 168 76% 42%;
+    /* Borders & Inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 142 71% 45%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
 
-    /* Sidebar - HubSpot style */
-    --sidebar-background: 220 14% 10%;
-    --sidebar-foreground: 220 9% 76%;
-    --sidebar-primary: 168 76% 42%;
+    /* Sidebar - Oscuro elegante */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 80%;
+    --sidebar-primary: 142 71% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 16%;
+    --sidebar-accent: 222 47% 16%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 14% 18%;
-    --sidebar-ring: 168 76% 42%;
-    --sidebar-muted: 220 9% 46%;
+    --sidebar-border: 222 47% 18%;
+    --sidebar-ring: 142 71% 45%;
+    --sidebar-muted: 215 16% 57%;
 
     /* Custom tokens */
     --header-height: 60px;
@@ -62,46 +74,46 @@
   }
 
   .dark {
-    --background: 220 14% 10%;
-    --foreground: 220 9% 94%;
+    --background: 222 47% 8%;
+    --foreground: 210 40% 96%;
 
-    --card: 220 14% 14%;
-    --card-foreground: 220 9% 94%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 220 14% 14%;
-    --popover-foreground: 220 9% 94%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 168 76% 48%;
-    --primary-foreground: 220 14% 10%;
+    --primary: 142 71% 50%;
+    --primary-foreground: 222 47% 8%;
 
-    --secondary: 220 14% 18%;
-    --secondary-foreground: 220 9% 94%;
+    --secondary: 222 47% 16%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 220 14% 18%;
-    --muted-foreground: 220 9% 56%;
+    --muted: 222 47% 16%;
+    --muted-foreground: 215 16% 57%;
 
-    --accent: 220 14% 18%;
-    --accent-foreground: 220 9% 94%;
+    --accent: 222 47% 16%;
+    --accent-foreground: 210 40% 96%;
 
-    --success: 142 71% 45%;
+    --success: 142 71% 50%;
     --success-foreground: 0 0% 100%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 22%;
-    --input: 220 14% 22%;
-    --ring: 168 76% 48%;
+    --border: 222 47% 20%;
+    --input: 222 47% 20%;
+    --ring: 142 71% 50%;
 
-    --sidebar-background: 220 14% 8%;
-    --sidebar-foreground: 220 9% 76%;
-    --sidebar-primary: 168 76% 48%;
-    --sidebar-primary-foreground: 220 14% 10%;
-    --sidebar-accent: 220 14% 14%;
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 76%;
+    --sidebar-primary: 142 71% 50%;
+    --sidebar-primary-foreground: 222 47% 8%;
+    --sidebar-accent: 222 47% 12%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 14% 16%;
-    --sidebar-ring: 168 76% 48%;
-    --sidebar-muted: 220 9% 46%;
+    --sidebar-border: 222 47% 14%;
+    --sidebar-ring: 142 71% 50%;
+    --sidebar-muted: 215 16% 50%;
   }
 }
 
