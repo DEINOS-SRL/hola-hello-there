@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { 
@@ -15,6 +15,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -79,8 +81,8 @@ function SortableFavoriteItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group/fav relative flex items-center",
-        isDragging && "opacity-50 z-50"
+        "group/fav relative flex items-center transition-all duration-200",
+        isDragging && "opacity-30 scale-95"
       )}
     >
       {/* Drag handle */}
@@ -88,7 +90,10 @@ function SortableFavoriteItem({
         <button
           {...attributes}
           {...listeners}
-          className="absolute -left-5 p-0.5 opacity-0 group-hover/fav:opacity-100 cursor-grab active:cursor-grabbing text-sidebar-foreground/40 hover:text-sidebar-foreground/70 transition-opacity"
+          className={cn(
+            "absolute -left-5 p-0.5 cursor-grab active:cursor-grabbing text-sidebar-foreground/40 hover:text-sidebar-foreground/70 transition-all duration-200",
+            "opacity-0 group-hover/fav:opacity-100"
+          )}
         >
           <GripVertical className="h-3 w-3" />
         </button>
@@ -127,6 +132,36 @@ function SortableFavoriteItem({
   );
 }
 
+// Componente overlay que se muestra mientras se arrastra
+interface DragOverlayItemProps {
+  fav: FavoritoConModulo;
+  isActive: boolean;
+}
+
+function DragOverlayItem({ fav, isActive }: DragOverlayItemProps) {
+  const IconComponent = getIconByName(fav.modulo.icono);
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
+        "bg-sidebar border border-primary/30 shadow-lg shadow-primary/20",
+        "scale-105 rotate-1",
+        isActive 
+          ? "bg-primary text-primary-foreground font-medium" 
+          : "text-sidebar-foreground"
+      )}
+      style={{
+        boxShadow: '0 10px 25px -5px hsl(var(--primary) / 0.25), 0 8px 10px -6px hsl(var(--primary) / 0.15)',
+      }}
+    >
+      <GripVertical className="h-3 w-3 text-current/50" />
+      <IconComponent className="h-4 w-4 shrink-0" />
+      <span>{fav.modulo.nombre}</span>
+    </div>
+  );
+}
+
 interface SortableFavoritesProps {
   favoritos: FavoritoConModulo[];
   collapsed: boolean;
@@ -144,6 +179,7 @@ export function SortableFavorites({
 }: SortableFavoritesProps) {
   const location = useLocation();
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -157,9 +193,15 @@ export function SortableFavorites({
   );
 
   const itemIds = useMemo(() => favoritos.map(f => f.id), [favoritos]);
+  const activeFav = useMemo(() => favoritos.find(f => f.id === activeId), [favoritos, activeId]);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);
 
     if (over && active.id !== over.id) {
       const oldIndex = favoritos.findIndex(f => f.id === active.id);
@@ -205,6 +247,7 @@ export function SortableFavorites({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
@@ -221,6 +264,19 @@ export function SortableFavorites({
           ))}
         </div>
       </SortableContext>
+      
+      {/* Drag Overlay - elemento flotante mientras se arrastra */}
+      <DragOverlay dropAnimation={{
+        duration: 200,
+        easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+      }}>
+        {activeFav ? (
+          <DragOverlayItem 
+            fav={activeFav} 
+            isActive={isActive(activeFav.modulo.ruta)} 
+          />
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }
