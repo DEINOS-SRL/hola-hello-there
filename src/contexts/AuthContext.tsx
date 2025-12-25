@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import { User, Empresa, AuthState } from '@/types/auth';
 
 interface AuthContextType extends AuthState {
@@ -22,11 +23,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin: false,
   });
 
-  // Fetch user profile from seg_usuarios
+  // Fetch user profile from seg.usuarios
   const fetchUserProfile = async (email: string) => {
     try {
-      const { data: usuario, error } = await supabase
-        .from('seg_usuarios')
+      const { data: usuario, error } = await segClient
+        .from('usuarios')
         .select('*')
         .eq('email', email)
         .eq('activo', true)
@@ -40,8 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       let empresa: Empresa | null = null;
       if (usuario.empresa_id) {
-        const { data: empresaData } = await supabase
-          .from('seg_empresas')
+        const { data: empresaData } = await segClient
+          .from('empresas')
           .select('*')
           .eq('id', usuario.empresa_id)
           .maybeSingle();
@@ -64,18 +65,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check if user has admin role
   const checkAdminRole = async (usuarioId: string) => {
     try {
-      const { data: roles } = await supabase
-        .from('seg_usuario_rol')
+      const { data: roles } = await segClient
+        .from('usuario_rol')
         .select(`
           rol_id,
-          seg_roles!inner(nombre)
+          roles!inner(nombre)
         `)
         .eq('usuario_id', usuarioId);
 
       if (roles && roles.length > 0) {
         return roles.some((r: any) => 
-          r.seg_roles?.nombre?.toLowerCase().includes('admin') ||
-          r.seg_roles?.nombre?.toLowerCase().includes('administrador')
+          r.roles?.nombre?.toLowerCase().includes('admin') ||
+          r.roles?.nombre?.toLowerCase().includes('administrador')
         );
       }
       return false;
@@ -161,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        // Check if user exists in seg_usuarios and is active
+        // Check if user exists in seg.usuarios and is active
         const { user: userProfile } = await fetchUserProfile(data.user.email!);
         
         if (!userProfile) {
@@ -214,9 +215,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        // Create user in seg_usuarios table
-        const { error: insertError } = await supabase
-          .from('seg_usuarios')
+        // Create user in seg.usuarios table
+        const { error: insertError } = await segClient
+          .from('usuarios')
           .insert({
             email: email.trim(),
             nombre,

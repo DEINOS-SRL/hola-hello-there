@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { ViewMode } from '@/types/auth';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 
 // Mapeo de nombres de iconos a componentes
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -51,8 +51,8 @@ export default function Modulos() {
   const { data: aplicaciones, isLoading } = useQuery({
     queryKey: ['aplicaciones-modulos'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('seg_aplicaciones')
+      const { data, error } = await segClient
+        .from('aplicaciones')
         .select('*')
         .order('nombre');
       

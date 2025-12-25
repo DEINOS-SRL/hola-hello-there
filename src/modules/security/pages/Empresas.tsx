@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, Building2, MoreHorizontal, Edit, Trash2, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,32 +32,32 @@ export default function Empresas() {
   const { data: empresas, isLoading, error, refetch } = useQuery({
     queryKey: ['empresas'],
     queryFn: async () => {
-      const { data: empresasData, error: empresasError } = await supabase
-        .from('seg_empresas')
+      const { data: empresasData, error: empresasError } = await segClient
+        .from('empresas')
         .select('*')
         .order('nombre', { ascending: true });
 
       if (empresasError) throw empresasError;
 
-      const { data: userCounts } = await supabase
-        .from('seg_usuarios')
+      const { data: userCounts } = await segClient
+        .from('usuarios')
         .select('empresa_id')
         .eq('activo', true);
 
       const counts: Record<string, number> = {};
-      userCounts?.forEach(u => {
+      userCounts?.forEach((u: any) => {
         if (u.empresa_id) counts[u.empresa_id] = (counts[u.empresa_id] || 0) + 1;
       });
 
-      return empresasData?.map(e => ({ ...e, usuarios_count: counts[e.id] || 0 }));
+      return empresasData?.map((e: any) => ({ ...e, usuarios_count: counts[e.id] || 0 }));
     },
   });
 
   const confirmDelete = async () => {
     if (!empresaToDelete) return;
     
-    const { error } = await supabase
-      .from('seg_empresas')
+    const { error } = await segClient
+      .from('empresas')
       .delete()
       .eq('id', empresaToDelete.id);
 
@@ -81,7 +81,7 @@ export default function Empresas() {
     setModalOpen(true);
   };
 
-  const filtered = empresas?.filter(e => 
+  const filtered = empresas?.filter((e: any) => 
     e.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.direccion?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -141,7 +141,7 @@ export default function Empresas() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(empresa => (
+                {filtered.map((empresa: any) => (
                   <TableRow key={empresa.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">

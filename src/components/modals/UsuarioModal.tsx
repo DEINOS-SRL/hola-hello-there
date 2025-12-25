@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
   DialogContent,
@@ -53,7 +53,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
   const { data: empresas } = useQuery({
     queryKey: ['empresas-select'],
     queryFn: async () => {
-      const { data } = await supabase.from('seg_empresas').select('id, nombre').order('nombre');
+      const { data } = await segClient.from('empresas').select('id, nombre').order('nombre');
       return data || [];
     },
   });
@@ -116,17 +116,17 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
       };
 
       if (isEditing) {
-        const { error } = await supabase
-          .from('seg_usuarios')
+        const { error } = await segClient
+          .from('usuarios')
           .update(payload)
           .eq('id', usuario.id);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Usuario actualizado correctamente' });
       } else {
-        const { error } = await supabase
-          .from('seg_usuarios')
-          .insert([{ ...payload, email: data.email }] as any);
+        const { error } = await segClient
+          .from('usuarios')
+          .insert([{ ...payload, email: data.email }]);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Usuario creado correctamente' });
@@ -199,7 +199,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                 <SelectValue placeholder="Seleccionar empresa" />
               </SelectTrigger>
               <SelectContent>
-                {empresas?.map((e) => (
+                {empresas?.map((e: any) => (
                   <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
                 ))}
               </SelectContent>

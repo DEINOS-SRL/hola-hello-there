@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, AppWindow, MoreHorizontal, Edit, Trash2, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,8 +32,8 @@ export default function Aplicaciones() {
   const { data: aplicaciones, isLoading, error, refetch } = useQuery({
     queryKey: ['aplicaciones'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('seg_aplicaciones')
+      const { data, error } = await segClient
+        .from('aplicaciones')
         .select('*')
         .order('nombre', { ascending: true });
       if (error) throw error;
@@ -42,8 +42,8 @@ export default function Aplicaciones() {
   });
 
   const toggleAppStatus = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from('seg_aplicaciones')
+    const { error } = await segClient
+      .from('aplicaciones')
       .update({ activa: !currentStatus })
       .eq('id', id);
 
@@ -58,8 +58,8 @@ export default function Aplicaciones() {
   const confirmDelete = async () => {
     if (!appToDelete) return;
     
-    const { error } = await supabase
-      .from('seg_aplicaciones')
+    const { error } = await segClient
+      .from('aplicaciones')
       .delete()
       .eq('id', appToDelete.id);
 
@@ -83,7 +83,7 @@ export default function Aplicaciones() {
     setModalOpen(true);
   };
 
-  const filtered = aplicaciones?.filter(a => 
+  const filtered = aplicaciones?.filter((a: any) => 
     a.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     a.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -143,7 +143,7 @@ export default function Aplicaciones() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(app => (
+                {filtered.map((app: any) => (
                   <TableRow key={app.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
