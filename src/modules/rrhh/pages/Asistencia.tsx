@@ -21,7 +21,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { rrhhClient } from '../services/rrhhClient';
 import { RegistrarAsistenciaModal } from '../components/RegistrarAsistenciaModal';
-import type { Asistencia, Permiso, TipoAsistencia, EstadoPermiso } from '../types/asistencia';
+import { HorarioModal } from '../components/HorarioModal';
+import type { Asistencia, Permiso, Horario, TipoAsistencia, EstadoPermiso } from '../types/asistencia';
 
 const tipoAsistenciaConfig: Record<TipoAsistencia, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   normal: { label: 'Normal', variant: 'default' },
@@ -43,6 +44,7 @@ export default function AsistenciaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState('registros');
   const [showRegistrarModal, setShowRegistrarModal] = useState(false);
+  const [showHorarioModal, setShowHorarioModal] = useState(false);
 
   // Fetch asistencias del día
   const { data: asistencias = [], isLoading: loadingAsistencias } = useQuery({
@@ -71,6 +73,21 @@ export default function AsistenciaPage() {
       
       if (error) throw error;
       return data as Permiso[];
+    },
+  });
+
+  // Fetch horarios
+  const { data: horarios = [], isLoading: loadingHorarios } = useQuery({
+    queryKey: ['horarios'],
+    queryFn: async () => {
+      const { data, error } = await rrhhClient
+        .from('horarios')
+        .select('*')
+        .eq('activo', true)
+        .order('nombre');
+      
+      if (error) throw error;
+      return data as Horario[];
     },
   });
 
@@ -360,24 +377,67 @@ export default function AsistenciaPage() {
                 <CardTitle>Horarios de Trabajo</CardTitle>
                 <CardDescription>Configuración de horarios laborales</CardDescription>
               </div>
-              <Button size="sm">
+              <Button size="sm" onClick={() => setShowHorarioModal(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nuevo horario
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No hay horarios configurados</p>
-                <Button variant="outline" className="mt-4">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Crear primer horario
-                </Button>
-              </div>
+              {loadingHorarios ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                </div>
+              ) : horarios.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No hay horarios configurados</p>
+                  <Button variant="outline" className="mt-4" onClick={() => setShowHorarioModal(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crear primer horario
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Entrada</TableHead>
+                      <TableHead>Salida</TableHead>
+                      <TableHead>Tolerancia</TableHead>
+                      <TableHead>Días Laborables</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {horarios.map((horario) => (
+                      <TableRow key={horario.id}>
+                        <TableCell className="font-medium">{horario.nombre}</TableCell>
+                        <TableCell>{horario.hora_entrada}</TableCell>
+                        <TableCell>{horario.hora_salida}</TableCell>
+                        <TableCell>{horario.tolerancia_minutos} min</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {horario.dias_laborables.map((dia) => (
+                              <Badge key={dia} variant="outline" className="text-xs capitalize">
+                                {dia.slice(0, 3)}
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modal para crear horario */}
+      <HorarioModal
+        open={showHorarioModal}
+        onOpenChange={setShowHorarioModal}
+      />
     </div>
   );
 }
