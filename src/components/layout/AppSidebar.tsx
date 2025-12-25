@@ -19,7 +19,8 @@ import {
   Settings,
   HelpCircle,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Workflow
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,6 +45,7 @@ const iconMap: Record<string, LucideIcon> = {
   BadgeCheck,
   AppWindow,
   Key,
+  Workflow,
 };
 
 // Items fijos del menú principal
@@ -74,7 +76,7 @@ export function AppSidebar() {
     );
   };
 
-  // Filtrar módulos según permisos del usuario
+  // Filtrar módulos según permisos del usuario y aplanar children
   const getVisibleModules = () => {
     return moduleRegistry
       .filter(module => {
@@ -87,17 +89,30 @@ export function AppSidebar() {
         });
         return hasAccessToAnyItem;
       })
-      .map(module => ({
-        moduleId: module.moduleId,
-        moduleName: module.name,
-        items: module.navItems.filter(item => {
-          if (isAdmin) return true;
-          if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
-            return true;
+      .map(module => {
+        // Aplanar items con children
+        const flattenedItems: ModuleNavItem[] = [];
+        module.navItems.forEach(item => {
+          if (item.children && item.children.length > 0) {
+            // Si tiene children, usar los children como items
+            item.children.forEach(child => {
+              if (isAdmin || !child.requiredPermissions || hasAnyPermission(child.requiredPermissions)) {
+                flattenedItems.push(child);
+              }
+            });
+          } else {
+            if (isAdmin || !item.requiredPermissions || hasAnyPermission(item.requiredPermissions)) {
+              flattenedItems.push(item);
+            }
           }
-          return hasAnyPermission(item.requiredPermissions);
-        })
-      }))
+        });
+        
+        return {
+          moduleId: module.moduleId,
+          moduleName: module.name,
+          items: flattenedItems
+        };
+      })
       .filter(section => section.items.length > 0);
   };
 
@@ -109,7 +124,7 @@ export function AppSidebar() {
       'security': Shield,
       'employees': Users,
       'equipos': Truck,
-      'movimientos': ArrowLeftRight,
+      'operacion': Workflow,
       'partes-diarios': ClipboardList,
       'habilitaciones': BadgeCheck,
     };
