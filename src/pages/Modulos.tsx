@@ -69,12 +69,12 @@ export default function Modulos() {
     activa: app.activa,
     icono: app.icono ?? 'AppWindow',
     ruta: app.ruta ?? null,
-    // Por ahora, solo Seguridad tiene acceso real implementado
-    hasAccess: app.nombre === 'Módulo de Seguridad' || app.nombre === 'Partes Diarios',
+    // Los módulos activos y con ruta tienen acceso
+    hasAccess: app.activa === true && app.ruta !== null,
   }));
 
-  const accessibleModules = modules.filter(m => m.hasAccess && m.activa);
-  const otherModules = modules.filter(m => !m.hasAccess || !m.activa);
+  const accessibleModules = modules.filter(m => m.hasAccess);
+  const otherModules = modules.filter(m => !m.hasAccess);
 
   const handleModuleClick = (module: ModuleData) => {
     if (module.hasAccess && module.activa && module.ruta) {
