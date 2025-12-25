@@ -33,7 +33,7 @@ const usuarioSchema = z.object({
   dni: z.string().optional(),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
-  empresa_id: z.string().optional(),
+  empresa_id: z.string().min(1, 'Debe seleccionar una empresa'),
   activo: z.boolean(),
 });
 
@@ -112,7 +112,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
     try {
       const payload = {
         ...data,
-        empresa_id: data.empresa_id || null,
+        empresa_id: data.empresa_id,
       };
 
       if (isEditing) {
@@ -190,21 +190,21 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
           </div>
 
           <div className="space-y-2">
-            <Label>Empresa</Label>
+            <Label>Empresa *</Label>
             <Select 
-              value={empresaId || "none"} 
-              onValueChange={(value) => setValue('empresa_id', value === "none" ? "" : value)}
+              value={empresaId || ""} 
+              onValueChange={(value) => setValue('empresa_id', value, { shouldValidate: true })}
             >
-              <SelectTrigger>
+              <SelectTrigger className={errors.empresa_id ? "border-destructive" : ""}>
                 <SelectValue placeholder="Seleccionar empresa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Sin empresa</SelectItem>
                 {empresas?.map((e) => (
                   <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
           </div>
 
           <div className="flex items-center justify-between">
