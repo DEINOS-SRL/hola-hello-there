@@ -17,11 +17,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+
+const iconOptions = [
+  { value: 'Shield', label: 'Escudo (Seguridad)' },
+  { value: 'BarChart3', label: 'Gráficos (Reportes)' },
+  { value: 'FileText', label: 'Documento (Documentos)' },
+  { value: 'Calendar', label: 'Calendario' },
+  { value: 'MessageSquare', label: 'Mensaje (Mensajería)' },
+  { value: 'ClipboardList', label: 'Lista (Partes)' },
+  { value: 'AppWindow', label: 'Aplicación (Genérico)' },
+];
 
 const aplicacionSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   descripcion: z.string().optional(),
+  icono: z.string().optional(),
+  ruta: z.string().optional(),
   activa: z.boolean(),
 });
 
@@ -50,23 +63,30 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
     defaultValues: {
       nombre: '',
       descripcion: '',
+      icono: 'AppWindow',
+      ruta: '',
       activa: true,
     },
   });
 
   const activa = watch('activa');
+  const icono = watch('icono');
 
   useEffect(() => {
     if (aplicacion) {
       reset({
         nombre: aplicacion.nombre,
         descripcion: aplicacion.descripcion || '',
+        icono: aplicacion.icono || 'AppWindow',
+        ruta: aplicacion.ruta || '',
         activa: aplicacion.activa ?? true,
       });
     } else {
       reset({
         nombre: '',
         descripcion: '',
+        icono: 'AppWindow',
+        ruta: '',
         activa: true,
       });
     }
@@ -74,10 +94,18 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
 
   const onSubmit = async (data: AplicacionFormData) => {
     try {
+      const payload = {
+        nombre: data.nombre,
+        descripcion: data.descripcion || null,
+        icono: data.icono || 'AppWindow',
+        ruta: data.ruta || null,
+        activa: data.activa,
+      };
+
       if (isEditing) {
         const { error } = await supabase
           .from('seg_aplicaciones')
-          .update(data)
+          .update(payload)
           .eq('id', aplicacion.id);
 
         if (error) throw error;
@@ -85,7 +113,7 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
       } else {
         const { error } = await supabase
           .from('seg_aplicaciones')
-          .insert([data] as any);
+          .insert([payload] as any);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Aplicación creada correctamente' });
@@ -124,8 +152,32 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
             <Textarea id="descripcion" {...register('descripcion')} placeholder="Describe la funcionalidad de la aplicación" />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Icono</Label>
+              <Select value={icono} onValueChange={(value) => setValue('icono', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar icono" />
+                </SelectTrigger>
+                <SelectContent>
+                  {iconOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ruta">Ruta</Label>
+              <Input id="ruta" {...register('ruta')} placeholder="/modulo" />
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
-            <Label htmlFor="activa">Aplicación activa</Label>
+            <div>
+              <Label htmlFor="activa">En producción</Label>
+              <p className="text-xs text-muted-foreground">Si está desactivada, mostrará "Próximamente"</p>
+            </div>
             <Switch
               id="activa"
               checked={activa}

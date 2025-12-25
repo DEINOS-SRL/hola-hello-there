@@ -8,91 +8,87 @@ import {
   LayoutGrid,
   List,
   Lock,
-  ArrowRight
+  ArrowRight,
+  AppWindow,
+  ClipboardList,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { ViewMode, Aplicacion } from '@/types/auth';
+import { ViewMode } from '@/types/auth';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-// Mock modules data
-const modules: (Aplicacion & { icon: typeof Shield; hasAccess: boolean })[] = [
-  {
-    id: '1',
-    nombre: 'Seguridad',
-    descripcion: 'Gestión de usuarios, roles, permisos y empresas',
-    activa: true,
-    icono: 'Shield',
-    ruta: '/seguridad/usuarios',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    icon: Shield,
-    hasAccess: true,
-  },
-  {
-    id: '2',
-    nombre: 'Reportes',
-    descripcion: 'Generación y visualización de reportes empresariales',
-    activa: true,
-    icono: 'BarChart3',
-    ruta: '/reportes',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    icon: BarChart3,
-    hasAccess: false,
-  },
-  {
-    id: '3',
-    nombre: 'Documentos',
-    descripcion: 'Gestión documental y archivos corporativos',
-    activa: true,
-    icono: 'FileText',
-    ruta: '/documentos',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    icon: FileText,
-    hasAccess: false,
-  },
-  {
-    id: '4',
-    nombre: 'Calendario',
-    descripcion: 'Programación de eventos y recordatorios',
-    activa: false,
-    icono: 'Calendar',
-    ruta: '/calendario',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    icon: Calendar,
-    hasAccess: false,
-  },
-  {
-    id: '5',
-    nombre: 'Mensajería',
-    descripcion: 'Sistema de comunicación interna',
-    activa: false,
-    icono: 'MessageSquare',
-    ruta: '/mensajeria',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    icon: MessageSquare,
-    hasAccess: false,
-  },
-];
+// Mapeo de nombres de iconos a componentes
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Shield,
+  BarChart3,
+  FileText,
+  Calendar,
+  MessageSquare,
+  AppWindow,
+  ClipboardList,
+};
+
+interface ModuleData {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  activa: boolean | null;
+  icono: string | null;
+  ruta: string | null;
+  hasAccess: boolean;
+}
 
 export default function Modulos() {
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const navigate = useNavigate();
 
+  // Fetch aplicaciones from database
+  const { data: aplicaciones, isLoading } = useQuery({
+    queryKey: ['aplicaciones-modulos'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('seg_aplicaciones')
+        .select('*')
+        .order('nombre');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Transform data for display
+  const modules: ModuleData[] = (aplicaciones ?? []).map(app => ({
+    id: app.id,
+    nombre: app.nombre,
+    descripcion: app.descripcion,
+    activa: app.activa,
+    icono: app.icono ?? 'AppWindow',
+    ruta: app.ruta ?? null,
+    // Por ahora, solo Seguridad tiene acceso real implementado
+    hasAccess: app.nombre === 'Módulo de Seguridad' || app.nombre === 'Partes Diarios',
+  }));
+
   const accessibleModules = modules.filter(m => m.hasAccess && m.activa);
   const otherModules = modules.filter(m => !m.hasAccess || !m.activa);
 
-  const handleModuleClick = (module: typeof modules[0]) => {
+  const handleModuleClick = (module: ModuleData) => {
     if (module.hasAccess && module.activa && module.ruta) {
       navigate(module.ruta);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -129,34 +125,36 @@ export default function Modulos() {
       </div>
 
       {/* Accessible Modules */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-success" />
-          Módulos con acceso
-        </h2>
-        
-        {viewMode === 'cards' ? (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {accessibleModules.map((module) => (
-              <ModuleCard 
-                key={module.id} 
-                module={module} 
-                onClick={() => handleModuleClick(module)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {accessibleModules.map((module) => (
-              <ModuleListItem 
-                key={module.id} 
-                module={module}
-                onClick={() => handleModuleClick(module)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {accessibleModules.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-success" />
+            Módulos con acceso
+          </h2>
+          
+          {viewMode === 'cards' ? (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {accessibleModules.map((module) => (
+                <ModuleCard 
+                  key={module.id} 
+                  module={module} 
+                  onClick={() => handleModuleClick(module)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {accessibleModules.map((module) => (
+                <ModuleListItem 
+                  key={module.id} 
+                  module={module}
+                  onClick={() => handleModuleClick(module)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Other Modules */}
       {otherModules.length > 0 && (
@@ -198,11 +196,11 @@ function ModuleCard({
   disabled,
   onClick 
 }: { 
-  module: typeof modules[0]; 
+  module: ModuleData; 
   disabled?: boolean;
   onClick?: () => void;
 }) {
-  const Icon = module.icon;
+  const Icon = iconMap[module.icono ?? 'AppWindow'] ?? AppWindow;
   
   return (
     <Card 
@@ -255,11 +253,11 @@ function ModuleListItem({
   disabled,
   onClick 
 }: { 
-  module: typeof modules[0]; 
+  module: ModuleData; 
   disabled?: boolean;
   onClick?: () => void;
 }) {
-  const Icon = module.icon;
+  const Icon = iconMap[module.icono ?? 'AppWindow'] ?? AppWindow;
   
   return (
     <div 
