@@ -12,7 +12,8 @@ import {
   Filter,
   Download,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  UserCog
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { rrhhClient } from '../services/rrhhClient';
 import { RegistrarAsistenciaModal } from '../components/RegistrarAsistenciaModal';
 import { HorarioModal } from '../components/HorarioModal';
+import { AsignarHorarioModal } from '../components/AsignarHorarioModal';
 import type { Asistencia, Permiso, Horario, TipoAsistencia, EstadoPermiso } from '../types/asistencia';
 
 const tipoAsistenciaConfig: Record<TipoAsistencia, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -45,6 +47,7 @@ export default function AsistenciaPage() {
   const [activeTab, setActiveTab] = useState('registros');
   const [showRegistrarModal, setShowRegistrarModal] = useState(false);
   const [showHorarioModal, setShowHorarioModal] = useState(false);
+  const [showAsignarHorarioModal, setShowAsignarHorarioModal] = useState(false);
 
   // Fetch asistencias del día
   const { data: asistencias = [], isLoading: loadingAsistencias } = useQuery({
@@ -377,10 +380,16 @@ export default function AsistenciaPage() {
                 <CardTitle>Horarios de Trabajo</CardTitle>
                 <CardDescription>Configuración de horarios laborales</CardDescription>
               </div>
-              <Button size="sm" onClick={() => setShowHorarioModal(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo horario
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowAsignarHorarioModal(true)}>
+                  <UserCog className="h-4 w-4 mr-2" />
+                  Asignar a Empleado
+                </Button>
+                <Button size="sm" onClick={() => setShowHorarioModal(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo horario
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingHorarios ? (
@@ -437,6 +446,12 @@ export default function AsistenciaPage() {
       <HorarioModal
         open={showHorarioModal}
         onOpenChange={setShowHorarioModal}
+      />
+
+      {/* Modal para asignar horario a empleado */}
+      <AsignarHorarioModal
+        open={showAsignarHorarioModal}
+        onOpenChange={setShowAsignarHorarioModal}
       />
     </div>
   );
