@@ -168,7 +168,7 @@ export function AppSidebar() {
       >
         {/* Indicador de punto activo en la línea */}
         {active && (
-          <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200" />
+          <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
         )}
         {IconComponent && <IconComponent className="h-4 w-4 shrink-0" />}
         {!collapsed && <span>{name}</span>}
