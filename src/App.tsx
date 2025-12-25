@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { PermissionsProvider } from "@/core/security/permissions";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Loader2 } from "lucide-react";
@@ -12,11 +13,12 @@ import Dashboard from "./pages/Dashboard";
 import Modulos from "./pages/Modulos";
 import Perfil from "./pages/Perfil";
 import Configuracion from "./pages/Configuracion";
-import Usuarios from "./pages/seguridad/Usuarios";
-import Empresas from "./pages/seguridad/Empresas";
-import Roles from "./pages/seguridad/Roles";
-import Aplicaciones from "./pages/seguridad/Aplicaciones";
-import SeguridadIndex from "./pages/seguridad/Index";
+// Importar páginas del módulo de Seguridad
+import SeguridadIndex from "./modules/security/pages/Index";
+import Usuarios from "./modules/security/pages/Usuarios";
+import Empresas from "./modules/security/pages/Empresas";
+import Roles from "./modules/security/pages/Roles";
+import Aplicaciones from "./modules/security/pages/Aplicaciones";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +60,7 @@ function AppRoutes() {
       <Route path="/modulos" element={<ProtectedRoute><Modulos /></ProtectedRoute>} />
       <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
       <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
+      {/* Rutas del módulo de Seguridad */}
       <Route path="/seguridad" element={<ProtectedRoute><SeguridadIndex /></ProtectedRoute>} />
       <Route path="/seguridad/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
       <Route path="/seguridad/empresas" element={<ProtectedRoute><Empresas /></ProtectedRoute>} />
@@ -65,6 +68,14 @@ function AppRoutes() {
       <Route path="/seguridad/aplicaciones" element={<ProtectedRoute><Aplicaciones /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+  );
+}
+
+function AppWithPermissions() {
+  return (
+    <PermissionsProvider>
+      <AppRoutes />
+    </PermissionsProvider>
   );
 }
 
@@ -76,7 +87,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <AppRoutes />
+            <AppWithPermissions />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

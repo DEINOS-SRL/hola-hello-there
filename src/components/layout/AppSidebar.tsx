@@ -1,39 +1,57 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { 
   Home, 
-  Shield, 
-  Users, 
-  Building2, 
-  Key, 
-  AppWindow,
-  ChevronLeft,
-  ChevronRight,
   LayoutGrid,
   Moon,
-  Sun
+  Sun,
+  ChevronLeft,
+  ChevronRight,
+  LucideIcon,
+  Shield,
+  Users,
+  Building2,
+  Truck,
+  ArrowLeftRight,
+  ClipboardList,
+  BadgeCheck,
+  AppWindow,
+  Key
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/ThemeProvider';
+import { usePermissions } from '@/core/security/permissions';
+import { moduleRegistry } from '@/app/moduleRegistry';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { ModuleNavItem } from '@/shared/types/module';
 
+// Mapa de iconos por nombre de string
+const iconMap: Record<string, LucideIcon> = {
+  Home,
+  LayoutGrid,
+  Shield,
+  Users,
+  Building2,
+  Truck,
+  ArrowLeftRight,
+  ClipboardList,
+  BadgeCheck,
+  AppWindow,
+  Key,
+};
+
+// Items fijos del menú principal
 const mainMenuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Módulos', href: '/modulos', icon: LayoutGrid },
 ];
 
-const securityMenuItems = [
-  { name: 'Usuarios', href: '/seguridad/usuarios', icon: Users },
-  { name: 'Empresas', href: '/seguridad/empresas', icon: Building2 },
-  { name: 'Roles', href: '/seguridad/roles', icon: Key },
-  { name: 'Aplicaciones', href: '/seguridad/aplicaciones', icon: AppWindow },
-];
-
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { isAdmin } = useAuth();
+  const { hasAnyPermission } = usePermissions();
   const { resolvedTheme, setTheme } = useTheme();
   const location = useLocation();
 
@@ -43,22 +61,58 @@ export function AppSidebar() {
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
-  const NavItem = ({ item }: { item: typeof mainMenuItems[0] }) => {
-    const Icon = item.icon;
-    const active = isActive(item.href);
+  // Filtrar módulos según permisos del usuario
+  const getVisibleModules = () => {
+    return moduleRegistry
+      .filter(module => {
+        // Si es admin, mostrar todos los módulos
+        if (isAdmin) return true;
+        
+        // Si el módulo tiene items de navegación con permisos, verificar acceso
+        const hasAccessToAnyItem = module.navItems.some(item => {
+          if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
+            return true;
+          }
+          return hasAnyPermission(item.requiredPermissions);
+        });
+        
+        return hasAccessToAnyItem;
+      })
+      .map(module => ({
+        moduleId: module.moduleId,
+        moduleName: module.name,
+        items: module.navItems.filter(item => {
+          if (isAdmin) return true;
+          if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
+            return true;
+          }
+          return hasAnyPermission(item.requiredPermissions);
+        })
+      }))
+      .filter(section => section.items.length > 0);
+  };
+
+  const visibleModules = getVisibleModules();
+
+  const NavItem = ({ item, icon }: { item: { name: string; href: string; icon: LucideIcon } | ModuleNavItem; icon?: LucideIcon }) => {
+    const isNavItem = 'href' in item;
+    const href = isNavItem ? item.href : item.path;
+    const name = isNavItem ? item.name : item.label;
+    const IconComponent = icon || (isNavItem ? item.icon : iconMap[item.icon || ''] || Shield);
+    const active = isActive(href);
 
     const content = (
-      <NavLink
-        to={item.href}
+      <RouterNavLink
+        to={href}
         className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
           "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           active && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary"
         )}
       >
-        <Icon className="h-5 w-5 shrink-0" />
-        {!collapsed && <span className="font-medium">{item.name}</span>}
-      </NavLink>
+        <IconComponent className="h-5 w-5 shrink-0" />
+        {!collapsed && <span className="font-medium">{name}</span>}
+      </RouterNavLink>
     );
 
     if (collapsed) {
@@ -66,13 +120,26 @@ export function AppSidebar() {
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
           <TooltipContent side="right" className="font-medium">
-            {item.name}
+            {name}
           </TooltipContent>
         </Tooltip>
       );
     }
 
     return content;
+  };
+
+  // Obtener icono del módulo
+  const getModuleIcon = (moduleId: string): LucideIcon => {
+    const iconMapping: Record<string, LucideIcon> = {
+      'security': Shield,
+      'employees': Users,
+      'equipos': Truck,
+      'movimientos': ArrowLeftRight,
+      'partes-diarios': ClipboardList,
+      'habilitaciones': BadgeCheck,
+    };
+    return iconMapping[moduleId] || Shield;
   };
 
   return (
@@ -116,29 +183,32 @@ export function AppSidebar() {
             </p>
           )}
           {mainMenuItems.map(item => (
-            <NavItem key={item.href} item={item} />
+            <NavItem key={item.href} item={item} icon={item.icon} />
           ))}
         </div>
 
-        {/* Security Module - Only for admins */}
-        {isAdmin && (
-          <div className="space-y-1">
-            {!collapsed && (
-              <p className="text-xs font-semibold text-sidebar-muted uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-                <Shield className="h-3.5 w-3.5" />
-                Seguridad
-              </p>
-            )}
-            {collapsed && (
-              <div className="flex justify-center py-2">
-                <Shield className="h-4 w-4 text-sidebar-muted" />
-              </div>
-            )}
-            {securityMenuItems.map(item => (
-              <NavItem key={item.href} item={item} />
-            ))}
-          </div>
-        )}
+        {/* Dynamic Modules from Registry */}
+        {visibleModules.map(section => {
+          const ModuleIcon = getModuleIcon(section.moduleId);
+          return (
+            <div key={section.moduleId} className="space-y-1">
+              {!collapsed && (
+                <p className="text-xs font-semibold text-sidebar-muted uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
+                  <ModuleIcon className="h-3.5 w-3.5" />
+                  {section.moduleName}
+                </p>
+              )}
+              {collapsed && (
+                <div className="flex justify-center py-2">
+                  <ModuleIcon className="h-4 w-4 text-sidebar-muted" />
+                </div>
+              )}
+              {section.items.map(item => (
+                <NavItem key={item.path} item={item} />
+              ))}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Theme Toggle */}
