@@ -47,14 +47,41 @@ export default function Usuarios() {
   const { toast } = useToast();
 
   const { data: usuarios, isLoading, error, refetch } = useQuery({
-    queryKey: ['usuarios'],
+    queryKey: ['usuarios-con-roles'],
     queryFn: async () => {
-      const { data, error } = await segClient
+      // Obtener usuarios con empresa
+      const { data: usersData, error: usersError } = await segClient
         .from('usuarios')
         .select(`*, empresas(nombre)`)
         .order('nombre', { ascending: true });
-      if (error) throw error;
-      return data;
+      if (usersError) throw usersError;
+
+      // Obtener roles de todos los usuarios
+      const { data: rolesData, error: rolesError } = await segClient
+        .from('usuario_rol')
+        .select(`
+          usuario_id,
+          roles(nombre),
+          aplicaciones(nombre)
+        `);
+      if (rolesError) throw rolesError;
+
+      // Agrupar roles por usuario
+      const rolesByUser = (rolesData || []).reduce((acc: Record<string, any[]>, ur: any) => {
+        const userId = ur.usuario_id;
+        if (!acc[userId]) acc[userId] = [];
+        acc[userId].push({
+          rol: ur.roles?.nombre,
+          app: ur.aplicaciones?.nombre,
+        });
+        return acc;
+      }, {});
+
+      // Combinar usuarios con sus roles
+      return usersData?.map((user: any) => ({
+        ...user,
+        roles: rolesByUser[user.id] || [],
+      })) || [];
     },
   });
 
@@ -161,6 +188,7 @@ export default function Usuarios() {
                 <TableRow>
                   <TableHead>Usuario</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Roles</TableHead>
                   <TableHead>Empresa</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
@@ -180,6 +208,24 @@ export default function Usuarios() {
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                        {user.roles && user.roles.length > 0 ? (
+                          user.roles.map((r: any, idx: number) => (
+                            <Badge 
+                              key={idx} 
+                              variant="outline" 
+                              className="text-xs bg-primary/5 border-primary/20"
+                              title={`App: ${r.app}`}
+                            >
+                              {r.rol}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">Sin roles</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{user.empresas?.nombre || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={user.activo ? 'default' : 'secondary'}>
