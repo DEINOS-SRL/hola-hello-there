@@ -19,6 +19,9 @@ export interface PreferenciasUsuario {
   tema: string;
   // Comportamiento
   preservar_scroll: boolean;
+  animaciones_reducidas: boolean;
+  confirmar_eliminar: boolean;
+  sonidos_notificacion: boolean;
 }
 
 const defaultPreferencias: Omit<PreferenciasUsuario, 'id' | 'usuario_id'> = {
@@ -35,6 +38,9 @@ const defaultPreferencias: Omit<PreferenciasUsuario, 'id' | 'usuario_id'> = {
   densidad_ui: 'comfortable',
   tema: 'system',
   preservar_scroll: true,
+  animaciones_reducidas: false,
+  confirmar_eliminar: true,
+  sonidos_notificacion: true,
 };
 
 export async function getPreferencias(usuarioId: string): Promise<PreferenciasUsuario> {

@@ -12,6 +12,9 @@ interface PreferenciasContextType {
   formatDateTime: (date: Date | string) => string;
   formatRelativeTime: (date: Date | string) => string;
   preservarScroll: boolean;
+  animacionesReducidas: boolean;
+  confirmarEliminar: boolean;
+  sonidosNotificacion: boolean;
 }
 
 const PreferenciasContext = createContext<PreferenciasContextType | undefined>(undefined);
@@ -42,8 +45,11 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
     }
   }, [preferencias?.tema, isAuthenticated, setTheme]);
 
-  // Valor de preservar scroll (default true)
+  // Valores de comportamiento (con defaults)
   const preservarScroll = preferencias?.preservar_scroll ?? true;
+  const animacionesReducidas = preferencias?.animaciones_reducidas ?? false;
+  const confirmarEliminar = preferencias?.confirmar_eliminar ?? true;
+  const sonidosNotificacion = preferencias?.sonidos_notificacion ?? true;
 
   // Obtener locale basado en idioma
   const getLocale = () => {
@@ -132,6 +138,9 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
         formatDateTime,
         formatRelativeTime,
         preservarScroll,
+        animacionesReducidas,
+        confirmarEliminar,
+        sonidosNotificacion,
       }}
     >
       {children}
@@ -160,6 +169,9 @@ export function usePreferenciasGlobal() {
         return d.toLocaleDateString('es-AR');
       },
       preservarScroll: true,
+      animacionesReducidas: false,
+      confirmarEliminar: true,
+      sonidosNotificacion: true,
     };
   }
   return context;
