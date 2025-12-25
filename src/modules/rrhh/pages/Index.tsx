@@ -33,8 +33,7 @@ const submodulos: SubmoduloCard[] = [
     description: 'Control de horarios, asistencia y permisos',
     icon: <Clock className="h-6 w-6" />,
     path: '/rrhh/asistencia',
-    badge: 'Próximamente',
-    available: false,
+    available: true,
   },
   {
     title: 'Nómina',

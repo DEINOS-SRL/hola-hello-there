@@ -19,7 +19,9 @@ import {
   PanelLeftClose,
   PanelLeft,
   Workflow,
-  Briefcase
+  Briefcase,
+  Clock,
+  UserCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,6 +47,8 @@ const iconMap: Record<string, LucideIcon> = {
   AppWindow,
   Key,
   Workflow,
+  Clock,
+  UserCheck,
 };
 
 // Items fijos del menú principal
