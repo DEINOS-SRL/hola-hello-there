@@ -21,7 +21,9 @@ import {
   Workflow,
   Briefcase,
   Clock,
-  UserCheck
+  UserCheck,
+  BookOpen,
+  FileCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,6 +51,8 @@ const iconMap: Record<string, LucideIcon> = {
   Workflow,
   Clock,
   UserCheck,
+  BookOpen,
+  FileCheck,
 };
 
 // Items fijos del menú principal
@@ -131,6 +135,7 @@ export function AppSidebar() {
       'operacion': Workflow,
       'partes-diarios': ClipboardList,
       'habilitaciones': BadgeCheck,
+      'conocimiento': BookOpen,
     };
     return iconMapping[moduleId] || Shield;
   };
