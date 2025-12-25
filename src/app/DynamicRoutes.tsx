@@ -42,6 +42,11 @@ import EquiposPartes from '@/modules/equipos/pages/Partes';
 import HabilitacionesIndex from '@/modules/habilitaciones/pages/Index';
 import HabilitacionesCertificaciones from '@/modules/habilitaciones/pages/Certificaciones';
 import HabilitacionesVencimientos from '@/modules/habilitaciones/pages/Vencimientos';
+// Comercial
+import ComercialIndex from '@/modules/comercial/pages/Index';
+import ComercialPresupuestos from '@/modules/comercial/pages/Presupuestos';
+import ComercialCertificaciones from '@/modules/comercial/pages/Certificaciones';
+import ComercialSeguimientos from '@/modules/comercial/pages/Seguimientos';
 
 // Mapeo de rutas a componentes implementados
 const implementedRoutes: Record<string, React.ComponentType> = {
@@ -82,6 +87,11 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   '/habilitaciones': HabilitacionesIndex,
   '/habilitaciones/certificaciones': HabilitacionesCertificaciones,
   '/habilitaciones/vencimientos': HabilitacionesVencimientos,
+  // Comercial
+  '/comercial': ComercialIndex,
+  '/comercial/presupuestos': ComercialPresupuestos,
+  '/comercial/certificaciones': ComercialCertificaciones,
+  '/comercial/seguimientos': ComercialSeguimientos,
 };
 
 function ProtectedLayout() {

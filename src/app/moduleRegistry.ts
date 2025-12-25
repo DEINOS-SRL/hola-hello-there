@@ -7,6 +7,7 @@ import { equiposManifest } from '@/modules/equipos/manifest';
 import { operacionManifest } from '@/modules/operacion/manifest';
 import { habilitacionesManifest } from '@/modules/habilitaciones/manifest';
 import { conocimientoManifest } from '@/modules/conocimiento/manifest';
+import { comercialManifest } from '@/modules/comercial/manifest';
 
 
 // Registro central de todos los módulos
@@ -17,6 +18,7 @@ export const moduleRegistry: ModuleManifest[] = [
   operacionManifest,
   habilitacionesManifest,
   conocimientoManifest,
+  comercialManifest,
 ];
 
 // Helpers para acceder a los módulos
