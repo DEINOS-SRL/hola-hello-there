@@ -118,6 +118,19 @@ export function AppSidebar() {
     };
   }, [isDragging, handleSetCollapsed]);
 
+  // Keyboard shortcut: Cmd/Ctrl + B para toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        handleSetCollapsed(!collapsed);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [collapsed, handleSetCollapsed]);
+
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
   // Expandir automáticamente el módulo activo
