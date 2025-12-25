@@ -1,13 +1,21 @@
-import { Sliders, Palette, Globe, Clock, Languages, Loader2 } from 'lucide-react';
+import { Sliders, Palette, Globe, Clock, Languages, Loader2, Sun, Moon, Monitor } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { usePreferencias } from '@/hooks/usePreferencias';
+import { useTheme } from 'next-themes';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function ConfiguracionPreferencias() {
   const { preferencias, isLoading, updatePreferencias, isSaving } = usePreferencias();
+  const { theme, setTheme } = useTheme();
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    updatePreferencias({ tema: newTheme });
+  };
 
   if (isLoading) {
     return (
@@ -43,12 +51,50 @@ export default function ConfiguracionPreferencias() {
             <CardDescription>Personaliza la interfaz visual</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="font-medium">Tema</Label>
-                <p className="text-sm text-muted-foreground">Selecciona el modo de color</p>
+            <div className="space-y-3">
+              <Label className="font-medium">Tema</Label>
+              <p className="text-sm text-muted-foreground">Selecciona el modo de color</p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleThemeChange('light')}
+                  disabled={isSaving}
+                  className={cn(
+                    "flex-1 gap-2",
+                    theme === 'light' && "border-primary bg-primary/10"
+                  )}
+                >
+                  <Sun className="h-4 w-4" />
+                  Claro
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleThemeChange('dark')}
+                  disabled={isSaving}
+                  className={cn(
+                    "flex-1 gap-2",
+                    theme === 'dark' && "border-primary bg-primary/10"
+                  )}
+                >
+                  <Moon className="h-4 w-4" />
+                  Oscuro
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleThemeChange('system')}
+                  disabled={isSaving}
+                  className={cn(
+                    "flex-1 gap-2",
+                    theme === 'system' && "border-primary bg-primary/10"
+                  )}
+                >
+                  <Monitor className="h-4 w-4" />
+                  Auto
+                </Button>
               </div>
-              <ThemeToggle />
             </div>
             <Separator />
             <div className="space-y-2">

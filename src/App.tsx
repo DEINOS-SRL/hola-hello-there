@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PermissionsProvider } from "@/core/security/permissions";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { PreferenciasProvider } from "@/contexts/PreferenciasContext";
 import { AppRoutes } from "@/app/DynamicRoutes";
 
 const queryClient = new QueryClient();
@@ -13,7 +14,9 @@ const queryClient = new QueryClient();
 function AppWithPermissions() {
   return (
     <PermissionsProvider>
-      <AppRoutes />
+      <PreferenciasProvider>
+        <AppRoutes />
+      </PreferenciasProvider>
     </PermissionsProvider>
   );
 }

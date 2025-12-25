@@ -98,19 +98,19 @@ export default function Dashboard() {
                 icon={Users}
                 title="Nuevo Usuario"
                 description="Agregar usuario al sistema"
-                href="/seguridad/usuarios"
+                href="/configuracion/administracion/usuarios"
               />
               <QuickActionCard
                 icon={Building2}
                 title="Nueva Empresa"
                 description="Registrar nueva empresa"
-                href="/seguridad/empresas"
+                href="/configuracion/administracion/empresas"
               />
               <QuickActionCard
                 icon={Shield}
                 title="Gestionar Roles"
                 description="Configurar permisos"
-                href="/seguridad/roles"
+                href="/configuracion/administracion/roles"
               />
               <QuickActionCard
                 icon={AppWindow}
