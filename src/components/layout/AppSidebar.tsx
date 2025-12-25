@@ -1060,15 +1060,30 @@ export function AppSidebar() {
             "flex items-center justify-between px-3 py-1 transition-all duration-300 ease-in-out",
             collapsed ? "h-0 opacity-0 py-0 overflow-hidden" : "h-auto opacity-100"
           )}>
-            <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider whitespace-nowrap">
-              Secciones/Módulos
-            </p>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider whitespace-nowrap cursor-help">
+                  Secciones/Módulos
+                </p>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="text-xs z-[9999] max-w-[200px]">
+                <p className="font-medium mb-1">Navegación principal</p>
+                <p className="text-muted-foreground text-[10px]">
+                  Accede a las diferentes áreas funcionales de la plataforma organizadas por secciones.
+                </p>
+              </TooltipContent>
+            </Tooltip>
             {collapsibleModuleIds.length > 0 && (
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <button
                     onClick={toggleAllModules}
-                    className="p-0.5 rounded text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                    className={cn(
+                      "p-0.5 rounded transition-all duration-200",
+                      allExpanded 
+                        ? "text-primary bg-primary/10 hover:bg-primary/20" 
+                        : "text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    )}
                   >
                     {allExpanded ? (
                       <ChevronsDownUp className="h-3.5 w-3.5" />
