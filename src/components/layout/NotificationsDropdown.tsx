@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bell, Check, MessageSquare, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,12 +13,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { segClient } from '@/modules/security/services/segClient';
 import { 
   fetchNotificaciones, 
   marcarComoLeida, 
   marcarTodasComoLeidas,
   type Notificacion 
 } from '@/modules/security/services/notificacionesService';
+import { useToast } from '@/hooks/use-toast';
 
 const notificationIcons = {
   info: Info,
@@ -38,10 +40,11 @@ export function NotificationsDropdown() {
   const [notifications, setNotifications] = useState<Notificacion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const unreadCount = notifications.filter(n => !n.leida).length;
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -53,11 +56,78 @@ export function NotificationsDropdown() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
+  // Cargar notificaciones iniciales y suscribirse a cambios en tiempo real
   useEffect(() => {
     loadNotifications();
-  }, []);
+
+    // Suscribirse a cambios en tiempo real
+    const channel = segClient
+      .channel('notificaciones-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'seg',
+          table: 'notificaciones',
+        },
+        (payload) => {
+          console.log('Nueva notificación recibida:', payload);
+          const newNotification = payload.new as Notificacion;
+          
+          // Agregar la nueva notificación al principio
+          setNotifications(prev => [newNotification, ...prev].slice(0, 20));
+          
+          // Mostrar toast de nueva notificación
+          toast({
+            title: newNotification.titulo,
+            description: newNotification.mensaje,
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'seg',
+          table: 'notificaciones',
+        },
+        (payload) => {
+          console.log('Notificación actualizada:', payload);
+          const updatedNotification = payload.new as Notificacion;
+          
+          // Actualizar la notificación en el estado
+          setNotifications(prev =>
+            prev.map(n => (n.id === updatedNotification.id ? updatedNotification : n))
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'seg',
+          table: 'notificaciones',
+        },
+        (payload) => {
+          console.log('Notificación eliminada:', payload);
+          const deletedId = (payload.old as Notificacion).id;
+          
+          // Eliminar la notificación del estado
+          setNotifications(prev => prev.filter(n => n.id !== deletedId));
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
+
+    // Cleanup: desuscribirse cuando el componente se desmonte
+    return () => {
+      console.log('Removing realtime channel');
+      segClient.removeChannel(channel);
+    };
+  }, [loadNotifications, toast]);
 
   const handleMarkAsRead = async (id: string) => {
     try {
@@ -87,7 +157,7 @@ export function NotificationsDropdown() {
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] animate-pulse"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -96,7 +166,10 @@ export function NotificationsDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 bg-popover">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notificaciones</span>
+          <span className="flex items-center gap-2">
+            Notificaciones
+            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Tiempo real activo" />
+          </span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -130,7 +203,7 @@ export function NotificationsDropdown() {
               return (
                 <DropdownMenuItem
                   key={notification.id}
-                  className={`flex items-start gap-3 p-3 cursor-pointer ${
+                  className={`flex items-start gap-3 p-3 cursor-pointer transition-colors ${
                     !notification.leida ? 'bg-muted/50' : ''
                   }`}
                   onClick={() => handleMarkAsRead(notification.id)}
@@ -150,7 +223,7 @@ export function NotificationsDropdown() {
                     </p>
                   </div>
                   {!notification.leida && (
-                    <div className="h-2 w-2 rounded-full bg-primary mt-1.5" />
+                    <div className="h-2 w-2 rounded-full bg-primary mt-1.5 animate-pulse" />
                   )}
                 </DropdownMenuItem>
               );
