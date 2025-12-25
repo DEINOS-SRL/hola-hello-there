@@ -18,14 +18,14 @@ export const securityManifest: ModuleManifest = {
     { key: 'security.roles.update', name: 'Editar roles', description: 'Permite editar roles existentes' },
     { key: 'security.roles.delete', name: 'Eliminar roles', description: 'Permite eliminar roles' },
     { key: 'security.permisos.assign', name: 'Asignar permisos', description: 'Permite asignar permisos a roles' },
-    { key: 'security.aplicaciones.read', name: 'Ver aplicaciones', description: 'Permite ver la lista de aplicaciones' },
-    { key: 'security.aplicaciones.manage', name: 'Gestionar aplicaciones', description: 'Permite gestionar aplicaciones' },
+    { key: 'security.modulos.read', name: 'Ver módulos', description: 'Permite ver la lista de módulos' },
+    { key: 'security.modulos.manage', name: 'Gestionar módulos', description: 'Permite gestionar módulos' },
   ],
   routes: [],
   navItems: [
     { label: 'Empresas', path: '/seguridad/empresas', icon: 'Building2', requiredPermissions: ['security.empresas.read'] },
     { label: 'Usuarios', path: '/seguridad/usuarios', icon: 'Users', requiredPermissions: ['security.usuarios.read'] },
     { label: 'Roles', path: '/seguridad/roles', icon: 'Shield', requiredPermissions: ['security.roles.read'] },
-    { label: 'Aplicaciones', path: '/seguridad/aplicaciones', icon: 'AppWindow', requiredPermissions: ['security.aplicaciones.read'] },
+    { label: 'Módulos', path: '/seguridad/modulos', icon: 'LayoutGrid', requiredPermissions: ['security.modulos.read'] },
   ],
 };

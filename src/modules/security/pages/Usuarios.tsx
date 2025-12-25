@@ -70,7 +70,7 @@ export default function Usuarios() {
         .select(`
           usuario_id,
           roles(nombre),
-          aplicaciones(nombre)
+          modulos(nombre)
         `);
       if (rolesError) throw rolesError;
 
@@ -80,7 +80,7 @@ export default function Usuarios() {
         if (!acc[userId]) acc[userId] = [];
         acc[userId].push({
           rol: ur.roles?.nombre,
-          app: ur.aplicaciones?.nombre,
+          modulo: ur.modulos?.nombre,
         });
         return acc;
       }, {});
@@ -268,7 +268,7 @@ export default function Usuarios() {
                               key={idx} 
                               variant="outline" 
                               className="text-xs bg-primary/5 border-primary/20"
-                              title={`App: ${r.app}`}
+                              title={`Módulo: ${r.modulo}`}
                             >
                               {r.rol}
                             </Badge>

@@ -18,7 +18,7 @@ import SeguridadIndex from "./modules/security/pages/Index";
 import Usuarios from "./modules/security/pages/Usuarios";
 import Empresas from "./modules/security/pages/Empresas";
 import Roles from "./modules/security/pages/Roles";
-import Aplicaciones from "./modules/security/pages/Aplicaciones";
+import ModulosAdmin from "./modules/security/pages/Modulos";
 // Importar páginas del módulo de Empleados
 import Empleados from "./modules/employees/pages/Empleados";
 import ResetPassword from "./pages/ResetPassword";
@@ -70,7 +70,7 @@ function AppRoutes() {
       <Route path="/seguridad/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
       <Route path="/seguridad/empresas" element={<ProtectedRoute><Empresas /></ProtectedRoute>} />
       <Route path="/seguridad/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
-      <Route path="/seguridad/aplicaciones" element={<ProtectedRoute><Aplicaciones /></ProtectedRoute>} />
+      <Route path="/seguridad/modulos" element={<ProtectedRoute><ModulosAdmin /></ProtectedRoute>} />
       {/* Rutas del módulo de Empleados */}
       <Route path="/empleados" element={<ProtectedRoute><Empleados /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
