@@ -33,6 +33,18 @@ import ConocimientoSGI from '@/modules/conocimiento/pages/SGI';
 import OperacionIndex from '@/modules/operacion/pages/Index';
 import OperacionMovimientos from '@/modules/operacion/pages/Movimientos';
 import OperacionPartesEquipos from '@/modules/operacion/pages/PartesEquipos';
+// Equipos
+import EquiposIndex from '@/modules/equipos/pages/Index';
+import EquiposListado from '@/modules/equipos/pages/Listado';
+import EquiposMantenimientos from '@/modules/equipos/pages/Mantenimientos';
+// Habilitaciones
+import HabilitacionesIndex from '@/modules/habilitaciones/pages/Index';
+import HabilitacionesCertificaciones from '@/modules/habilitaciones/pages/Certificaciones';
+import HabilitacionesVencimientos from '@/modules/habilitaciones/pages/Vencimientos';
+// Partes Diarios
+import PartesIndex from '@/modules/partes/pages/Index';
+import PartesRegistro from '@/modules/partes/pages/Registro';
+import PartesHistorial from '@/modules/partes/pages/Historial';
 
 // Mapeo de rutas a componentes implementados
 const implementedRoutes: Record<string, React.ComponentType> = {
@@ -64,6 +76,18 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   '/operacion': OperacionIndex,
   '/operacion/movimientos': OperacionMovimientos,
   '/operacion/partes-equipos': OperacionPartesEquipos,
+  // Equipos
+  '/equipos': EquiposIndex,
+  '/equipos/listado': EquiposListado,
+  '/equipos/mantenimientos': EquiposMantenimientos,
+  // Habilitaciones
+  '/habilitaciones': HabilitacionesIndex,
+  '/habilitaciones/certificaciones': HabilitacionesCertificaciones,
+  '/habilitaciones/vencimientos': HabilitacionesVencimientos,
+  // Partes Diarios
+  '/partes-diarios': PartesIndex,
+  '/partes-diarios/registro': PartesRegistro,
+  '/partes-diarios/historial': PartesHistorial,
 };
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
