@@ -572,11 +572,16 @@ export function AppSidebar() {
             <TooltipContent 
               side="right" 
               sideOffset={8} 
-              className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in min-w-[180px]"
+              className="z-[9999] bg-popover border border-border shadow-lg p-3 min-w-[180px] data-[state=delayed-open]:animate-scale-in data-[state=closed]:animate-fade-out"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <ModuleIcon className="h-4 w-4 text-primary" />
-                <p className="font-semibold text-sm text-foreground">{modulo.nombre}</p>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <ModuleIcon className="h-4 w-4 text-primary" />
+                  <p className="font-semibold text-sm text-foreground">{modulo.nombre}</p>
+                </div>
+                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
+                  {modulo.hijos.length}
+                </span>
               </div>
               <div className="border-t border-border/50 mb-2" />
               <div className="space-y-0.5">
@@ -901,11 +906,18 @@ export function AppSidebar() {
             <TooltipContent 
               side="right" 
               sideOffset={8} 
-              className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in min-w-[180px]"
+              className="z-[9999] bg-popover border border-border shadow-lg p-3 min-w-[180px] data-[state=delayed-open]:animate-scale-in data-[state=closed]:animate-fade-out"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <Bookmark className="h-4 w-4 text-primary" />
-                <p className="font-semibold text-sm text-foreground">Favoritos</p>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <Bookmark className="h-4 w-4 text-primary" />
+                  <p className="font-semibold text-sm text-foreground">Favoritos</p>
+                </div>
+                {favoritos.length > 0 && (
+                  <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-[10px] font-medium rounded-full bg-primary/15 text-primary">
+                    {favoritos.length}
+                  </span>
+                )}
               </div>
               <div className="border-t border-border/50 mb-2" />
               {favoritos.length === 0 ? (
