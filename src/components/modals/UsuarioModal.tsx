@@ -191,12 +191,15 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
 
           <div className="space-y-2">
             <Label>Empresa</Label>
-            <Select value={empresaId} onValueChange={(value) => setValue('empresa_id', value)}>
+            <Select 
+              value={empresaId || "none"} 
+              onValueChange={(value) => setValue('empresa_id', value === "none" ? "" : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar empresa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin empresa</SelectItem>
+                <SelectItem value="none">Sin empresa</SelectItem>
                 {empresas?.map((e) => (
                   <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
                 ))}
