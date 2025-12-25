@@ -86,7 +86,6 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   // Partes Diarios
   '/partes-diarios': PartesIndex,
   '/partes-diarios/registro': PartesRegistro,
-  '/partes-diarios/historial': PartesHistorial,
 };
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
