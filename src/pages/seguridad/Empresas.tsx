@@ -8,16 +8,30 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { EmpresaModal } from '@/components/modals/EmpresaModal';
 
 export default function Empresas() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingEmpresa, setEditingEmpresa] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [empresaToDelete, setEmpresaToDelete] = useState<any>(null);
   const { toast } = useToast();
 
   const { data: empresas, isLoading, error, refetch } = useQuery({
     queryKey: ['empresas'],
     queryFn: async () => {
-      // Get empresas with user count
       const { data: empresasData, error: empresasError } = await supabase
         .from('seg_empresas')
         .select('*')
@@ -25,34 +39,27 @@ export default function Empresas() {
 
       if (empresasError) throw empresasError;
 
-      // Get user counts per empresa
-      const { data: userCounts, error: countError } = await supabase
+      const { data: userCounts } = await supabase
         .from('seg_usuarios')
         .select('empresa_id')
         .eq('activo', true);
 
-      if (countError) throw countError;
-
-      // Count users per empresa
       const counts: Record<string, number> = {};
       userCounts?.forEach(u => {
-        if (u.empresa_id) {
-          counts[u.empresa_id] = (counts[u.empresa_id] || 0) + 1;
-        }
+        if (u.empresa_id) counts[u.empresa_id] = (counts[u.empresa_id] || 0) + 1;
       });
 
-      return empresasData?.map(e => ({
-        ...e,
-        usuarios_count: counts[e.id] || 0
-      }));
+      return empresasData?.map(e => ({ ...e, usuarios_count: counts[e.id] || 0 }));
     },
   });
 
-  const deleteEmpresa = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!empresaToDelete) return;
+    
     const { error } = await supabase
       .from('seg_empresas')
       .delete()
-      .eq('id', id);
+      .eq('id', empresaToDelete.id);
 
     if (error) {
       toast({ title: 'Error', description: 'No se pudo eliminar la empresa', variant: 'destructive' });
@@ -60,6 +67,18 @@ export default function Empresas() {
       toast({ title: 'Éxito', description: 'Empresa eliminada' });
       refetch();
     }
+    setDeleteDialogOpen(false);
+    setEmpresaToDelete(null);
+  };
+
+  const openEditModal = (empresa: any) => {
+    setEditingEmpresa(empresa);
+    setModalOpen(true);
+  };
+
+  const openCreateModal = () => {
+    setEditingEmpresa(null);
+    setModalOpen(true);
   };
 
   const filtered = empresas?.filter(e => 
@@ -82,7 +101,9 @@ export default function Empresas() {
           <h1 className="text-2xl font-bold">Empresas</h1>
           <p className="text-muted-foreground">Gestiona las empresas de la plataforma</p>
         </div>
-        <Button><Plus className="mr-2 h-4 w-4" />Nueva Empresa</Button>
+        <Button onClick={openCreateModal}>
+          <Plus className="mr-2 h-4 w-4" />Nueva Empresa
+        </Button>
       </div>
 
       <Card>
@@ -142,13 +163,16 @@ export default function Empresas() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditModal(empresa)}>
                             <Edit className="mr-2 h-4 w-4" />Editar
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             className="text-destructive"
-                            onClick={() => deleteEmpresa(empresa.id)}
+                            onClick={() => {
+                              setEmpresaToDelete(empresa);
+                              setDeleteDialogOpen(true);
+                            }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />Eliminar
                           </DropdownMenuItem>
@@ -162,6 +186,30 @@ export default function Empresas() {
           )}
         </CardContent>
       </Card>
+
+      <EmpresaModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        empresa={editingEmpresa}
+        onSuccess={refetch}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar empresa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la empresa "{empresaToDelete?.nombre}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

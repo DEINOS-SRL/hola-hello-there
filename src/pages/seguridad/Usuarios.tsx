@@ -22,10 +22,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { UsuarioModal } from '@/components/modals/UsuarioModal';
 
 export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<any>(null);
   const { toast } = useToast();
 
   const { data: usuarios, isLoading, error, refetch } = useQuery({
@@ -33,12 +48,8 @@ export default function Usuarios() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('seg_usuarios')
-        .select(`
-          *,
-          seg_empresas(nombre)
-        `)
+        .select(`*, seg_empresas(nombre)`)
         .order('nombre', { ascending: true });
-
       if (error) throw error;
       return data;
     },
@@ -58,11 +69,13 @@ export default function Usuarios() {
     }
   };
 
-  const deleteUser = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+    
     const { error } = await supabase
       .from('seg_usuarios')
       .delete()
-      .eq('id', id);
+      .eq('id', userToDelete.id);
 
     if (error) {
       toast({ title: 'Error', description: 'No se pudo eliminar el usuario', variant: 'destructive' });
@@ -70,6 +83,18 @@ export default function Usuarios() {
       toast({ title: 'Éxito', description: 'Usuario eliminado' });
       refetch();
     }
+    setDeleteDialogOpen(false);
+    setUserToDelete(null);
+  };
+
+  const openEditModal = (user: any) => {
+    setEditingUser(user);
+    setModalOpen(true);
+  };
+
+  const openCreateModal = () => {
+    setEditingUser(null);
+    setModalOpen(true);
   };
 
   const filtered = usuarios?.filter(u => 
@@ -93,7 +118,9 @@ export default function Usuarios() {
           <h1 className="text-2xl font-bold">Usuarios</h1>
           <p className="text-muted-foreground">Gestiona los usuarios del sistema</p>
         </div>
-        <Button><Plus className="mr-2 h-4 w-4" />Nuevo Usuario</Button>
+        <Button onClick={openCreateModal}>
+          <Plus className="mr-2 h-4 w-4" />Nuevo Usuario
+        </Button>
       </div>
 
       <Card>
@@ -159,7 +186,7 @@ export default function Usuarios() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditModal(user)}>
                             <Edit className="mr-2 h-4 w-4" />Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleUserStatus(user.id, user.activo || false)}>
@@ -172,7 +199,10 @@ export default function Usuarios() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             className="text-destructive"
-                            onClick={() => deleteUser(user.id)}
+                            onClick={() => {
+                              setUserToDelete(user);
+                              setDeleteDialogOpen(true);
+                            }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />Eliminar
                           </DropdownMenuItem>
@@ -186,6 +216,30 @@ export default function Usuarios() {
           )}
         </CardContent>
       </Card>
+
+      <UsuarioModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        usuario={editingUser}
+        onSuccess={refetch}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente a {userToDelete?.nombre} {userToDelete?.apellido}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
