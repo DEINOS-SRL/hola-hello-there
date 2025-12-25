@@ -1,4 +1,5 @@
 import { Users, Building2, Shield, AppWindow, TrendingUp, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -137,13 +138,13 @@ function QuickActionCard({
   href: string;
 }) {
   return (
-    <a
-      href={href}
+    <Link
+      to={href}
       className="p-4 rounded-lg border border-border hover:border-primary hover:bg-secondary/50 transition-all group"
     >
       <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
       <h3 className="font-medium mt-2 text-sm group-hover:text-primary transition-colors">{title}</h3>
       <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-    </a>
+    </Link>
   );
 }
