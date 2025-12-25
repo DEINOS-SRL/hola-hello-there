@@ -29,6 +29,7 @@ import ConocimientoIndex from '@/modules/conocimiento/pages/Index';
 import ConocimientoSGI from '@/modules/conocimiento/pages/SGI';
 import OperacionIndex from '@/modules/operacion/pages/Index';
 import OperacionMovimientos from '@/modules/operacion/pages/Movimientos';
+import OperacionPartesEquipos from '@/modules/operacion/pages/PartesEquipos';
 
 // Mapeo de rutas a componentes implementados
 const implementedRoutes: Record<string, React.ComponentType> = {
@@ -44,6 +45,7 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   '/conocimiento/sgi': ConocimientoSGI,
   '/operacion': OperacionIndex,
   '/operacion/movimientos': OperacionMovimientos,
+  '/operacion/partes-equipos': OperacionPartesEquipos,
 };
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {

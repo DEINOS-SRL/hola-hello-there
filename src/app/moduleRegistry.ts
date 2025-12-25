@@ -5,7 +5,6 @@ import { securityManifest } from '@/modules/security/manifest';
 import { rrhhManifest } from '@/modules/rrhh/manifest';
 import { equiposManifest } from '@/modules/equipos/manifest';
 import { operacionManifest } from '@/modules/operacion/manifest';
-import { partesDiariosManifest } from '@/modules/partes-diarios/manifest';
 import { habilitacionesManifest } from '@/modules/habilitaciones/manifest';
 import { conocimientoManifest } from '@/modules/conocimiento/manifest';
 
@@ -16,7 +15,6 @@ export const moduleRegistry: ModuleManifest[] = [
   rrhhManifest,
   equiposManifest,
   operacionManifest,
-  partesDiariosManifest,
   habilitacionesManifest,
   conocimientoManifest,
 ];
