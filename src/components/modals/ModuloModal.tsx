@@ -37,8 +37,15 @@ const iconOptions = [
   { value: 'LayoutGrid', label: 'Módulo (Genérico)' },
   { value: 'Workflow', label: 'Operación' },
   { value: 'Users', label: 'Empleados' },
+  { value: 'UserCheck', label: 'Usuario Verificado' },
   { value: 'Truck', label: 'Equipos' },
   { value: 'BadgeCheck', label: 'Habilitaciones' },
+  { value: 'BookOpen', label: 'Libro (Conocimiento)' },
+  { value: 'FileCheck', label: 'Archivo Verificado (SGI)' },
+  { value: 'FolderOpen', label: 'Carpeta' },
+  { value: 'Database', label: 'Base de Datos' },
+  { value: 'Settings', label: 'Configuración' },
+  { value: 'Briefcase', label: 'Maletín (RRHH)' },
 ];
 
 const moduloSchema = z.object({
