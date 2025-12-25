@@ -1,4 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useScrollRestoration } from '@/shared/hooks/useScrollRestoration';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { AppBreadcrumb } from './AppBreadcrumb';
@@ -9,12 +11,21 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const location = useLocation();
+  const mainScrollRef = useRef<HTMLElement>(null);
+
+  useScrollRestoration(
+    mainScrollRef,
+    `dnscloud-main-scroll:${location.pathname}`,
+    [location.pathname],
+  );
+
   return (
-    <div className="flex min-h-screen w-full bg-muted/30">
+    <div className="flex h-screen w-full bg-muted/30 overflow-hidden">
       <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <AppHeader />
-        <main className="flex-1 p-6 overflow-auto">
+        <main ref={mainScrollRef} className="flex-1 min-h-0 p-6 overflow-auto overscroll-contain">
           <AppBreadcrumb />
           {children}
         </main>

@@ -35,6 +35,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
+import { useScrollRestoration } from '@/shared/hooks/useScrollRestoration';
 
 // Función para obtener icono dinámicamente por nombre
 const getIconByName = (iconName: string): LucideIcon => {
@@ -85,6 +86,7 @@ const configMenuItems = [
 const SIDEBAR_COLLAPSED_KEY = 'dnscloud-sidebar-collapsed';
 const SIDEBAR_EXPANDED_MODULES_KEY = 'dnscloud-sidebar-expanded-modules';
 const SIDEBAR_PINNED_KEY = 'dnscloud-sidebar-pinned';
+const SIDEBAR_NAV_SCROLL_KEY = 'dnscloud-sidebar-nav-scroll';
 const SIDEBAR_MIN_WIDTH = 68;
 const SIDEBAR_MAX_WIDTH = 260;
 const SIDEBAR_COLLAPSE_THRESHOLD = 120;
@@ -125,7 +127,10 @@ export function AppSidebar() {
   
   // Ref para el input de búsqueda
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+  const navScrollRef = useRef<HTMLElement>(null);
+
+  useScrollRestoration(navScrollRef, SIDEBAR_NAV_SCROLL_KEY, [location.pathname]);
+
   // Búsqueda con debounce y persistencia en sessionStorage
   const [moduleSearchInput, setModuleSearchInput] = useState(() => {
     return sessionStorage.getItem(SIDEBAR_SEARCH_KEY) || '';
@@ -836,7 +841,7 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
+      <nav ref={navScrollRef} className="flex-1 py-3 px-2 space-y-1 overflow-y-auto overscroll-contain">
         {/* Dashboard */}
         <div className="space-y-0.5">
           <NavItem item={{ name: 'Dashboard', href: '/dashboard', icon: Home }} icon={Home} />
