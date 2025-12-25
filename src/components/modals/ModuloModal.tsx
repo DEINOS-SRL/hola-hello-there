@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Eye, Edit3, FolderOpen, Github } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -33,33 +34,54 @@ const iconOptions = [
   { value: 'Calendar', label: 'Calendario' },
   { value: 'MessageSquare', label: 'Mensaje (Mensajería)' },
   { value: 'ClipboardList', label: 'Lista (Partes)' },
-  { value: 'AppWindow', label: 'Aplicación (Genérico)' },
+  { value: 'LayoutGrid', label: 'Módulo (Genérico)' },
+  { value: 'Workflow', label: 'Operación' },
+  { value: 'Users', label: 'Empleados' },
+  { value: 'Truck', label: 'Equipos' },
+  { value: 'BadgeCheck', label: 'Habilitaciones' },
 ];
 
-const aplicacionSchema = z.object({
+const moduloSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   descripcion: z.string().optional(),
   icono: z.string().optional(),
   ruta: z.string().optional(),
-  activa: z.boolean(),
+  activo: z.boolean(),
+  modulo_padre_id: z.string().optional(),
+  orden: z.number().optional(),
   link_documentos: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
   repositorio: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
   prd_documento: z.string().optional(),
 });
 
-type AplicacionFormData = z.infer<typeof aplicacionSchema>;
+type ModuloFormData = z.infer<typeof moduloSchema>;
 
-interface AplicacionModalProps {
+interface ModuloModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  aplicacion?: any;
+  modulo?: any;
   onSuccess: () => void;
 }
 
-export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: AplicacionModalProps) {
+export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloModalProps) {
   const { toast } = useToast();
-  const isEditing = !!aplicacion;
+  const isEditing = !!modulo;
   const [prdTab, setPrdTab] = useState<'edit' | 'preview'>('edit');
+
+  // Cargar módulos principales para selector de padre
+  const { data: modulosPadre } = useQuery({
+    queryKey: ['modulos-padre'],
+    queryFn: async () => {
+      const { data, error } = await segClient
+        .from('modulos')
+        .select('id, nombre')
+        .is('modulo_padre_id', null)
+        .order('nombre');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: open,
+  });
 
   const {
     register,
@@ -68,59 +90,68 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<AplicacionFormData>({
-    resolver: zodResolver(aplicacionSchema),
+  } = useForm<ModuloFormData>({
+    resolver: zodResolver(moduloSchema),
     defaultValues: {
       nombre: '',
       descripcion: '',
-      icono: 'AppWindow',
+      icono: 'LayoutGrid',
       ruta: '',
-      activa: true,
+      activo: true,
+      modulo_padre_id: '',
+      orden: 0,
       link_documentos: '',
       repositorio: '',
       prd_documento: '',
     },
   });
 
-  const activa = watch('activa');
+  const activo = watch('activo');
   const icono = watch('icono');
+  const moduloPadreId = watch('modulo_padre_id');
   const prdDocumento = watch('prd_documento');
 
   useEffect(() => {
-    if (aplicacion) {
+    if (modulo) {
       reset({
-        nombre: aplicacion.nombre,
-        descripcion: aplicacion.descripcion || '',
-        icono: aplicacion.icono || 'AppWindow',
-        ruta: aplicacion.ruta || '',
-        activa: aplicacion.activa ?? true,
-        link_documentos: aplicacion.link_documentos || '',
-        repositorio: aplicacion.repositorio || '',
-        prd_documento: aplicacion.prd_documento || '',
+        nombre: modulo.nombre,
+        descripcion: modulo.descripcion || '',
+        icono: modulo.icono || 'LayoutGrid',
+        ruta: modulo.ruta || '',
+        activo: modulo.activo ?? true,
+        modulo_padre_id: modulo.modulo_padre_id || '',
+        orden: modulo.orden || 0,
+        link_documentos: modulo.link_documentos || '',
+        repositorio: modulo.repositorio || '',
+        prd_documento: modulo.prd_documento || '',
       });
     } else {
       reset({
         nombre: '',
         descripcion: '',
-        icono: 'AppWindow',
+        icono: 'LayoutGrid',
         ruta: '',
-        activa: true,
+        activo: true,
+        modulo_padre_id: '',
+        orden: 0,
         link_documentos: '',
         repositorio: '',
         prd_documento: '',
       });
     }
     setPrdTab('edit');
-  }, [aplicacion, reset]);
+  }, [modulo, reset]);
 
-  const onSubmit = async (data: AplicacionFormData) => {
+  const onSubmit = async (data: ModuloFormData) => {
     try {
       const payload = {
         nombre: data.nombre,
         descripcion: data.descripcion || null,
-        icono: data.icono || 'AppWindow',
+        icono: data.icono || 'LayoutGrid',
         ruta: data.ruta || null,
-        activa: data.activa,
+        activo: data.activo,
+        modulo_padre_id: data.modulo_padre_id || null,
+        orden: data.orden || 0,
         link_documentos: data.link_documentos || null,
         repositorio: data.repositorio || null,
         prd_documento: data.prd_documento || null,
@@ -128,19 +159,19 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
 
       if (isEditing) {
         const { error } = await segClient
-          .from('aplicaciones')
+          .from('modulos')
           .update(payload)
-          .eq('id', aplicacion.id);
+          .eq('id', modulo.id);
 
         if (error) throw error;
-        toast({ title: 'Éxito', description: 'Aplicación actualizada correctamente' });
+        toast({ title: 'Éxito', description: 'Módulo actualizado correctamente' });
       } else {
         const { error } = await segClient
-          .from('aplicaciones')
+          .from('modulos')
           .insert([payload]);
 
         if (error) throw error;
-        toast({ title: 'Éxito', description: 'Aplicación creada correctamente' });
+        toast({ title: 'Éxito', description: 'Módulo creado correctamente' });
       }
 
       onSuccess();
@@ -148,24 +179,27 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo guardar la aplicación',
+        description: error.message || 'No se pudo guardar el módulo',
         variant: 'destructive',
       });
     }
   };
 
+  // Filtrar módulos padre para no mostrar el actual
+  const filteredModulosPadre = modulosPadre?.filter((m: any) => m.id !== modulo?.id) || [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>{isEditing ? 'Editar Aplicación' : 'Nueva Aplicación'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}</DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Modifica los datos de la aplicación' : 'Completa los datos para crear una nueva aplicación'}
+            {isEditing ? 'Modifica los datos del módulo' : 'Completa los datos para crear un nuevo módulo'}
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="flex-1 overflow-y-auto">
-          <form id="aplicacion-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 pr-4">
+          <form id="modulo-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 pr-4">
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre *</Label>
               <Input id="nombre" {...register('nombre')} />
@@ -174,7 +208,7 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
 
             <div className="space-y-2">
               <Label htmlFor="descripcion">Descripción</Label>
-              <Textarea id="descripcion" {...register('descripcion')} placeholder="Describe la funcionalidad de la aplicación" />
+              <Textarea id="descripcion" {...register('descripcion')} placeholder="Describe la funcionalidad del módulo" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -198,15 +232,46 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Módulo Padre</Label>
+                <Select 
+                  value={moduloPadreId || 'none'} 
+                  onValueChange={(value) => setValue('modulo_padre_id', value === 'none' ? '' : value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Ninguno (Principal)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Ninguno (Principal)</SelectItem>
+                    {filteredModulosPadre.map((m: any) => (
+                      <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Si seleccionas un padre, este será un submódulo</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="orden">Orden</Label>
+                <Input 
+                  id="orden" 
+                  type="number" 
+                  {...register('orden', { valueAsNumber: true })} 
+                  placeholder="0" 
+                />
+              </div>
+            </div>
+
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="activa">En producción</Label>
-                <p className="text-xs text-muted-foreground">Si está desactivada, mostrará "Próximamente"</p>
+                <Label htmlFor="activo">En producción</Label>
+                <p className="text-xs text-muted-foreground">Si está desactivado, mostrará "Próximamente"</p>
               </div>
               <Switch
-                id="activa"
-                checked={activa}
-                onCheckedChange={(checked) => setValue('activa', checked)}
+                id="activo"
+                checked={activo}
+                onCheckedChange={(checked) => setValue('activo', checked)}
               />
             </div>
 
@@ -313,9 +378,9 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button type="submit" form="aplicacion-form" disabled={isSubmitting}>
+          <Button type="submit" form="modulo-form" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEditing ? 'Guardar cambios' : 'Crear aplicación'}
+            {isEditing ? 'Guardar cambios' : 'Crear módulo'}
           </Button>
         </DialogFooter>
       </DialogContent>

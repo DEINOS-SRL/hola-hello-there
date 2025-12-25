@@ -43,34 +43,35 @@ interface Rol {
   descripcion: string | null;
 }
 
-interface Aplicacion {
+interface Modulo {
   id: string;
   nombre: string;
 }
 
 interface UsuarioRol {
   rol_id: string;
-  aplicacion_id: string;
+  modulo_id: string;
 }
 
 export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: AsignarRolesModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedApp, setSelectedApp] = useState<string>('');
+  const [selectedModulo, setSelectedModulo] = useState<string>('');
   const [selectedRoles, setSelectedRoles] = useState<Set<string>>(new Set());
   const [initialRoles, setInitialRoles] = useState<Set<string>>(new Set());
 
-  // Fetch aplicaciones
-  const { data: aplicaciones, isLoading: loadingApps } = useQuery({
-    queryKey: ['aplicaciones-select'],
+  // Fetch módulos principales (sin padre)
+  const { data: modulos, isLoading: loadingModulos } = useQuery({
+    queryKey: ['modulos-select'],
     queryFn: async () => {
       const { data, error } = await segClient
-        .from('aplicaciones')
+        .from('modulos')
         .select('id, nombre')
         .eq('activo', true)
+        .is('modulo_padre_id', null)
         .order('nombre');
       if (error) throw error;
-      return data as Aplicacion[];
+      return data as Modulo[];
     },
     enabled: open,
   });
@@ -89,20 +90,20 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
     enabled: open,
   });
 
-  // Fetch roles actuales del usuario para la app seleccionada
+  // Fetch roles actuales del usuario para el módulo seleccionado
   const { data: usuarioRoles, isLoading: loadingUserRoles, refetch: refetchUserRoles } = useQuery({
-    queryKey: ['usuario-roles', usuario?.id, selectedApp],
+    queryKey: ['usuario-roles', usuario?.id, selectedModulo],
     queryFn: async () => {
-      if (!usuario?.id || !selectedApp) return [];
+      if (!usuario?.id || !selectedModulo) return [];
       const { data, error } = await segClient
         .from('usuario_rol')
-        .select('rol_id, aplicacion_id')
+        .select('rol_id, modulo_id')
         .eq('usuario_id', usuario.id)
-        .eq('aplicacion_id', selectedApp);
+        .eq('modulo_id', selectedModulo);
       if (error) throw error;
       return data as UsuarioRol[];
     },
-    enabled: open && !!usuario?.id && !!selectedApp,
+    enabled: open && !!usuario?.id && !!selectedModulo,
   });
 
   // Actualizar selectedRoles cuando cambian los roles del usuario
@@ -117,17 +118,17 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
     }
   }, [usuarioRoles]);
 
-  // Seleccionar primera app por defecto
+  // Seleccionar primer módulo por defecto
   useEffect(() => {
-    if (aplicaciones && aplicaciones.length > 0 && !selectedApp) {
-      setSelectedApp(aplicaciones[0].id);
+    if (modulos && modulos.length > 0 && !selectedModulo) {
+      setSelectedModulo(modulos[0].id);
     }
-  }, [aplicaciones, selectedApp]);
+  }, [modulos, selectedModulo]);
 
   // Reset cuando se cierra
   useEffect(() => {
     if (!open) {
-      setSelectedApp('');
+      setSelectedModulo('');
       setSelectedRoles(new Set());
       setInitialRoles(new Set());
     }
@@ -136,7 +137,7 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
   // Mutation para guardar cambios
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!usuario?.id || !selectedApp) throw new Error('Usuario o aplicación no seleccionados');
+      if (!usuario?.id || !selectedModulo) throw new Error('Usuario o módulo no seleccionados');
 
       const toAdd = [...selectedRoles].filter(roleId => !initialRoles.has(roleId));
       const toRemove = [...initialRoles].filter(roleId => !selectedRoles.has(roleId));
@@ -147,7 +148,7 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
           .from('usuario_rol')
           .delete()
           .eq('usuario_id', usuario.id)
-          .eq('aplicacion_id', selectedApp)
+          .eq('modulo_id', selectedModulo)
           .in('rol_id', toRemove);
         if (deleteError) throw deleteError;
       }
@@ -157,7 +158,7 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
         const inserts = toAdd.map(rolId => ({
           usuario_id: usuario.id,
           rol_id: rolId,
-          aplicacion_id: selectedApp,
+          modulo_id: selectedModulo,
         }));
         const { error: insertError } = await segClient
           .from('usuario_rol')
@@ -201,7 +202,7 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
     return false;
   };
 
-  const isLoading = loadingApps || loadingRoles;
+  const isLoading = loadingModulos || loadingRoles;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -226,17 +227,17 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Selector de aplicación */}
+            {/* Selector de módulo */}
             <div className="space-y-2">
-              <Label>Aplicación</Label>
-              <Select value={selectedApp} onValueChange={setSelectedApp}>
+              <Label>Módulo</Label>
+              <Select value={selectedModulo} onValueChange={setSelectedModulo}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar aplicación" />
+                  <SelectValue placeholder="Seleccionar módulo" />
                 </SelectTrigger>
                 <SelectContent>
-                  {aplicaciones?.map((app) => (
-                    <SelectItem key={app.id} value={app.id}>
-                      {app.nombre}
+                  {modulos?.map((modulo) => (
+                    <SelectItem key={modulo.id} value={modulo.id}>
+                      {modulo.nombre}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -252,9 +253,9 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
                 <div className="flex items-center justify-center h-20">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
-              ) : !selectedApp ? (
+              ) : !selectedModulo ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Selecciona una aplicación para ver los roles
+                  Selecciona un módulo para ver los roles
                 </p>
               ) : (
                 <ScrollArea className="h-[250px] rounded-md border p-3">

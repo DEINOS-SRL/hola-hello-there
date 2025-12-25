@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, AppWindow, MoreHorizontal, Edit, Trash2, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Search, LayoutGrid, MoreHorizontal, Edit, Trash2, Loader2, ToggleLeft, ToggleRight, ChevronRight } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,79 +19,84 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { AplicacionModal } from '@/components/modals/AplicacionModal';
+import { ModuloModal } from '@/components/modals/ModuloModal';
 
-export default function Aplicaciones() {
+export default function Modulos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingApp, setEditingApp] = useState<any>(null);
+  const [editingModulo, setEditingModulo] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [appToDelete, setAppToDelete] = useState<any>(null);
+  const [moduloToDelete, setModuloToDelete] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: aplicaciones, isLoading, error, refetch } = useQuery({
-    queryKey: ['aplicaciones'],
+  const { data: modulos, isLoading, error, refetch } = useQuery({
+    queryKey: ['modulos'],
     queryFn: async () => {
       const { data, error } = await segClient
-        .from('aplicaciones')
-        .select('*')
+        .from('modulos')
+        .select('*, modulo_padre:modulo_padre_id(id, nombre)')
+        .order('orden', { ascending: true })
         .order('nombre', { ascending: true });
       if (error) throw error;
       return data;
     },
   });
 
-  const toggleAppStatus = async (id: string, currentStatus: boolean) => {
+  const toggleModuloStatus = async (id: string, currentStatus: boolean) => {
     const { error } = await segClient
-      .from('aplicaciones')
-      .update({ activa: !currentStatus })
+      .from('modulos')
+      .update({ activo: !currentStatus })
       .eq('id', id);
 
     if (error) {
       toast({ title: 'Error', description: 'No se pudo actualizar el estado', variant: 'destructive' });
     } else {
-      toast({ title: 'Éxito', description: `Aplicación ${!currentStatus ? 'activada' : 'desactivada'}` });
+      toast({ title: 'Éxito', description: `Módulo ${!currentStatus ? 'activado' : 'desactivado'}` });
       refetch();
     }
   };
 
   const confirmDelete = async () => {
-    if (!appToDelete) return;
+    if (!moduloToDelete) return;
     
     const { error } = await segClient
-      .from('aplicaciones')
+      .from('modulos')
       .delete()
-      .eq('id', appToDelete.id);
+      .eq('id', moduloToDelete.id);
 
     if (error) {
-      toast({ title: 'Error', description: 'No se pudo eliminar la aplicación', variant: 'destructive' });
+      toast({ title: 'Error', description: 'No se pudo eliminar el módulo', variant: 'destructive' });
     } else {
-      toast({ title: 'Éxito', description: 'Aplicación eliminada' });
+      toast({ title: 'Éxito', description: 'Módulo eliminado' });
       refetch();
     }
     setDeleteDialogOpen(false);
-    setAppToDelete(null);
+    setModuloToDelete(null);
   };
 
-  const openEditModal = (app: any) => {
-    setEditingApp(app);
+  const openEditModal = (modulo: any) => {
+    setEditingModulo(modulo);
     setModalOpen(true);
   };
 
   const openCreateModal = () => {
-    setEditingApp(null);
+    setEditingModulo(null);
     setModalOpen(true);
   };
 
-  const filtered = aplicaciones?.filter((a: any) => 
-    a.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = modulos?.filter((m: any) => 
+    m.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    m.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+
+  // Separar módulos principales y submódulos
+  const modulosPrincipales = filtered.filter((m: any) => !m.modulo_padre_id);
+  const submodulos = filtered.filter((m: any) => m.modulo_padre_id);
 
   if (error) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-destructive">Error al cargar aplicaciones</p>
+        <p className="text-destructive">Error al cargar módulos</p>
       </div>
     );
   }
@@ -100,11 +105,11 @@ export default function Aplicaciones() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Aplicaciones</h1>
+          <h1 className="text-2xl font-bold">Módulos</h1>
           <p className="text-muted-foreground">Gestiona los módulos de la plataforma</p>
         </div>
         <Button onClick={openCreateModal}>
-          <Plus className="mr-2 h-4 w-4" />Nueva Aplicación
+          <Plus className="mr-2 h-4 w-4" />Nuevo Módulo
         </Button>
       </div>
 
@@ -114,13 +119,13 @@ export default function Aplicaciones() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Buscar aplicaciones..." 
+                placeholder="Buscar módulos..." 
                 className="pl-10"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
-            <Badge variant="outline">{filtered.length} aplicaciones</Badge>
+            <Badge variant="outline">{filtered.length} módulos</Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -130,35 +135,46 @@ export default function Aplicaciones() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <p>No se encontraron aplicaciones</p>
+              <p>No se encontraron módulos</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Aplicación</TableHead>
+                  <TableHead>Módulo</TableHead>
                   <TableHead>Descripción</TableHead>
+                  <TableHead>Módulo Padre</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((app: any) => (
-                  <TableRow key={app.id}>
+                {filtered.map((modulo: any) => (
+                  <TableRow key={modulo.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <AppWindow className="h-4 w-4 text-primary" />
+                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${modulo.modulo_padre_id ? 'bg-secondary' : 'bg-primary/10'}`}>
+                          <LayoutGrid className={`h-4 w-4 ${modulo.modulo_padre_id ? 'text-secondary-foreground' : 'text-primary'}`} />
                         </div>
-                        <span className="font-medium">{app.nombre}</span>
+                        <div className="flex items-center gap-2">
+                          {modulo.modulo_padre_id && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                          <span className="font-medium">{modulo.nombre}</span>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-[300px] truncate">
-                      {app.descripcion || '-'}
+                      {modulo.descripcion || '-'}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={app.activa ? 'default' : 'secondary'}>
-                        {app.activa ? 'Activa' : 'Inactiva'}
+                      {modulo.modulo_padre?.nombre ? (
+                        <Badge variant="outline">{modulo.modulo_padre.nombre}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Principal</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={modulo.activo ? 'default' : 'secondary'}>
+                        {modulo.activo ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -169,11 +185,11 @@ export default function Aplicaciones() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditModal(app)}>
+                          <DropdownMenuItem onClick={() => openEditModal(modulo)}>
                             <Edit className="mr-2 h-4 w-4" />Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleAppStatus(app.id, app.activa || false)}>
-                            {app.activa ? (
+                          <DropdownMenuItem onClick={() => toggleModuloStatus(modulo.id, modulo.activo || false)}>
+                            {modulo.activo ? (
                               <><ToggleLeft className="mr-2 h-4 w-4" />Desactivar</>
                             ) : (
                               <><ToggleRight className="mr-2 h-4 w-4" />Activar</>
@@ -183,7 +199,7 @@ export default function Aplicaciones() {
                           <DropdownMenuItem 
                             className="text-destructive"
                             onClick={() => {
-                              setAppToDelete(app);
+                              setModuloToDelete(modulo);
                               setDeleteDialogOpen(true);
                             }}
                           >
@@ -200,19 +216,19 @@ export default function Aplicaciones() {
         </CardContent>
       </Card>
 
-      <AplicacionModal
+      <ModuloModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        aplicacion={editingApp}
+        modulo={editingModulo}
         onSuccess={refetch}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar aplicación?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar módulo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminará permanentemente la aplicación "{appToDelete?.nombre}".
+              Esta acción no se puede deshacer. Se eliminará permanentemente el módulo "{moduloToDelete?.nombre}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
