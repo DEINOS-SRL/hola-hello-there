@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { 
@@ -58,6 +58,12 @@ const SIDEBAR_MAX_WIDTH = 260;
 const SIDEBAR_COLLAPSE_THRESHOLD = 120;
 
 export function AppSidebar() {
+  // Detectar si es Mac para mostrar el shortcut correcto
+  const isMac = useMemo(() => 
+    typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0, 
+  []);
+  const shortcutKey = isMac ? '⌘B' : 'Ctrl+B';
+
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     return stored === 'true';
@@ -509,7 +515,7 @@ export function AppSidebar() {
               <TooltipContent side="right" sideOffset={8} className="z-[9999]">
                 <span>Colapsar menú</span>
                 <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
-                  ⌘B
+                  {shortcutKey}
                 </kbd>
               </TooltipContent>
             </Tooltip>
@@ -536,7 +542,7 @@ export function AppSidebar() {
           <TooltipContent side="right" sideOffset={8} className="z-[9999]">
             <span>Expandir menú</span>
             <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
-              ⌘B
+              {shortcutKey}
             </kbd>
           </TooltipContent>
         </Tooltip>
