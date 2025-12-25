@@ -161,11 +161,15 @@ export function AppSidebar() {
       <RouterNavLink
         to={href}
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm",
+          "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm",
           "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
           active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
         )}
       >
+        {/* Indicador de punto activo en la línea */}
+        {active && (
+          <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200" />
+        )}
         {IconComponent && <IconComponent className="h-4 w-4 shrink-0" />}
         {!collapsed && <span>{name}</span>}
       </RouterNavLink>
