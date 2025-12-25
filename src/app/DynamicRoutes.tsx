@@ -11,6 +11,9 @@ import Dashboard from '@/pages/Dashboard';
 import Modulos from '@/pages/Modulos';
 import Perfil from '@/pages/Perfil';
 import Configuracion from '@/pages/Configuracion';
+import ConfiguracionEmpresa from '@/pages/ConfiguracionEmpresa';
+import ConfiguracionNotificaciones from '@/pages/ConfiguracionNotificaciones';
+import ConfiguracionPreferencias from '@/pages/ConfiguracionPreferencias';
 import ResetPassword from '@/pages/ResetPassword';
 import NotFound from '@/pages/NotFound';
 import Landing from '@/pages/Landing';
@@ -33,8 +36,12 @@ import OperacionPartesEquipos from '@/modules/operacion/pages/PartesEquipos';
 
 // Mapeo de rutas a componentes implementados
 const implementedRoutes: Record<string, React.ComponentType> = {
-  // Configuración y Administración (antes Seguridad)
+  // Configuración y sus subpáginas
   '/configuracion': Configuracion,
+  '/configuracion/empresa': ConfiguracionEmpresa,
+  '/configuracion/notificaciones': ConfiguracionNotificaciones,
+  '/configuracion/preferencias': ConfiguracionPreferencias,
+  // Administración (antes Seguridad)
   '/configuracion/administracion': SeguridadIndex,
   '/configuracion/administracion/usuarios': Usuarios,
   '/configuracion/administracion/empresas': Empresas,
