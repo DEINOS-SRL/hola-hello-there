@@ -583,32 +583,56 @@ export function AppSidebar() {
     return (
       <Collapsible open={isExpanded} onOpenChange={() => toggleModule(modulo.id)}>
         <div className="group/parent relative flex items-center">
-          <CollapsibleTrigger asChild>
-            <button
-              className={cn(
-                "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm",
-                "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                hasActiveItem && "text-primary font-medium"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <ModuleIcon className="h-4 w-4 shrink-0" />
-                <span><HighlightText text={modulo.nombre} search={moduleSearch} /></span>
-                {/* Contador de items cuando está colapsado */}
-                {!isExpanded && modulo.hijos.length > 0 && (
-                  <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
-                    {modulo.hijos.length}
-                  </span>
-                )}
-              </div>
-              <ChevronRight 
-                className={cn(
-                  "h-4 w-4 transition-transform duration-200",
-                  isExpanded && "rotate-90"
-                )} 
-              />
-            </button>
-          </CollapsibleTrigger>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <CollapsibleTrigger asChild>
+                <button
+                  className={cn(
+                    "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm",
+                    "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                    hasActiveItem && "text-primary font-medium"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <ModuleIcon className="h-4 w-4 shrink-0" />
+                    <span><HighlightText text={modulo.nombre} search={moduleSearch} /></span>
+                    {/* Contador de items cuando está colapsado */}
+                    {!isExpanded && modulo.hijos.length > 0 && (
+                      <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
+                        {modulo.hijos.length}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronRight 
+                    className={cn(
+                      "h-4 w-4 transition-transform duration-200",
+                      isExpanded && "rotate-90"
+                    )} 
+                  />
+                </button>
+              </CollapsibleTrigger>
+            </TooltipTrigger>
+            {/* Tooltip con submódulos cuando está colapsado */}
+            {!isExpanded && modulo.hijos.length > 0 && (
+              <TooltipContent side="right" sideOffset={8} className="z-[9999] bg-popover border border-border shadow-lg p-2">
+                <p className="font-semibold text-sm mb-2">{modulo.nombre}</p>
+                <div className="space-y-1">
+                  {modulo.hijos.map(hijo => (
+                    <RouterNavLink 
+                      key={hijo.id} 
+                      to={hijo.ruta}
+                      className={cn(
+                        "block text-sm py-1 px-2 rounded hover:bg-accent hover:text-accent-foreground transition-colors",
+                        isActive(hijo.ruta) && "text-primary font-medium"
+                      )}
+                    >
+                      {hijo.nombre}
+                    </RouterNavLink>
+                  ))}
+                </div>
+              </TooltipContent>
+            )}
+          </Tooltip>
           
           {/* Botón de favorito para módulo padre */}
           {!collapsed && (
@@ -802,36 +826,65 @@ export function AppSidebar() {
 
         {/* Favoritos - Collapsible section like HubSpot */}
         <Collapsible open={favoritosExpanded} onOpenChange={setFavoritosExpanded}>
-          <CollapsibleTrigger asChild>
-            <button
-              className={cn(
-                "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm mt-1",
-                "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <Bookmark className="h-4 w-4 shrink-0" />
-                <span className={cn(
-                  "flex items-center gap-2 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden",
-                  collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-                )}>
-                  Favoritos
-                  {favoritos.length > 0 && (
-                    <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-primary/15 text-primary">
-                      {favoritos.length}
-                    </span>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <CollapsibleTrigger asChild>
+                <button
+                  className={cn(
+                    "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm mt-1",
+                    "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   )}
-                </span>
-              </div>
-              <ChevronRight 
-                className={cn(
-                  "h-4 w-4 transition-all duration-300 ease-in-out",
-                  favoritosExpanded && "rotate-90",
-                  collapsed ? "w-0 opacity-0" : "w-4 opacity-100"
-                )} 
-              />
-            </button>
-          </CollapsibleTrigger>
+                >
+                  <div className="flex items-center gap-3">
+                    <Bookmark className="h-4 w-4 shrink-0" />
+                    <span className={cn(
+                      "flex items-center gap-2 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden",
+                      collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                    )}>
+                      Favoritos
+                      {favoritos.length > 0 && (
+                        <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-primary/15 text-primary">
+                          {favoritos.length}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <ChevronRight 
+                    className={cn(
+                      "h-4 w-4 transition-all duration-300 ease-in-out",
+                      favoritosExpanded && "rotate-90",
+                      collapsed ? "w-0 opacity-0" : "w-4 opacity-100"
+                    )} 
+                  />
+                </button>
+              </CollapsibleTrigger>
+            </TooltipTrigger>
+            {/* Tooltip con submódulos cuando está colapsado */}
+            {!favoritosExpanded && favoritos.length > 0 && !collapsed && (
+              <TooltipContent side="right" sideOffset={8} className="z-[9999] bg-popover border border-border shadow-lg p-2">
+                <p className="font-semibold text-sm mb-2">Favoritos</p>
+                <div className="space-y-1">
+                  {favoritos.map(fav => {
+                    const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
+                      modulosArbol.flatMap(m => m.hijos).find(h => h.id === fav.modulo_id);
+                    if (!modulo) return null;
+                    return (
+                      <RouterNavLink 
+                        key={fav.id} 
+                        to={modulo.ruta}
+                        className={cn(
+                          "block text-sm py-1 px-2 rounded hover:bg-accent hover:text-accent-foreground transition-colors",
+                          isActive(modulo.ruta) && "text-primary font-medium"
+                        )}
+                      >
+                        {modulo.nombre}
+                      </RouterNavLink>
+                    );
+                  })}
+                </div>
+              </TooltipContent>
+            )}
+          </Tooltip>
           <CollapsibleContent className="data-[state=open]:animate-none data-[state=closed]:animate-none">
             {isLoadingFavoritos ? (
               <div className="flex items-center justify-center py-2">
