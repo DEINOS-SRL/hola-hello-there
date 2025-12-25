@@ -617,28 +617,36 @@ export function AppSidebar() {
               <TooltipContent 
                 side="right" 
                 sideOffset={8} 
-                className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in"
+                className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in min-w-[180px]"
               >
-                <p className="font-semibold text-sm mb-2 text-foreground">{modulo.nombre}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <ModuleIcon className="h-4 w-4 text-primary" />
+                  <p className="font-semibold text-sm text-foreground">{modulo.nombre}</p>
+                </div>
+                <div className="border-t border-border/50 mb-2" />
                 <div className="space-y-0.5">
-                  {modulo.hijos.map(hijo => (
-                    <RouterNavLink 
-                      key={hijo.id} 
-                      to={hijo.ruta}
-                      className={cn(
-                        "flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all duration-200",
-                        "hover:bg-accent hover:text-accent-foreground",
-                        isActive(hijo.ruta) 
-                          ? "bg-primary/10 text-primary font-medium border-l-2 border-primary pl-1.5" 
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {isActive(hijo.ruta) && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-soft" />
-                      )}
-                      {hijo.nombre}
-                    </RouterNavLink>
-                  ))}
+                  {modulo.hijos.map(hijo => {
+                    const HijoIcon = getIconByName(hijo.icono);
+                    return (
+                      <RouterNavLink 
+                        key={hijo.id} 
+                        to={hijo.ruta}
+                        className={cn(
+                          "flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all duration-200",
+                          "hover:bg-accent hover:text-accent-foreground",
+                          isActive(hijo.ruta) 
+                            ? "bg-primary/10 text-primary font-medium border-l-2 border-primary pl-1.5" 
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <HijoIcon className={cn(
+                          "h-3.5 w-3.5 shrink-0",
+                          isActive(hijo.ruta) ? "text-primary" : "text-muted-foreground"
+                        )} />
+                        {hijo.nombre}
+                      </RouterNavLink>
+                    );
+                  })}
                 </div>
               </TooltipContent>
             )}
@@ -874,14 +882,19 @@ export function AppSidebar() {
               <TooltipContent 
                 side="right" 
                 sideOffset={8} 
-                className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in"
+                className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in min-w-[180px]"
               >
-                <p className="font-semibold text-sm mb-2 text-foreground">Favoritos</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <Bookmark className="h-4 w-4 text-primary" />
+                  <p className="font-semibold text-sm text-foreground">Favoritos</p>
+                </div>
+                <div className="border-t border-border/50 mb-2" />
                 <div className="space-y-0.5">
                   {favoritos.map(fav => {
                     const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
                       modulosArbol.flatMap(m => m.hijos).find(h => h.id === fav.modulo_id);
                     if (!modulo) return null;
+                    const FavIcon = getIconByName(modulo.icono);
                     return (
                       <RouterNavLink 
                         key={fav.id} 
@@ -894,9 +907,10 @@ export function AppSidebar() {
                             : "text-muted-foreground hover:text-foreground"
                         )}
                       >
-                        {isActive(modulo.ruta) && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-soft" />
-                        )}
+                        <FavIcon className={cn(
+                          "h-3.5 w-3.5 shrink-0",
+                          isActive(modulo.ruta) ? "text-primary" : "text-muted-foreground"
+                        )} />
                         {modulo.nombre}
                       </RouterNavLink>
                     );
