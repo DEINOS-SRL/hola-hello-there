@@ -17,6 +17,8 @@ import {
   Building2,
   Users,
   Shield,
+  ChevronsUpDown,
+  ChevronsDownUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -182,6 +184,39 @@ export function AppSidebar() {
       return newExpanded;
     });
   };
+
+  // Obtener IDs de módulos que tienen hijos (son colapsables)
+  const collapsibleModuleIds = useMemo(() => 
+    modulosArbol.filter(m => m.hijos.length > 0 && m.ruta !== '/configuracion').map(m => m.id),
+  [modulosArbol]);
+
+  // Verificar si todos están expandidos
+  const allExpanded = useMemo(() => 
+    collapsibleModuleIds.length > 0 && collapsibleModuleIds.every(id => expandedModules.includes(id)),
+  [collapsibleModuleIds, expandedModules]);
+
+  // Expandir todos los módulos
+  const expandAll = useCallback(() => {
+    const newExpanded = [...new Set([...expandedModules, ...collapsibleModuleIds])];
+    setExpandedModules(newExpanded);
+    localStorage.setItem(SIDEBAR_EXPANDED_MODULES_KEY, JSON.stringify(newExpanded));
+  }, [expandedModules, collapsibleModuleIds]);
+
+  // Colapsar todos los módulos
+  const collapseAll = useCallback(() => {
+    const newExpanded = expandedModules.filter(id => !collapsibleModuleIds.includes(id));
+    setExpandedModules(newExpanded);
+    localStorage.setItem(SIDEBAR_EXPANDED_MODULES_KEY, JSON.stringify(newExpanded));
+  }, [expandedModules, collapsibleModuleIds]);
+
+  // Toggle expandir/colapsar todos
+  const toggleAllModules = useCallback(() => {
+    if (allExpanded) {
+      collapseAll();
+    } else {
+      expandAll();
+    }
+  }, [allExpanded, expandAll, collapseAll]);
 
   // Filtrar módulos según permisos del usuario
   // Excluir "Configuración" que ahora es item fijo del footer
@@ -641,12 +676,33 @@ export function AppSidebar() {
 
         {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
-          <p className={cn(
-            "text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider px-3 py-1 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden",
-            collapsed ? "h-0 opacity-0 py-0" : "h-auto opacity-100"
+          <div className={cn(
+            "flex items-center justify-between px-3 py-1 transition-all duration-300 ease-in-out",
+            collapsed ? "h-0 opacity-0 py-0 overflow-hidden" : "h-auto opacity-100"
           )}>
-            Módulos
-          </p>
+            <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider whitespace-nowrap">
+              Módulos
+            </p>
+            {collapsibleModuleIds.length > 0 && (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={toggleAllModules}
+                    className="p-0.5 rounded text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                  >
+                    {allExpanded ? (
+                      <ChevronsDownUp className="h-3.5 w-3.5" />
+                    ) : (
+                      <ChevronsUpDown className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8} className="text-xs z-[9999]">
+                  {allExpanded ? 'Colapsar todos' : 'Expandir todos'}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
           
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
