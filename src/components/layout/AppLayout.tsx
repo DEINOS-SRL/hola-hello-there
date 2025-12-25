@@ -1,6 +1,7 @@
 import { ReactNode, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useScrollRestoration } from '@/shared/hooks/useScrollRestoration';
+import { usePreferenciasGlobal } from '@/contexts/PreferenciasContext';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { AppBreadcrumb } from './AppBreadcrumb';
@@ -13,11 +14,13 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const mainScrollRef = useRef<HTMLElement>(null);
+  const { preservarScroll } = usePreferenciasGlobal();
 
   useScrollRestoration(
     mainScrollRef,
     `dnscloud-main-scroll:${location.pathname}`,
     [location.pathname],
+    { enabled: preservarScroll, debug: true },
   );
 
   return (

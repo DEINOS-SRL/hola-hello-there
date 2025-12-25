@@ -1,8 +1,9 @@
-import { Sliders, Palette, Globe, Clock, Languages, Loader2, Sun, Moon, Monitor } from 'lucide-react';
+import { Sliders, Palette, Globe, Clock, Languages, Loader2, Sun, Moon, Monitor, MousePointer2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { usePreferencias } from '@/hooks/usePreferencias';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -114,6 +115,24 @@ export default function ConfiguracionPreferencias() {
                   <SelectItem value="spacious">Espacioso</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <MousePointer2 className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="preservar-scroll" className="font-medium">Preservar posición de scroll</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Mantiene la posición del scroll al navegar entre páginas
+                </p>
+              </div>
+              <Switch
+                id="preservar-scroll"
+                checked={preferencias?.preservar_scroll ?? true}
+                onCheckedChange={(checked) => updatePreferencias({ preservar_scroll: checked })}
+                disabled={isSaving}
+              />
             </div>
           </CardContent>
         </Card>
