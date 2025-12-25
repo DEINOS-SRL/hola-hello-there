@@ -371,32 +371,40 @@ export function AppSidebar() {
   return (
     <aside 
       className={cn(
-        "bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 sticky top-0 h-screen",
+        "bg-sidebar border-r border-sidebar-border flex flex-col sticky top-0 h-screen",
+        "transition-[width] duration-300 ease-in-out",
         collapsed ? "w-[68px]" : "w-[260px]"
       )}
     >
       {/* Header con logo y empresa */}
-      <div className="p-3 border-b border-sidebar-border">
+      <div className="p-3 border-b border-sidebar-border overflow-hidden">
         <div className="flex items-center justify-between">
           <div className={cn(
-            "flex items-center gap-2 overflow-hidden",
+            "flex items-center gap-2 overflow-hidden transition-all duration-300 ease-in-out",
             collapsed && "justify-center w-full"
           )}>
-            <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
+            <div className={cn(
+              "rounded-lg bg-primary flex items-center justify-center shrink-0 transition-all duration-300 ease-in-out",
+              collapsed ? "h-10 w-10" : "h-9 w-9"
+            )}>
               <span className="text-primary-foreground font-bold text-sm">DC</span>
             </div>
-            {!collapsed && (
-              <div className="min-w-0">
-                <p className="font-semibold text-sidebar-foreground text-sm truncate">
-                  {empresa?.nombre || 'DNSCloud'}
-                </p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">
-                  {user?.nombre} {user?.apellido}
-                </p>
-              </div>
-            )}
+            <div className={cn(
+              "min-w-0 transition-all duration-300 ease-in-out overflow-hidden",
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+            )}>
+              <p className="font-semibold text-sidebar-foreground text-sm truncate whitespace-nowrap">
+                {empresa?.nombre || 'DNSCloud'}
+              </p>
+              <p className="text-xs text-sidebar-foreground/60 truncate whitespace-nowrap">
+                {user?.nombre} {user?.apellido}
+              </p>
+            </div>
           </div>
-          {!collapsed && (
+          <div className={cn(
+            "transition-all duration-300 ease-in-out overflow-hidden",
+            collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+          )}>
             <Button
               variant="ghost"
               size="icon"
@@ -405,30 +413,31 @@ export function AppSidebar() {
             >
               <PanelLeftClose className="h-4 w-4" />
             </Button>
-          )}
+          </div>
         </div>
       </div>
 
       {/* Botón para expandir cuando está colapsado */}
-      {collapsed && (
-        <div className="p-2 border-b border-sidebar-border">
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCollapsed(false)}
-                className="w-full h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-              >
-                <PanelLeft className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-              Expandir menú
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      )}
+      <div className={cn(
+        "border-b border-sidebar-border overflow-hidden transition-all duration-300 ease-in-out",
+        collapsed ? "p-2 max-h-14 opacity-100" : "max-h-0 p-0 opacity-0"
+      )}>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCollapsed(false)}
+              className="w-full h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <PanelLeft className="h-4 w-4 transition-transform duration-300" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+            Expandir menú
+          </TooltipContent>
+        </Tooltip>
+      </div>
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
@@ -448,25 +457,25 @@ export function AppSidebar() {
             >
               <div className="flex items-center gap-3">
                 <Bookmark className="h-4 w-4 shrink-0" />
-                {!collapsed && (
-                  <span className="flex items-center gap-2">
-                    Favoritos
-                    {favoritos.length > 0 && (
-                      <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-primary/15 text-primary">
-                        {favoritos.length}
-                      </span>
-                    )}
-                  </span>
-                )}
+                <span className={cn(
+                  "flex items-center gap-2 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden",
+                  collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                )}>
+                  Favoritos
+                  {favoritos.length > 0 && (
+                    <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-primary/15 text-primary">
+                      {favoritos.length}
+                    </span>
+                  )}
+                </span>
               </div>
-              {!collapsed && (
-                <ChevronRight 
-                  className={cn(
-                    "h-4 w-4 transition-transform duration-200",
-                    favoritosExpanded && "rotate-90"
-                  )} 
-                />
-              )}
+              <ChevronRight 
+                className={cn(
+                  "h-4 w-4 transition-all duration-300 ease-in-out",
+                  favoritosExpanded && "rotate-90",
+                  collapsed ? "w-0 opacity-0" : "w-4 opacity-100"
+                )} 
+              />
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="animate-accordion-down data-[state=closed]:animate-accordion-up">
@@ -500,11 +509,12 @@ export function AppSidebar() {
 
         {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
-          {!collapsed && (
-            <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider px-3 py-1">
-              Módulos
-            </p>
-          )}
+          <p className={cn(
+            "text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider px-3 py-1 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden",
+            collapsed ? "h-0 opacity-0 py-0" : "h-auto opacity-100"
+          )}>
+            Módulos
+          </p>
           
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
