@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/core/security/permissions';
 import { useModulosDB, type ModuloConHijos } from '@/modules/security/hooks/useModulos';
 import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
+import { SortableFavorites } from './SortableFavorites';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -50,7 +51,7 @@ export function AppSidebar() {
   const { hasAnyPermission } = usePermissions();
   const location = useLocation();
   const { arbol: modulosArbol, isLoading } = useModulosDB();
-  const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, isAdding, isRemoving } = useFavoritos();
+  const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
@@ -426,65 +427,14 @@ export function AppSidebar() {
                 {!collapsed && 'Sin favoritos aún'}
               </p>
             ) : (
-              <div className="ml-[22px] pl-4 border-l-2 border-sidebar-border space-y-0.5 mt-0.5">
-                {favoritos.map(fav => {
-                  const IconComponent = getIconByName(fav.modulo.icono);
-                  const active = isActive(fav.modulo.ruta);
-                  const isFav = true;
-                  
-                  const handleRemoveFavorite = (e: React.MouseEvent) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleFavorito(fav.modulo_id);
-                  };
-                  
-                  const content = (
-                    <div key={fav.id} className="group/fav relative flex items-center">
-                      <RouterNavLink
-                        to={fav.modulo.ruta}
-                        className={cn(
-                          "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm flex-1",
-                          "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                          active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
-                        )}
-                      >
-                        <IconComponent className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span>{fav.modulo.nombre}</span>}
-                      </RouterNavLink>
-                      
-                      {/* Botón para quitar de favoritos */}
-                      {!collapsed && (
-                        <Tooltip delayDuration={0}>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={handleRemoveFavorite}
-                              disabled={isRemoving}
-                              className="absolute right-1 p-1 rounded opacity-0 group-hover/fav:opacity-100 text-yellow-500 hover:text-destructive transition-all duration-200"
-                            >
-                              <Bookmark className="h-3.5 w-3.5 fill-current" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="text-xs">
-                            Quitar de favoritos
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  );
-
-                  if (collapsed) {
-                    return (
-                      <Tooltip key={fav.id} delayDuration={0}>
-                        <TooltipTrigger asChild>{content}</TooltipTrigger>
-                        <TooltipContent side="right" className="font-medium">
-                          {fav.modulo.nombre}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  }
-
-                  return content;
-                })}
+              <div className="ml-[22px] pl-4 border-l-2 border-sidebar-border mt-0.5">
+                <SortableFavorites
+                  favoritos={favoritos}
+                  collapsed={collapsed}
+                  onReorder={reorderFavoritos}
+                  onRemove={toggleFavorito}
+                  isRemoving={isRemoving}
+                />
               </div>
             )}
           </CollapsibleContent>
