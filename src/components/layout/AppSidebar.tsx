@@ -243,10 +243,17 @@ export function AppSidebar() {
     const hasActiveItem = isModuleActive(modulo);
     const ModuleIcon = getIconByName(modulo.icono);
     const tieneHijos = modulo.hijos.length > 0;
+    const isFav = isFavorito(modulo.id);
 
-    // Si no tiene hijos, mostrar como link directo
+    const handleToggleFavorite = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFavorito(modulo.id);
+    };
+
+    // Si no tiene hijos, mostrar como link directo con opción de favorito
     if (!tieneHijos) {
-      return <ModuloNavItem modulo={modulo} />;
+      return <ModuloNavItem modulo={modulo} showFavoriteToggle />;
     }
 
     if (collapsed) {
@@ -289,26 +296,51 @@ export function AppSidebar() {
 
     return (
       <Collapsible open={isExpanded} onOpenChange={() => toggleModule(modulo.id)}>
-        <CollapsibleTrigger asChild>
-          <button
-            className={cn(
-              "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm",
-              "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-              hasActiveItem && "text-primary font-medium"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <ModuleIcon className="h-4 w-4 shrink-0" />
-              <span>{modulo.nombre}</span>
-            </div>
-            <ChevronRight 
+        <div className="group/parent relative flex items-center">
+          <CollapsibleTrigger asChild>
+            <button
               className={cn(
-                "h-4 w-4 transition-transform duration-200",
-                isExpanded && "rotate-90"
-              )} 
-            />
-          </button>
-        </CollapsibleTrigger>
+                "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm",
+                "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                hasActiveItem && "text-primary font-medium"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <ModuleIcon className="h-4 w-4 shrink-0" />
+                <span>{modulo.nombre}</span>
+              </div>
+              <ChevronRight 
+                className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  isExpanded && "rotate-90"
+                )} 
+              />
+            </button>
+          </CollapsibleTrigger>
+          
+          {/* Botón de favorito para módulo padre */}
+          {!collapsed && (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleToggleFavorite}
+                  disabled={isAdding || isRemoving}
+                  className={cn(
+                    "absolute right-7 p-1 rounded transition-all duration-200 z-10",
+                    isFav 
+                      ? "opacity-100 text-yellow-500" 
+                      : "opacity-0 group-hover/parent:opacity-100 text-sidebar-foreground/50 hover:text-yellow-500"
+                  )}
+                >
+                  <Bookmark className={cn("h-3.5 w-3.5", isFav && "fill-yellow-500")} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                {isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
         <CollapsibleContent className="mt-0.5 animate-accordion-down data-[state=closed]:animate-accordion-up">
           <div className={cn(
             "relative ml-[22px] pl-4 border-l-2 space-y-0.5 transition-all duration-300 ease-out",
