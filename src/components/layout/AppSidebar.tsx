@@ -479,7 +479,10 @@ export function AppSidebar() {
                 {!collapsed && 'Sin favoritos aún'}
               </p>
             ) : (
-              <div className="ml-[22px] pl-4 border-l-2 border-sidebar-border mt-0.5">
+              <div className={cn(
+                "mt-0.5",
+                !collapsed && "ml-[22px] pl-4 border-l-2 border-sidebar-border"
+              )}>
                 <SortableFavorites
                   favoritos={favoritos}
                   collapsed={collapsed}
