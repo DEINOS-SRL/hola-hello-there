@@ -76,20 +76,27 @@ export function AppSidebar() {
       )}
     >
       {/* Logo */}
-      <div className="h-[60px] flex items-center justify-between px-4 border-b border-sidebar-border">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-              <span className="text-sidebar-primary-foreground font-bold text-sm">DC</span>
-            </div>
-            <span className="font-semibold text-sidebar-foreground text-lg">DNSCloud</span>
-          </div>
-        )}
-        {collapsed && (
-          <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center mx-auto">
+      <div className="h-[60px] flex items-center justify-between px-3 border-b border-sidebar-border">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
             <span className="text-sidebar-primary-foreground font-bold text-sm">DC</span>
           </div>
-        )}
+          {!collapsed && (
+            <span className="font-semibold text-sidebar-foreground text-lg">DNSCloud</span>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setCollapsed(!collapsed)}
+          className="h-8 w-8 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
       {/* Navigation */}
@@ -127,27 +134,6 @@ export function AppSidebar() {
         )}
       </nav>
 
-      {/* Collapse Button */}
-      <div className="p-3 border-t border-sidebar-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            "w-full justify-center text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent",
-            !collapsed && "justify-start"
-          )}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <>
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              <span>Colapsar</span>
-            </>
-          )}
-        </Button>
-      </div>
     </aside>
   );
 }
