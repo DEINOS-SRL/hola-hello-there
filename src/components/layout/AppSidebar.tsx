@@ -134,19 +134,6 @@ export function AppSidebar() {
     };
   }, [isDragging, handleSetCollapsed]);
 
-  // Keyboard shortcut: Cmd/Ctrl + B para toggle sidebar
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-        e.preventDefault();
-        handleSetCollapsed(!collapsed);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [collapsed, handleSetCollapsed]);
-
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
   // Expandir automáticamente el módulo activo solo al montar o cambiar de módulo padre
@@ -217,6 +204,25 @@ export function AppSidebar() {
       expandAll();
     }
   }, [allExpanded, expandAll, collapseAll]);
+
+  // Keyboard shortcut: Cmd/Ctrl + B para toggle sidebar, Cmd/Ctrl + Shift + E para toggle módulos
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + B para toggle sidebar
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'b') {
+        e.preventDefault();
+        handleSetCollapsed(!collapsed);
+      }
+      // Ctrl/Cmd + Shift + E para expandir/colapsar todos los módulos
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        toggleAllModules();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [collapsed, handleSetCollapsed, toggleAllModules]);
 
   // Filtrar módulos según permisos del usuario
   // Excluir "Configuración" que ahora es item fijo del footer
@@ -452,6 +458,12 @@ export function AppSidebar() {
               <div className="flex items-center gap-3">
                 <ModuleIcon className="h-4 w-4 shrink-0" />
                 <span>{modulo.nombre}</span>
+                {/* Contador de items cuando está colapsado */}
+                {!isExpanded && modulo.hijos.length > 0 && (
+                  <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
+                    {modulo.hijos.length}
+                  </span>
+                )}
               </div>
               <ChevronRight 
                 className={cn(
