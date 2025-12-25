@@ -772,6 +772,12 @@ export function AppSidebar() {
                   placeholder="Buscar módulos..."
                   value={moduleSearch}
                   onChange={(e) => setModuleSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setModuleSearch('');
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
                   className="h-7 pl-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border focus:border-primary/50"
                 />
                 {moduleSearch && (
