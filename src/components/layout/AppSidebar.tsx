@@ -85,6 +85,8 @@ const SIDEBAR_EXPANDED_MODULES_KEY = 'dnscloud-sidebar-expanded-modules';
 const SIDEBAR_MIN_WIDTH = 68;
 const SIDEBAR_MAX_WIDTH = 260;
 const SIDEBAR_COLLAPSE_THRESHOLD = 120;
+const SIDEBAR_SEARCH_KEY = 'dnscloud-sidebar-search';
+const SEARCH_DEBOUNCE_MS = 150;
 
 export function AppSidebar() {
   // Detectar si es Mac para mostrar el shortcut correcto
@@ -113,7 +115,31 @@ export function AppSidebar() {
   const { arbol: modulosArbol, isLoading } = useModulosDB();
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
-  const [moduleSearch, setModuleSearch] = useState('');
+  
+  // Búsqueda con debounce y persistencia en sessionStorage
+  const [moduleSearchInput, setModuleSearchInput] = useState(() => {
+    return sessionStorage.getItem(SIDEBAR_SEARCH_KEY) || '';
+  });
+  const [moduleSearch, setModuleSearch] = useState(() => {
+    return sessionStorage.getItem(SIDEBAR_SEARCH_KEY) || '';
+  });
+
+  // Debounce del término de búsqueda
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setModuleSearch(moduleSearchInput);
+      sessionStorage.setItem(SIDEBAR_SEARCH_KEY, moduleSearchInput);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [moduleSearchInput]);
+
+  // Función para limpiar búsqueda
+  const clearSearch = useCallback(() => {
+    setModuleSearchInput('');
+    setModuleSearch('');
+    sessionStorage.removeItem(SIDEBAR_SEARCH_KEY);
+  }, []);
 
   // Shortcut key para mostrar en tooltips
   const shortcutModules = isMac ? '⌘⇧E' : 'Ctrl+Shift+E';
@@ -789,19 +815,19 @@ export function AppSidebar() {
                 <Input
                   type="text"
                   placeholder="Buscar módulos..."
-                  value={moduleSearch}
-                  onChange={(e) => setModuleSearch(e.target.value)}
+                  value={moduleSearchInput}
+                  onChange={(e) => setModuleSearchInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
-                      setModuleSearch('');
+                      clearSearch();
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
                   className="h-7 pl-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border focus:border-primary/50"
                 />
-                {moduleSearch && (
+                {moduleSearchInput && (
                   <button
-                    onClick={() => setModuleSearch('')}
+                    onClick={clearSearch}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-3 w-3" />
