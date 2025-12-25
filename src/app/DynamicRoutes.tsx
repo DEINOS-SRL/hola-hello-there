@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useModulosDB, ModuloDB } from '@/modules/security/hooks/useModulos';
+import { useModulosDB } from '@/modules/security/hooks/useModulos';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Loader2 } from 'lucide-react';
-import { lazy, Suspense, useMemo } from 'react';
+import { useMemo } from 'react';
 
 // Páginas estáticas
 import Login from '@/pages/Login';
@@ -56,16 +56,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
-// Genera las rutas dinámicas desde los módulos de la BD
-function DynamicModuleRoutes() {
-  const { modulos, isLoading } = useModulosDB();
+// Rutas estáticas del sistema
+const staticPaths = ['/dashboard', '/modulos', '/perfil', '/configuracion', '/login', '/reset-password', '/'];
 
-  // Generar rutas únicas de todos los módulos
+export function AppRoutes() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const { modulos } = useModulosDB();
+  
+  // Generar rutas dinámicas desde los módulos de la BD
   const dynamicRoutes = useMemo(() => {
     if (!modulos.length) return [];
-    
-    // Filtrar rutas que no sean las estáticas del sistema
-    const staticPaths = ['/dashboard', '/modulos', '/perfil', '/configuracion', '/login', '/reset-password', '/'];
     
     return modulos
       .filter(m => m.ruta && !staticPaths.includes(m.ruta))
@@ -74,26 +74,6 @@ function DynamicModuleRoutes() {
         component: implementedRoutes[m.ruta] || ModuloPlaceholder,
       }));
   }, [modulos]);
-
-  return (
-    <>
-      {dynamicRoutes.map(({ path, component: Component }) => (
-        <Route 
-          key={path} 
-          path={path} 
-          element={
-            <ProtectedRoute>
-              <Component />
-            </ProtectedRoute>
-          } 
-        />
-      ))}
-    </>
-  );
-}
-
-export function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
     return (
@@ -117,7 +97,17 @@ export function AppRoutes() {
       <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
       
       {/* Rutas dinámicas de módulos desde BD */}
-      <DynamicModuleRoutes />
+      {dynamicRoutes.map(({ path, component: Component }) => (
+        <Route 
+          key={path} 
+          path={path} 
+          element={
+            <ProtectedRoute>
+              <Component />
+            </ProtectedRoute>
+          } 
+        />
+      ))}
       
       {/* Redirect legacy */}
       <Route path="/empleados" element={<Navigate to="/rrhh/empleados" replace />} />
