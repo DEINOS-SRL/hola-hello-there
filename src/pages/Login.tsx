@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Loader2, User, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Loader2, User, UserPlus, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,8 +23,15 @@ const signupSchema = z.object({
   apellido: z.string().trim().min(2, { message: 'El apellido debe tener al menos 2 caracteres' }),
 });
 
+const recoverySchema = z.object({
+  email: z.string().trim().email({ message: 'Email inválido' }),
+});
+
 export default function Login() {
   const [activeTab, setActiveTab] = useState('login');
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [isRecoveryLoading, setIsRecoveryLoading] = useState(false);
   
   // Login state
   const [loginEmail, setLoginEmail] = useState('');
@@ -40,6 +48,43 @@ export default function Login() {
   const { login, signup, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const handlePasswordRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const validation = recoverySchema.safeParse({ email: recoveryEmail });
+    if (!validation.success) {
+      toast({
+        title: 'Error de validación',
+        description: validation.error.errors[0].message,
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setIsRecoveryLoading(true);
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    
+    setIsRecoveryLoading(false);
+    
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Correo enviado',
+        description: 'Revisa tu bandeja de entrada para restablecer tu contraseña',
+      });
+      setShowRecovery(false);
+      setRecoveryEmail('');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,7 +227,7 @@ export default function Login() {
                 Inicia sesión o crea una cuenta
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="login" className="flex items-center gap-2">
@@ -250,11 +295,69 @@ export default function Login() {
 
                     <p className="text-center text-sm text-muted-foreground pt-2">
                       ¿Olvidaste tu contraseña?{' '}
-                      <button type="button" className="text-primary hover:underline font-medium">
+                      <button 
+                        type="button" 
+                        className="text-primary hover:underline font-medium"
+                        onClick={() => {
+                          setShowRecovery(true);
+                          setRecoveryEmail(loginEmail);
+                        }}
+                      >
                         Recuperar acceso
                       </button>
                     </p>
                   </form>
+                  
+                  {/* Password Recovery Form */}
+                  {showRecovery && (
+                    <div className="absolute inset-0 bg-background rounded-lg p-6 animate-fade-in">
+                      <button
+                        type="button"
+                        onClick={() => setShowRecovery(false)}
+                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Volver al inicio de sesión
+                      </button>
+                      
+                      <div className="space-y-2 mb-6">
+                        <h3 className="text-xl font-semibold">Recuperar contraseña</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+                        </p>
+                      </div>
+                      
+                      <form onSubmit={handlePasswordRecovery} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="recovery-email">Correo electrónico</Label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="recovery-email"
+                              type="email"
+                              placeholder="correo@ejemplo.com"
+                              value={recoveryEmail}
+                              onChange={(e) => setRecoveryEmail(e.target.value)}
+                              className="pl-10"
+                              disabled={isRecoveryLoading}
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button type="submit" className="w-full" size="lg" disabled={isRecoveryLoading}>
+                          {isRecoveryLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Enviando...
+                            </>
+                          ) : (
+                            'Enviar enlace de recuperación'
+                          )}
+                        </Button>
+                      </form>
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* Signup Form */}
