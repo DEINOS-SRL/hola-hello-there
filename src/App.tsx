@@ -19,6 +19,8 @@ import Usuarios from "./modules/security/pages/Usuarios";
 import Empresas from "./modules/security/pages/Empresas";
 import Roles from "./modules/security/pages/Roles";
 import Aplicaciones from "./modules/security/pages/Aplicaciones";
+// Importar páginas del módulo de Empleados
+import Empleados from "./modules/employees/pages/Empleados";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +68,8 @@ function AppRoutes() {
       <Route path="/seguridad/empresas" element={<ProtectedRoute><Empresas /></ProtectedRoute>} />
       <Route path="/seguridad/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
       <Route path="/seguridad/aplicaciones" element={<ProtectedRoute><Aplicaciones /></ProtectedRoute>} />
+      {/* Rutas del módulo de Empleados */}
+      <Route path="/empleados" element={<ProtectedRoute><Empleados /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
