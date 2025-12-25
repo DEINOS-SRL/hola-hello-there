@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Eye, Edit3, ExternalLink } from 'lucide-react';
+import { Loader2, Eye, Edit3, FolderOpen, Github } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -40,6 +40,7 @@ const aplicacionSchema = z.object({
   ruta: z.string().optional(),
   activa: z.boolean(),
   link_documentos: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
+  repositorio: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
   prd_documento: z.string().optional(),
 });
 
@@ -73,6 +74,7 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
       ruta: '',
       activa: true,
       link_documentos: '',
+      repositorio: '',
       prd_documento: '',
     },
   });
@@ -90,6 +92,7 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
         ruta: aplicacion.ruta || '',
         activa: aplicacion.activa ?? true,
         link_documentos: aplicacion.link_documentos || '',
+        repositorio: aplicacion.repositorio || '',
         prd_documento: aplicacion.prd_documento || '',
       });
     } else {
@@ -100,6 +103,7 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
         ruta: '',
         activa: true,
         link_documentos: '',
+        repositorio: '',
         prd_documento: '',
       });
     }
@@ -115,6 +119,7 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
         ruta: data.ruta || null,
         activa: data.activa,
         link_documentos: data.link_documentos || null,
+        repositorio: data.repositorio || null,
         prd_documento: data.prd_documento || null,
       };
 
@@ -148,16 +153,16 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>{isEditing ? 'Editar Aplicación' : 'Nueva Aplicación'}</DialogTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos de la aplicación' : 'Completa los datos para crear una nueva aplicación'}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          <form id="aplicacion-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <form id="aplicacion-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 pr-4">
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre *</Label>
               <Input id="nombre" {...register('nombre')} />
@@ -205,18 +210,33 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
             <div className="border-t pt-4 space-y-4">
               <h4 className="font-medium text-sm">Documentación</h4>
               
-              <div className="space-y-2">
-                <Label htmlFor="link_documentos" className="flex items-center gap-2">
-                  <ExternalLink className="h-4 w-4" />
-                  Link de Documentos
-                </Label>
-                <Input 
-                  id="link_documentos" 
-                  {...register('link_documentos')} 
-                  placeholder="https://docs.example.com/modulo" 
-                  type="url"
-                />
-                {errors.link_documentos && <p className="text-xs text-destructive">{errors.link_documentos.message}</p>}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="link_documentos" className="flex items-center gap-2">
+                    <FolderOpen className="h-4 w-4" />
+                    Carpeta del módulo
+                  </Label>
+                  <Input 
+                    id="link_documentos" 
+                    {...register('link_documentos')} 
+                    placeholder="https://drive.google.com/..." 
+                    type="url"
+                  />
+                  {errors.link_documentos && <p className="text-xs text-destructive">{errors.link_documentos.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="repositorio" className="flex items-center gap-2">
+                    <Github className="h-4 w-4" />
+                    Repositorio
+                  </Label>
+                  <Input 
+                    id="repositorio" 
+                    {...register('repositorio')} 
+                    placeholder="https://github.com/..." 
+                    type="url"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
