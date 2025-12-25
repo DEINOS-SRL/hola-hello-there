@@ -1,23 +1,24 @@
-import { Bell, Mail, MessageSquare, Smartphone, Monitor } from 'lucide-react';
+import { Bell, Mail, MessageSquare, Smartphone, Monitor, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { useState } from 'react';
+import { usePreferencias } from '@/hooks/usePreferencias';
 
 export default function ConfiguracionNotificaciones() {
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
-    desktopNotifications: true,
-    newMessages: true,
-    taskUpdates: true,
-    systemAlerts: true,
-    weeklyDigest: false,
-  });
+  const { preferencias, isLoading, updatePreferencias, isSaving } = usePreferencias();
 
-  const handleToggle = (key: keyof typeof settings) => {
-    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const handleToggle = (key: keyof typeof preferencias) => {
+    if (!preferencias) return;
+    updatePreferencias({ [key]: !preferencias[key] });
   };
 
   return (
@@ -53,8 +54,9 @@ export default function ConfiguracionNotificaciones() {
               </div>
               <Switch 
                 id="email" 
-                checked={settings.emailNotifications}
-                onCheckedChange={() => handleToggle('emailNotifications')}
+                checked={preferencias?.email_notifications ?? true}
+                onCheckedChange={() => handleToggle('email_notifications')}
+                disabled={isSaving}
               />
             </div>
             <Separator />
@@ -68,8 +70,9 @@ export default function ConfiguracionNotificaciones() {
               </div>
               <Switch 
                 id="push" 
-                checked={settings.pushNotifications}
-                onCheckedChange={() => handleToggle('pushNotifications')}
+                checked={preferencias?.push_notifications ?? false}
+                onCheckedChange={() => handleToggle('push_notifications')}
+                disabled={isSaving}
               />
             </div>
             <Separator />
@@ -83,8 +86,9 @@ export default function ConfiguracionNotificaciones() {
               </div>
               <Switch 
                 id="desktop" 
-                checked={settings.desktopNotifications}
-                onCheckedChange={() => handleToggle('desktopNotifications')}
+                checked={preferencias?.desktop_notifications ?? true}
+                onCheckedChange={() => handleToggle('desktop_notifications')}
+                disabled={isSaving}
               />
             </div>
           </CardContent>
@@ -107,8 +111,9 @@ export default function ConfiguracionNotificaciones() {
               </div>
               <Switch 
                 id="messages" 
-                checked={settings.newMessages}
-                onCheckedChange={() => handleToggle('newMessages')}
+                checked={preferencias?.new_messages ?? true}
+                onCheckedChange={() => handleToggle('new_messages')}
+                disabled={isSaving}
               />
             </div>
             <Separator />
@@ -119,8 +124,9 @@ export default function ConfiguracionNotificaciones() {
               </div>
               <Switch 
                 id="tasks" 
-                checked={settings.taskUpdates}
-                onCheckedChange={() => handleToggle('taskUpdates')}
+                checked={preferencias?.task_updates ?? true}
+                onCheckedChange={() => handleToggle('task_updates')}
+                disabled={isSaving}
               />
             </div>
             <Separator />
@@ -131,8 +137,9 @@ export default function ConfiguracionNotificaciones() {
               </div>
               <Switch 
                 id="system" 
-                checked={settings.systemAlerts}
-                onCheckedChange={() => handleToggle('systemAlerts')}
+                checked={preferencias?.system_alerts ?? true}
+                onCheckedChange={() => handleToggle('system_alerts')}
+                disabled={isSaving}
               />
             </div>
             <Separator />
@@ -143,8 +150,9 @@ export default function ConfiguracionNotificaciones() {
               </div>
               <Switch 
                 id="digest" 
-                checked={settings.weeklyDigest}
-                onCheckedChange={() => handleToggle('weeklyDigest')}
+                checked={preferencias?.weekly_digest ?? false}
+                onCheckedChange={() => handleToggle('weekly_digest')}
+                disabled={isSaving}
               />
             </div>
           </CardContent>
