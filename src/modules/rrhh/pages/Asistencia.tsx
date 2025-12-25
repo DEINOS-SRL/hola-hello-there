@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
@@ -13,8 +13,13 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
-  UserCog
+  UserCog,
+  Check,
+  X,
+  Loader2
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,11 +48,16 @@ const estadoPermisoConfig: Record<EstadoPermiso, { label: string; variant: 'defa
 };
 
 export default function AsistenciaPage() {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState('registros');
   const [showRegistrarModal, setShowRegistrarModal] = useState(false);
   const [showHorarioModal, setShowHorarioModal] = useState(false);
   const [showAsignarHorarioModal, setShowAsignarHorarioModal] = useState(false);
+  const [processingPermisoId, setProcessingPermisoId] = useState<string | null>(null);
 
   // Fetch asistencias del día
   const { data: asistencias = [], isLoading: loadingAsistencias } = useQuery({
@@ -100,6 +110,54 @@ export default function AsistenciaPage() {
     tardanzas: asistencias.filter(a => a.tipo === 'tardanza').length,
     faltas: asistencias.filter(a => a.tipo === 'falta').length,
     permisosPendientes: permisos.filter(p => p.estado === 'pendiente').length,
+  };
+
+  // Mutation para aprobar/rechazar permisos
+  const actualizarPermisoMutation = useMutation({
+    mutationFn: async ({ permisoId, estado }: { permisoId: string; estado: 'aprobado' | 'rechazado' }) => {
+      setProcessingPermisoId(permisoId);
+      
+      const { data, error } = await rrhhClient
+        .from('permisos')
+        .update({
+          estado,
+          aprobado_por: user?.id || null,
+          fecha_aprobacion: new Date().toISOString(),
+        })
+        .eq('id', permisoId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      const accion = variables.estado === 'aprobado' ? 'aprobado' : 'rechazado';
+      toast({
+        title: `Permiso ${accion}`,
+        description: `El permiso ha sido ${accion} correctamente.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['permisos'] });
+    },
+    onError: (error) => {
+      console.error('Error actualizando permiso:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el permiso.',
+        variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      setProcessingPermisoId(null);
+    },
+  });
+
+  const handleAprobar = (permisoId: string) => {
+    actualizarPermisoMutation.mutate({ permisoId, estado: 'aprobado' });
+  };
+
+  const handleRechazar = (permisoId: string) => {
+    actualizarPermisoMutation.mutate({ permisoId, estado: 'rechazado' });
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -353,16 +411,46 @@ export default function AsistenciaPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {permiso.estado === 'pendiente' && (
+                          {permiso.estado === 'pendiente' ? (
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
-                                Aprobar
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => handleAprobar(permiso.id)}
+                                disabled={processingPermisoId === permiso.id}
+                              >
+                                {processingPermisoId === permiso.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Aprobar
+                                  </>
+                                )}
                               </Button>
-                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                                Rechazar
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleRechazar(permiso.id)}
+                                disabled={processingPermisoId === permiso.id}
+                              >
+                                {processingPermisoId === permiso.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <X className="h-4 w-4 mr-1" />
+                                    Rechazar
+                                  </>
+                                )}
                               </Button>
                             </div>
-                          )}
+                          ) : permiso.fecha_aprobacion ? (
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(permiso.fecha_aprobacion), 'dd/MM/yyyy HH:mm')}
+                            </span>
+                          ) : null}
                         </TableCell>
                       </TableRow>
                     ))}
