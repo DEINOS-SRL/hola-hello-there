@@ -21,6 +21,7 @@ import Roles from "./modules/security/pages/Roles";
 import Aplicaciones from "./modules/security/pages/Aplicaciones";
 // Importar páginas del módulo de Empleados
 import Empleados from "./modules/employees/pages/Empleados";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/modulos" element={<ProtectedRoute><Modulos /></ProtectedRoute>} />
