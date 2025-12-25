@@ -266,9 +266,11 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
                   </TabsContent>
                   
                   <TabsContent value="preview" className="mt-2">
-                    <div className="min-h-[200px] rounded-md border bg-muted/30 p-4 prose prose-sm dark:prose-invert max-w-none">
+                    <div className="min-h-[200px] max-h-[300px] overflow-auto rounded-md border bg-muted/30 p-4">
                       {prdDocumento ? (
-                        <ReactMarkdown>{prdDocumento}</ReactMarkdown>
+                        <article className="prose prose-sm dark:prose-invert prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 max-w-none">
+                          <ReactMarkdown>{prdDocumento}</ReactMarkdown>
+                        </article>
                       ) : (
                         <p className="text-muted-foreground italic">Sin contenido para mostrar</p>
                       )}
