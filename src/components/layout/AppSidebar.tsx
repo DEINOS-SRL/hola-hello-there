@@ -19,6 +19,8 @@ import {
   Shield,
   ChevronsUpDown,
   ChevronsDownUp,
+  Search,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 
 // Función para obtener icono dinámicamente por nombre
 const getIconByName = (iconName: string): LucideIcon => {
@@ -87,6 +90,10 @@ export function AppSidebar() {
   const { arbol: modulosArbol, isLoading } = useModulosDB();
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
+  const [moduleSearch, setModuleSearch] = useState('');
+
+  // Shortcut key para mostrar en tooltips
+  const shortcutModules = isMac ? '⌘⇧E' : 'Ctrl+Shift+E';
 
   // Persistir estado colapsado en localStorage
   const handleSetCollapsed = useCallback((value: boolean) => {
@@ -263,6 +270,19 @@ export function AppSidebar() {
   };
 
   const visibleModules = getVisibleModules();
+
+  // Filtrar módulos según búsqueda
+  const filteredModules = useMemo(() => {
+    if (!moduleSearch.trim()) return visibleModules;
+    
+    const searchLower = moduleSearch.toLowerCase().trim();
+    return visibleModules.filter(modulo => {
+      // Buscar en nombre del módulo
+      if (modulo.nombre.toLowerCase().includes(searchLower)) return true;
+      // Buscar en nombres de hijos
+      return modulo.hijos.some(hijo => hijo.nombre.toLowerCase().includes(searchLower));
+    });
+  }, [visibleModules, moduleSearch]);
 
   // Verificar si algún item del módulo está activo
   const isModuleActive = (modulo: ModuloConHijos) => {
@@ -710,18 +730,49 @@ export function AppSidebar() {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8} className="text-xs z-[9999]">
-                  {allExpanded ? 'Colapsar todos' : 'Expandir todos'}
+                  <span>{allExpanded ? 'Colapsar todos' : 'Expandir todos'}</span>
+                  <kbd className="ml-2 px-1 py-0.5 text-[9px] font-mono bg-muted/50 rounded border border-border/50">
+                    {shortcutModules}
+                  </kbd>
                 </TooltipContent>
               </Tooltip>
             )}
           </div>
+
+          {/* Filtro de búsqueda de módulos */}
+          {!collapsed && visibleModules.length > 3 && (
+            <div className="px-2 pb-1">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Buscar módulos..."
+                  value={moduleSearch}
+                  onChange={(e) => setModuleSearch(e.target.value)}
+                  className="h-7 pl-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border focus:border-primary/50"
+                />
+                {moduleSearch && (
+                  <button
+                    onClick={() => setModuleSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
+          ) : filteredModules.length === 0 ? (
+            <p className="text-xs text-muted-foreground px-3 py-2 italic">
+              No se encontraron módulos
+            </p>
           ) : (
-            visibleModules.map(modulo => (
+            filteredModules.map(modulo => (
               <ModuleGroup key={modulo.id} modulo={modulo} />
             ))
           )}
