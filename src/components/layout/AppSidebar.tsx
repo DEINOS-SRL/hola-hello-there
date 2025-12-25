@@ -852,33 +852,43 @@ export function AppSidebar() {
         {/* Favoritos - Con popover cuando está colapsado igual que los módulos */}
         {collapsed ? (
           // Modo colapsado: mostrar icono con Tooltip que muestra los favoritos
-          favoritos.length > 0 && (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <div 
-                  className={cn(
-                    "flex items-center justify-center p-2 rounded-md cursor-pointer",
-                    "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                    favoritos.some(fav => {
-                      const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
-                        modulosArbol.flatMap(m => m.hijos).find(h => h.id === fav.modulo_id);
-                      return modulo && isActive(modulo.ruta);
-                    }) && "bg-primary/10 text-primary"
-                  )}
-                >
-                  <Bookmark className="h-5 w-5" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent 
-                side="right" 
-                sideOffset={8} 
-                className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in min-w-[180px]"
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <div 
+                className={cn(
+                  "relative flex items-center justify-center p-2 rounded-md cursor-pointer",
+                  "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  favoritos.some(fav => {
+                    const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
+                      modulosArbol.flatMap(m => m.hijos).find(h => h.id === fav.modulo_id);
+                    return modulo && isActive(modulo.ruta);
+                  }) && "bg-primary/10 text-primary"
+                )}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <Bookmark className="h-4 w-4 text-primary" />
-                  <p className="font-semibold text-sm text-foreground">Favoritos</p>
-                </div>
-                <div className="border-t border-border/50 mb-2" />
+                <Bookmark className="h-5 w-5" />
+                {/* Indicador de favorito activo */}
+                {favoritos.some(fav => {
+                  const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
+                    modulosArbol.flatMap(m => m.hijos).find(h => h.id === fav.modulo_id);
+                  return modulo && isActive(modulo.ruta);
+                }) && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary ring-2 ring-sidebar-background animate-pulse-soft" />
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent 
+              side="right" 
+              sideOffset={8} 
+              className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in min-w-[180px]"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Bookmark className="h-4 w-4 text-primary" />
+                <p className="font-semibold text-sm text-foreground">Favoritos</p>
+              </div>
+              <div className="border-t border-border/50 mb-2" />
+              {favoritos.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic py-1">Sin favoritos aún</p>
+              ) : (
                 <div className="space-y-0.5">
                   {favoritos.map(fav => {
                     const modulo = modulosArbol.find(m => m.id === fav.modulo_id) || 
@@ -906,9 +916,9 @@ export function AppSidebar() {
                     );
                   })}
                 </div>
-              </TooltipContent>
-            </Tooltip>
-          )
+              )}
+            </TooltipContent>
+          </Tooltip>
         ) : (
           // Modo expandido: sección colapsable con lista de favoritos
           <Collapsible open={favoritosExpanded} onOpenChange={setFavoritosExpanded}>
