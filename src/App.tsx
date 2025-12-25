@@ -19,7 +19,10 @@ import Usuarios from "./modules/security/pages/Usuarios";
 import Empresas from "./modules/security/pages/Empresas";
 import Roles from "./modules/security/pages/Roles";
 import ModulosAdmin from "./modules/security/pages/Modulos";
-// Importar páginas del módulo de Empleados
+// Importar páginas del módulo de RRHH
+import RRHHIndex from "./modules/rrhh/pages/Index";
+import RRHHEmpleados from "./modules/rrhh/pages/Empleados";
+// Legacy route (redirect)
 import Empleados from "./modules/employees/pages/Empleados";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -71,8 +74,11 @@ function AppRoutes() {
       <Route path="/seguridad/empresas" element={<ProtectedRoute><Empresas /></ProtectedRoute>} />
       <Route path="/seguridad/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
       <Route path="/seguridad/modulos" element={<ProtectedRoute><ModulosAdmin /></ProtectedRoute>} />
-      {/* Rutas del módulo de Empleados */}
-      <Route path="/empleados" element={<ProtectedRoute><Empleados /></ProtectedRoute>} />
+      {/* Rutas del módulo de RRHH */}
+      <Route path="/rrhh" element={<ProtectedRoute><RRHHIndex /></ProtectedRoute>} />
+      <Route path="/rrhh/empleados" element={<ProtectedRoute><RRHHEmpleados /></ProtectedRoute>} />
+      {/* Redirect legacy empleados route */}
+      <Route path="/empleados" element={<Navigate to="/rrhh/empleados" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
