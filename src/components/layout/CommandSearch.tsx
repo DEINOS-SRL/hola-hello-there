@@ -12,6 +12,9 @@ import {
   Award,
   Settings,
   Home,
+  Edit,
+  User,
+  ArrowLeftRight,
 } from 'lucide-react';
 import {
   CommandDialog,
@@ -24,6 +27,8 @@ import {
 } from '@/components/ui/command';
 import { useModulosDB } from '@/modules/security/hooks/useModulos';
 import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
+import { useEmpleados } from '@/modules/employees/hooks/useEmpleados';
+import { useMovimientos } from '@/modules/operacion/hooks/useMovimientos';
 
 // Función para obtener icono dinámicamente por nombre
 const getIconByName = (iconName: string): LucideIcon => {
@@ -99,11 +104,23 @@ const quickNavigation = [
   { id: 'settings', label: 'Configuración', icon: Settings, target: '/configuracion' },
 ];
 
+// Interfaz para registros editables
+interface EditableRecord {
+  id: string;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+  route: string;
+  keywords: string[];
+}
+
 export function CommandSearch() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { modulos } = useModulosDB();
   const { favoritos } = useFavoritos();
+  const { empleados } = useEmpleados();
+  const { movimientos } = useMovimientos();
 
   // Detectar si es Mac
   const isMac = useMemo(() => 
@@ -122,6 +139,45 @@ export function CommandSearch() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Registros recientes para editar (últimos 5 de cada tipo)
+  const recentRecords = useMemo((): EditableRecord[] => {
+    const records: EditableRecord[] = [];
+
+    // Últimos 5 empleados
+    const recentEmpleados = [...empleados]
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 5);
+
+    recentEmpleados.forEach(emp => {
+      records.push({
+        id: `emp-${emp.id}`,
+        label: `${emp.nombre} ${emp.apellido}`,
+        description: `Empleado · ${emp.cargo || 'Sin cargo'}`,
+        icon: User,
+        route: `/rrhh/empleados?action=edit&id=${emp.id}`,
+        keywords: ['editar', 'empleado', emp.nombre, emp.apellido, emp.legajo || '', emp.email || ''],
+      });
+    });
+
+    // Últimos 5 movimientos
+    const recentMovimientos = [...movimientos]
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 5);
+
+    recentMovimientos.forEach(mov => {
+      records.push({
+        id: `mov-${mov.id}`,
+        label: mov.equipo_descripcion,
+        description: `Movimiento · ${mov.origen} → ${mov.destino}`,
+        icon: ArrowLeftRight,
+        route: `/operacion/movimientos?action=edit&id=${mov.id}`,
+        keywords: ['editar', 'movimiento', mov.equipo_descripcion, mov.origen, mov.destino],
+      });
+    });
+
+    return records;
+  }, [empleados, movimientos]);
 
   // Módulos favoritos
   const favoritosModulos = useMemo(() => 
@@ -161,9 +217,14 @@ export function CommandSearch() {
     }
   }, [navigate]);
 
+  const handleEditRecord = useCallback((record: EditableRecord) => {
+    setOpen(false);
+    navigate(record.route);
+  }, [navigate]);
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Buscar módulos, acciones rápidas..." />
+      <CommandInput placeholder="Buscar módulos, registros, acciones..." />
       <CommandList>
         <CommandEmpty>No se encontraron resultados.</CommandEmpty>
         
@@ -189,6 +250,32 @@ export function CommandSearch() {
         </CommandGroup>
 
         <CommandSeparator />
+
+        {/* Registros Recientes para Editar */}
+        {recentRecords.length > 0 && (
+          <>
+            <CommandGroup heading="Editar Recientes">
+              {recentRecords.map(record => (
+                <CommandItem
+                  key={record.id}
+                  value={`editar ${record.label} ${record.keywords.join(' ')}`}
+                  onSelect={() => handleEditRecord(record)}
+                  className="cursor-pointer"
+                >
+                  <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted mr-3">
+                    <record.icon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{record.label}</span>
+                    <span className="text-xs text-muted-foreground">{record.description}</span>
+                  </div>
+                  <Edit className="ml-auto h-3 w-3 text-muted-foreground" />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
 
         {/* Navegación Rápida */}
         <CommandGroup heading="Navegación">
