@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { 
   Cloud, 
   Shield, 
@@ -58,9 +59,9 @@ const benefits = [
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-[hsl(200,20%,8%)] text-[hsl(166,20%,95%)] overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[hsl(200,20%,8%)]/80 border-b border-[hsl(200,18%,20%)]">
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-background/80 border-b border-border">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
@@ -81,8 +82,9 @@ export default function Landing() {
             </div>
             
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <Link to="/login">
-                <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground hidden sm:inline-flex">
                   Iniciar Sesión
                 </Button>
               </Link>
@@ -104,10 +106,10 @@ export default function Landing() {
           <img 
             src={heroImage} 
             alt="DNSCloud Technology" 
-            className="w-full h-full object-cover opacity-40"
+            className="w-full h-full object-cover opacity-30 dark:opacity-40"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(200,20%,8%)] via-[hsl(200,20%,8%)]/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[hsl(200,20%,8%)] via-transparent to-[hsl(200,20%,8%)]/50" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50" />
         </div>
         
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
@@ -119,7 +121,7 @@ export default function Landing() {
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
               Con <span className="text-primary">DNSCloud</span> las posibilidades son{" "}
-              <span className="bg-gradient-to-r from-primary to-[hsl(174,55%,60%)] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 Infinitas
               </span>
             </h1>
@@ -137,7 +139,7 @@ export default function Landing() {
                 </Button>
               </Link>
               <a href="#features">
-                <Button size="lg" variant="outline" className="border-primary/30 text-foreground hover:bg-primary/10 px-8 h-12 text-base">
+                <Button size="lg" variant="outline" className="border-primary/30 hover:bg-primary/10 px-8 h-12 text-base">
                   Ver Funcionalidades
                 </Button>
               </a>
@@ -172,13 +174,13 @@ export default function Landing() {
             {features.map((feature, index) => (
               <Card 
                 key={index} 
-                className="bg-[hsl(200,18%,12%)] border-[hsl(200,18%,20%)] hover:border-primary/50 transition-all duration-300 group"
+                className="bg-card border-border hover:border-primary/50 transition-all duration-300 group"
               >
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                     <feature.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">{feature.title}</h3>
+                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                   <p className="text-muted-foreground">{feature.description}</p>
                 </CardContent>
               </Card>
@@ -188,7 +190,7 @@ export default function Landing() {
       </section>
 
       {/* Benefits Section */}
-      <section id="benefits" className="py-24 bg-[hsl(200,18%,10%)]">
+      <section id="benefits" className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -204,14 +206,14 @@ export default function Landing() {
                 {benefits.map((benefit, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-foreground">{benefit}</span>
+                    <span>{benefit}</span>
                   </li>
                 ))}
               </ul>
               
               <div className="mt-8">
                 <Link to="/login">
-                  <Button size="lg" className="bg-primary hover:bg-primary/90">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     Empieza Gratis
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
@@ -221,7 +223,7 @@ export default function Landing() {
             
             <div className="relative">
               <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 p-8 flex items-center justify-center">
-                <Cloud className="h-48 w-48 text-primary/30" />
+                <Cloud className="h-48 w-48 text-primary/20" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className="text-6xl font-bold text-primary mb-2">100%</div>
@@ -249,7 +251,7 @@ export default function Landing() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/login">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 px-8">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8">
                   Acceder a la Plataforma
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -260,7 +262,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-[hsl(200,18%,20%)]">
+      <footer className="py-8 border-t border-border">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
