@@ -4,6 +4,7 @@ import * as LucideIcons from 'lucide-react';
 import { 
   Home, 
   Star,
+  Bookmark,
   ChevronRight,
   LucideIcon,
   Settings,
@@ -34,6 +35,7 @@ const getIconByName = (iconName: string): LucideIcon => {
 // Items fijos del menú principal
 const mainMenuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Favoritos', href: '#favoritos', icon: Bookmark, isSection: true },
 ];
 
 // Items del footer
@@ -48,7 +50,8 @@ export function AppSidebar() {
   const { hasAnyPermission } = usePermissions();
   const location = useLocation();
   const { arbol: modulosArbol, isLoading } = useModulosDB();
-  const { favoritos, isLoading: isLoadingFavoritos } = useFavoritos();
+  const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, isAdding, isRemoving } = useFavoritos();
+  const [favoritosExpanded, setFavoritosExpanded] = useState(true);
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
@@ -159,27 +162,61 @@ export function AppSidebar() {
 
   const ModuloNavItem = ({ 
     modulo,
+    showFavoriteToggle = false,
   }: { 
     modulo: ModuloConHijos;
+    showFavoriteToggle?: boolean;
   }) => {
     const IconComponent = getIconByName(modulo.icono);
     const active = isActive(modulo.ruta);
+    const isFav = isFavorito(modulo.id);
+
+    const handleToggleFavorite = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFavorito(modulo.id);
+    };
 
     const content = (
-      <RouterNavLink
-        to={modulo.ruta}
-        className={cn(
-          "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm",
-          "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-          active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+      <div className="group/item relative flex items-center">
+        <RouterNavLink
+          to={modulo.ruta}
+          className={cn(
+            "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm flex-1",
+            "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+          )}
+        >
+          {active && (
+            <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
+          )}
+          <IconComponent className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>{modulo.nombre}</span>}
+        </RouterNavLink>
+        
+        {/* Botón de favorito visible en hover */}
+        {showFavoriteToggle && !collapsed && (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleToggleFavorite}
+                disabled={isAdding || isRemoving}
+                className={cn(
+                  "absolute right-1 p-1 rounded transition-all duration-200",
+                  isFav 
+                    ? "opacity-100 text-yellow-500" 
+                    : "opacity-0 group-hover/item:opacity-100 text-sidebar-foreground/50 hover:text-yellow-500"
+                )}
+              >
+                <Bookmark className={cn("h-3.5 w-3.5", isFav && "fill-yellow-500")} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              {isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            </TooltipContent>
+          </Tooltip>
         )}
-      >
-        {active && (
-          <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
-        )}
-        <IconComponent className="h-4 w-4 shrink-0" />
-        {!collapsed && <span>{modulo.nombre}</span>}
-      </RouterNavLink>
+      </div>
     );
 
     if (collapsed) {
@@ -279,7 +316,7 @@ export function AppSidebar() {
               : "border-sidebar-border hover:border-primary/40"
           )}>
             {modulo.hijos.map(hijo => (
-              <ModuloNavItem key={hijo.id} modulo={hijo} />
+              <ModuloNavItem key={hijo.id} modulo={hijo} showFavoriteToggle />
             ))}
           </div>
         </CollapsibleContent>
@@ -351,50 +388,88 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
-        {/* Main Menu */}
-        <div className="space-y-0.5 pb-2">
-          {mainMenuItems.map(item => (
-            <NavItem key={item.href} item={item} icon={item.icon} />
-          ))}
+        {/* Dashboard */}
+        <div className="space-y-0.5">
+          <NavItem item={{ name: 'Dashboard', href: '/dashboard', icon: Home }} icon={Home} />
         </div>
 
-        {/* Favoritos */}
-        {favoritos.length > 0 && (
-          <>
-            <div className="border-t border-sidebar-border my-2" />
-            <div className="space-y-1">
-              {!collapsed && (
-                <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider px-3 py-1 flex items-center gap-1.5">
-                  <Star className="h-3 w-3" />
-                  Favoritos
-                </p>
+        {/* Favoritos - Collapsible section like HubSpot */}
+        <Collapsible open={favoritosExpanded} onOpenChange={setFavoritosExpanded}>
+          <CollapsibleTrigger asChild>
+            <button
+              className={cn(
+                "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm mt-1",
+                "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               )}
-              
-              {isLoadingFavoritos ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                favoritos.map(fav => {
+            >
+              <div className="flex items-center gap-3">
+                <Bookmark className="h-4 w-4 shrink-0" />
+                {!collapsed && <span>Favoritos</span>}
+              </div>
+              {!collapsed && (
+                <ChevronRight 
+                  className={cn(
+                    "h-4 w-4 transition-transform duration-200",
+                    favoritosExpanded && "rotate-90"
+                  )} 
+                />
+              )}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="animate-accordion-down data-[state=closed]:animate-accordion-up">
+            {isLoadingFavoritos ? (
+              <div className="flex items-center justify-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : favoritos.length === 0 ? (
+              <p className="text-xs text-sidebar-foreground/50 px-3 py-2 italic">
+                {!collapsed && 'Sin favoritos aún'}
+              </p>
+            ) : (
+              <div className="ml-[22px] pl-4 border-l-2 border-sidebar-border space-y-0.5 mt-0.5">
+                {favoritos.map(fav => {
                   const IconComponent = getIconByName(fav.modulo.icono);
                   const active = isActive(fav.modulo.ruta);
+                  const isFav = true;
+                  
+                  const handleRemoveFavorite = (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleFavorito(fav.modulo_id);
+                  };
                   
                   const content = (
-                    <RouterNavLink
-                      key={fav.id}
-                      to={fav.modulo.ruta}
-                      className={cn(
-                        "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm",
-                        "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                        active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+                    <div key={fav.id} className="group/fav relative flex items-center">
+                      <RouterNavLink
+                        to={fav.modulo.ruta}
+                        className={cn(
+                          "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm flex-1",
+                          "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                          active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+                        )}
+                      >
+                        <IconComponent className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span>{fav.modulo.nombre}</span>}
+                      </RouterNavLink>
+                      
+                      {/* Botón para quitar de favoritos */}
+                      {!collapsed && (
+                        <Tooltip delayDuration={0}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={handleRemoveFavorite}
+                              disabled={isRemoving}
+                              className="absolute right-1 p-1 rounded opacity-0 group-hover/fav:opacity-100 text-yellow-500 hover:text-destructive transition-all duration-200"
+                            >
+                              <Bookmark className="h-3.5 w-3.5 fill-current" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="text-xs">
+                            Quitar de favoritos
+                          </TooltipContent>
+                        </Tooltip>
                       )}
-                    >
-                      {active && (
-                        <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
-                      )}
-                      <IconComponent className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{fav.modulo.nombre}</span>}
-                    </RouterNavLink>
+                    </div>
                   );
 
                   if (collapsed) {
@@ -409,11 +484,11 @@ export function AppSidebar() {
                   }
 
                   return content;
-                })
-              )}
-            </div>
-          </>
-        )}
+                })}
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Separador */}
         <div className="border-t border-sidebar-border my-2" />
