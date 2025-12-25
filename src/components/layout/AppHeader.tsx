@@ -1,5 +1,6 @@
-import { Bell, Search, ChevronDown, LogOut, User, Settings } from 'lucide-react';
+import { Bell, Search, ChevronDown, LogOut, User, Settings, Moon, Sun } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,7 +11,41 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
+
+function ThemeToggleIcon() {
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === 'dark';
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+          >
+            {isDark ? (
+              <Sun className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <Moon className="h-5 w-5 text-muted-foreground" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{isDark ? 'Modo claro' : 'Modo oscuro'}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 export function AppHeader() {
   const { user, empresa, logout } = useAuth();
@@ -39,10 +74,21 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-muted-foreground" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Notificaciones</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <ThemeToggleIcon />
 
         <div className="h-6 w-px bg-border" />
 
