@@ -261,7 +261,10 @@ export function AppSidebar() {
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-0.5 animate-accordion-down data-[state=closed]:animate-accordion-up">
-          <div className="relative ml-[22px] pl-4 border-l-2 border-sidebar-border space-y-0.5 transition-all duration-300 ease-out">
+          <div className={cn(
+            "relative ml-[22px] pl-4 border-l-2 space-y-0.5 transition-all duration-300 ease-out",
+            hasActiveItem ? "border-primary" : "border-sidebar-border"
+          )}>
             {items.map(item => (
               <NavItem key={item.path} item={item} />
             ))}
