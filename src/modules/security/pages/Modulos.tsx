@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, LayoutGrid, MoreHorizontal, Edit, Trash2, Loader2, ToggleLeft, ToggleRight, ChevronRight, ChevronDown, FolderTree, GripVertical } from 'lucide-react';
+import { Plus, Search, LayoutGrid, MoreHorizontal, Edit, Trash2, Loader2, ToggleLeft, ToggleRight, ChevronRight, ChevronDown, FolderTree, GripVertical, Home } from 'lucide-react';
 import { 
   DndContext, 
   DragOverlay,
@@ -12,6 +12,7 @@ import {
   DragStartEvent,
   DragEndEvent,
   DragOverEvent,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -81,19 +82,46 @@ function buildModuloTree(modulos: Modulo[]): ModuloConHijos[] {
   return raices;
 }
 
-// Flattens tree for sorting context
-function flattenTree(nodes: ModuloConHijos[], expandedIds: Set<string>): ModuloConHijos[] {
-  const result: ModuloConHijos[] = [];
-  const traverse = (items: ModuloConHijos[]) => {
-    items.forEach(item => {
-      result.push(item);
-      if (item.hijos.length > 0 && expandedIds.has(item.id)) {
-        traverse(item.hijos);
-      }
-    });
-  };
-  traverse(nodes);
-  return result;
+// Drop zone for root level
+function RootDropZone({ isOver, isDragging }: { isOver: boolean; isDragging: boolean }) {
+  const { setNodeRef } = useDroppable({ id: 'root-zone' });
+  
+  if (!isDragging) return null;
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      className={`flex items-center gap-2 p-3 rounded-lg border-2 border-dashed transition-all ${
+        isOver 
+          ? 'border-primary bg-primary/10 text-primary' 
+          : 'border-muted-foreground/30 text-muted-foreground'
+      }`}
+    >
+      <Home className="h-4 w-4" />
+      <span className="text-sm font-medium">Soltar aquí para convertir en módulo principal</span>
+    </div>
+  );
+}
+
+// Drop zone for making a module a child of another
+function ChildDropZone({ parentId, parentName, isOver, isDragging }: { parentId: string; parentName: string; isOver: boolean; isDragging: boolean }) {
+  const { setNodeRef } = useDroppable({ id: `child-of-${parentId}` });
+  
+  if (!isDragging) return null;
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      className={`ml-6 flex items-center gap-2 p-2 rounded-lg border-2 border-dashed transition-all text-xs ${
+        isOver 
+          ? 'border-primary bg-primary/10 text-primary' 
+          : 'border-muted-foreground/20 text-muted-foreground'
+      }`}
+    >
+      <ChevronRight className="h-3 w-3" />
+      <span>Agregar como submódulo de {parentName}</span>
+    </div>
+  );
 }
 
 interface SortableModuloItemProps {
@@ -105,7 +133,8 @@ interface SortableModuloItemProps {
   toggleModuloStatus: (id: string, status: boolean) => void;
   onDeleteClick: (modulo: Modulo) => void;
   isDragging?: boolean;
-  isOverlay?: boolean;
+  activeId: string | null;
+  overDropZone: string | null;
 }
 
 function SortableModuloItem({ 
@@ -117,7 +146,8 @@ function SortableModuloItem({
   toggleModuloStatus,
   onDeleteClick,
   isDragging,
-  isOverlay
+  activeId,
+  overDropZone,
 }: SortableModuloItemProps) {
   const {
     attributes,
@@ -125,25 +155,28 @@ function SortableModuloItem({
     setNodeRef,
     transform,
     transition,
+    isOver,
   } = useSortable({ id: modulo.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.4 : 1,
   };
 
   const tieneHijos = modulo.hijos.length > 0;
   const isExpanded = expandedIds.has(modulo.id);
+  const showChildDropZone = activeId && activeId !== modulo.id && nivel === 0;
 
   return (
-    <div ref={setNodeRef} style={style} className="animate-fade-in">
+    <div ref={setNodeRef} style={style}>
       <Collapsible open={isExpanded} onOpenChange={() => tieneHijos && toggleExpanded(modulo.id)}>
         <div 
-          className={`flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors ${nivel > 0 ? 'ml-6 border-l-2 border-l-primary/20' : ''} ${isOverlay ? 'shadow-lg ring-2 ring-primary' : ''}`}
+          className={`flex items-center justify-between p-3 rounded-lg border bg-card transition-colors ${
+            nivel > 0 ? 'ml-6 border-l-2 border-l-primary/20' : ''
+          } ${isOver ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'}`}
         >
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            {/* Drag handle */}
             <button
               {...attributes}
               {...listeners}
@@ -224,6 +257,18 @@ function SortableModuloItem({
           </div>
         </div>
 
+        {/* Drop zone para agregar como hijo */}
+        {showChildDropZone && (
+          <div className="mt-1">
+            <ChildDropZone 
+              parentId={modulo.id} 
+              parentName={modulo.nombre}
+              isOver={overDropZone === `child-of-${modulo.id}`}
+              isDragging={!!activeId}
+            />
+          </div>
+        )}
+
         {tieneHijos && (
           <CollapsibleContent className="mt-2 space-y-2">
             <SortableContext items={modulo.hijos.map(h => h.id)} strategy={verticalListSortingStrategy}>
@@ -237,6 +282,9 @@ function SortableModuloItem({
                   openEditModal={openEditModal}
                   toggleModuloStatus={toggleModuloStatus}
                   onDeleteClick={onDeleteClick}
+                  isDragging={activeId === hijo.id}
+                  activeId={activeId}
+                  overDropZone={overDropZone}
                 />
               ))}
             </SortableContext>
@@ -255,6 +303,7 @@ export default function Modulos() {
   const [moduloToDelete, setModuloToDelete] = useState<Modulo | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [overDropZone, setOverDropZone] = useState<string | null>(null);
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -281,7 +330,7 @@ export default function Modulos() {
     },
   });
 
-  const toggleExpanded = (id: string) => {
+  const toggleExpanded = useCallback((id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -291,7 +340,7 @@ export default function Modulos() {
       }
       return next;
     });
-  };
+  }, []);
 
   const expandAll = () => {
     if (modulos) {
@@ -303,7 +352,7 @@ export default function Modulos() {
     setExpandedIds(new Set());
   };
 
-  const toggleModuloStatus = async (id: string, currentStatus: boolean) => {
+  const toggleModuloStatus = useCallback(async (id: string, currentStatus: boolean) => {
     const { error } = await segClient
       .from('modulos')
       .update({ activo: !currentStatus })
@@ -315,7 +364,7 @@ export default function Modulos() {
       toast({ title: 'Éxito', description: `Módulo ${!currentStatus ? 'activado' : 'desactivado'}` });
       refetch();
     }
-  };
+  }, [toast, refetch]);
 
   const confirmDelete = async () => {
     if (!moduloToDelete) return;
@@ -335,10 +384,10 @@ export default function Modulos() {
     setModuloToDelete(null);
   };
 
-  const openEditModal = (modulo: Modulo) => {
+  const openEditModal = useCallback((modulo: Modulo) => {
     setEditingModulo(modulo);
     setModalOpen(true);
-  };
+  }, []);
 
   const openCreateModal = () => {
     setEditingModulo(null);
@@ -365,56 +414,131 @@ export default function Modulos() {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    // Expandir todos para ver drop zones
+    if (modulos) {
+      setExpandedIds(new Set(modulos.map(m => m.id)));
+    }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    // Could add drop zone indicators here
+    const overId = event.over?.id as string;
+    setOverDropZone(overId || null);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+    setOverDropZone(null);
 
-    if (!over || active.id === over.id || !modulos) return;
+    if (!over || !modulos) return;
 
     const activeModulo = modulos.find(m => m.id === active.id);
+    if (!activeModulo) return;
+
+    const overId = over.id as string;
+
+    // Mover a raíz
+    if (overId === 'root-zone') {
+      const rootModules = modulos.filter(m => !m.modulo_padre_id);
+      const maxOrden = rootModules.length > 0 ? Math.max(...rootModules.map(m => m.orden)) : 0;
+      
+      const { error } = await segClient
+        .from('modulos')
+        .update({ modulo_padre_id: null, orden: maxOrden + 1 })
+        .eq('id', active.id);
+
+      if (error) {
+        toast({ title: 'Error', description: 'No se pudo mover el módulo', variant: 'destructive' });
+      } else {
+        toast({ title: 'Éxito', description: 'Módulo movido a raíz' });
+        refetch();
+      }
+      return;
+    }
+
+    // Mover como hijo de otro módulo
+    if (overId.startsWith('child-of-')) {
+      const parentId = overId.replace('child-of-', '');
+      
+      // Evitar mover a sí mismo o a sus propios hijos
+      if (parentId === active.id) return;
+      
+      const siblings = modulos.filter(m => m.modulo_padre_id === parentId);
+      const maxOrden = siblings.length > 0 ? Math.max(...siblings.map(m => m.orden)) : 0;
+
+      const { error } = await segClient
+        .from('modulos')
+        .update({ modulo_padre_id: parentId, orden: maxOrden + 1 })
+        .eq('id', active.id);
+
+      if (error) {
+        toast({ title: 'Error', description: 'No se pudo mover el módulo', variant: 'destructive' });
+      } else {
+        toast({ title: 'Éxito', description: 'Módulo movido como submódulo' });
+        refetch();
+      }
+      return;
+    }
+
+    // Reordenar entre hermanos
+    if (active.id === over.id) return;
+
     const overModulo = modulos.find(m => m.id === over.id);
+    if (!overModulo) return;
 
-    if (!activeModulo || !overModulo) return;
+    // Si tienen el mismo padre, reordenamos
+    if (activeModulo.modulo_padre_id === overModulo.modulo_padre_id) {
+      const siblings = modulos
+        .filter(m => m.modulo_padre_id === overModulo.modulo_padre_id && m.id !== active.id)
+        .sort((a, b) => a.orden - b.orden);
+      
+      const overIndex = siblings.findIndex(m => m.id === over.id);
+      const newOrder = overIndex >= 0 ? overModulo.orden : 0;
 
-    // Determine new parent and order
-    const newParentId = overModulo.modulo_padre_id;
-    
-    // Get siblings (modules with same parent)
-    const siblings = modulos.filter(m => m.modulo_padre_id === newParentId && m.id !== active.id);
-    const overIndex = siblings.findIndex(m => m.id === over.id);
-    
-    // Calculate new order
-    let newOrder: number;
-    if (overIndex === 0) {
-      newOrder = overModulo.orden - 1;
-    } else if (overIndex === siblings.length - 1) {
-      newOrder = overModulo.orden + 1;
+      const { error } = await segClient
+        .from('modulos')
+        .update({ orden: newOrder })
+        .eq('id', active.id);
+
+      if (error) {
+        toast({ title: 'Error', description: 'No se pudo reordenar', variant: 'destructive' });
+      } else {
+        // Actualizar orden de hermanos
+        const updates = siblings.map((m, i) => ({
+          id: m.id,
+          orden: i >= overIndex ? i + 2 : i
+        }));
+        
+        for (const u of updates) {
+          await segClient.from('modulos').update({ orden: u.orden }).eq('id', u.id);
+        }
+        
+        toast({ title: 'Éxito', description: 'Módulo reordenado' });
+        refetch();
+      }
     } else {
-      const prevSibling = siblings[overIndex - 1];
-      newOrder = Math.floor((prevSibling.orden + overModulo.orden) / 2);
-    }
+      // Mover al mismo nivel que el target
+      const targetParentId = overModulo.modulo_padre_id;
+      const siblings = modulos.filter(m => m.modulo_padre_id === targetParentId);
+      const maxOrden = siblings.length > 0 ? Math.max(...siblings.map(m => m.orden)) : 0;
 
-    // Update in database
-    const { error } = await segClient
-      .from('modulos')
-      .update({ 
-        modulo_padre_id: newParentId,
-        orden: newOrder
-      })
-      .eq('id', active.id);
+      const { error } = await segClient
+        .from('modulos')
+        .update({ modulo_padre_id: targetParentId, orden: maxOrden + 1 })
+        .eq('id', active.id);
 
-    if (error) {
-      toast({ title: 'Error', description: 'No se pudo reordenar el módulo', variant: 'destructive' });
-    } else {
-      toast({ title: 'Éxito', description: 'Módulo reordenado' });
-      refetch();
+      if (error) {
+        toast({ title: 'Error', description: 'No se pudo mover el módulo', variant: 'destructive' });
+      } else {
+        toast({ title: 'Éxito', description: 'Módulo movido' });
+        refetch();
+      }
     }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setOverDropZone(null);
   };
 
   if (error) {
@@ -430,7 +554,7 @@ export default function Modulos() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Módulos</h1>
-          <p className="text-muted-foreground">Gestiona los módulos de la plataforma. Arrastra para reordenar.</p>
+          <p className="text-muted-foreground">Arrastra los módulos para reordenar o cambiar jerarquía</p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="mr-2 h-4 w-4" />Nuevo Módulo
@@ -477,9 +601,13 @@ export default function Modulos() {
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
             >
-              <SortableContext items={arbol.map(m => m.id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2">
+              <div className="space-y-2">
+                {/* Drop zone para convertir en módulo principal */}
+                <RootDropZone isOver={overDropZone === 'root-zone'} isDragging={!!activeId} />
+                
+                <SortableContext items={arbol.map(m => m.id)} strategy={verticalListSortingStrategy}>
                   {arbol.map(modulo => (
                     <SortableModuloItem 
                       key={modulo.id} 
@@ -494,10 +622,12 @@ export default function Modulos() {
                         setDeleteDialogOpen(true);
                       }}
                       isDragging={activeId === modulo.id}
+                      activeId={activeId}
+                      overDropZone={overDropZone}
                     />
                   ))}
-                </div>
-              </SortableContext>
+                </SortableContext>
+              </div>
 
               <DragOverlay>
                 {activeItem ? (
