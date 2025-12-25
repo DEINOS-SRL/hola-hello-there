@@ -43,6 +43,36 @@ export function useFavoritos() {
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: (orderedFavoritos: FavoritoConModulo[]) => {
+      if (!user?.id) throw new Error('Usuario no autenticado');
+      const orderedIds = orderedFavoritos.map((f, index) => ({ id: f.id, orden: index }));
+      return favoritosService.reorderFavoritos(user.id, orderedIds);
+    },
+    onMutate: async (newOrder) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['favoritos', user?.id] });
+      
+      // Snapshot previous value
+      const previousFavoritos = queryClient.getQueryData<FavoritoConModulo[]>(['favoritos', user?.id]);
+      
+      // Optimistically update
+      queryClient.setQueryData<FavoritoConModulo[]>(['favoritos', user?.id], newOrder);
+      
+      return { previousFavoritos };
+    },
+    onError: (err, newOrder, context) => {
+      // Rollback on error
+      if (context?.previousFavoritos) {
+        queryClient.setQueryData(['favoritos', user?.id], context.previousFavoritos);
+      }
+      toast.error('Error al reordenar favoritos');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['favoritos'] });
+    },
+  });
+
   const toggleFavorito = (moduloId: string) => {
     const isFav = favoritos.some(f => f.modulo_id === moduloId);
     if (isFav) {
@@ -56,6 +86,10 @@ export function useFavoritos() {
     return favoritos.some(f => f.modulo_id === moduloId);
   };
 
+  const reorderFavoritos = (newOrder: FavoritoConModulo[]) => {
+    reorderMutation.mutate(newOrder);
+  };
+
   return {
     favoritos,
     isLoading,
@@ -64,8 +98,10 @@ export function useFavoritos() {
     removeFavorito: removeFavoritoMutation.mutate,
     toggleFavorito,
     isFavorito,
+    reorderFavoritos,
     isAdding: addFavoritoMutation.isPending,
     isRemoving: removeFavoritoMutation.isPending,
+    isReordering: reorderMutation.isPending,
   };
 }
 

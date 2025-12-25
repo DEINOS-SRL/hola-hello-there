@@ -95,4 +95,19 @@ export const favoritosService = {
     if (error) throw error;
     return !!data;
   },
+
+  async reorderFavoritos(usuarioId: string, orderedIds: { id: string; orden: number }[]): Promise<void> {
+    // Actualizar el orden de cada favorito
+    const updates = orderedIds.map(({ id, orden }) =>
+      segClient
+        .from('usuario_favoritos')
+        .update({ orden })
+        .eq('id', id)
+        .eq('usuario_id', usuarioId)
+    );
+
+    const results = await Promise.all(updates);
+    const error = results.find(r => r.error)?.error;
+    if (error) throw error;
+  },
 };
