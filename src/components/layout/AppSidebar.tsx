@@ -3,9 +3,7 @@ import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { 
   Home, 
   LayoutGrid,
-  ChevronLeft,
   ChevronRight,
-  ChevronDown,
   LucideIcon,
   Shield,
   Users,
@@ -20,7 +18,8 @@ import {
   HelpCircle,
   PanelLeftClose,
   PanelLeft,
-  Workflow
+  Workflow,
+  Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -123,6 +122,7 @@ export function AppSidebar() {
     const iconMapping: Record<string, LucideIcon> = {
       'security': Shield,
       'employees': Users,
+      'rrhh': Briefcase,
       'equipos': Truck,
       'operacion': Workflow,
       'partes-diarios': ClipboardList,
@@ -163,8 +163,7 @@ export function AppSidebar() {
         className={cn(
           "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm",
           "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-          active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium",
-          indent && !collapsed && "ml-7"
+          active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
         )}
       >
         {IconComponent && <IconComponent className="h-4 w-4 shrink-0" />}
@@ -253,18 +252,20 @@ export function AppSidebar() {
               <ModuleIcon className="h-4 w-4 shrink-0" />
               <span>{moduleName}</span>
             </div>
-            <ChevronDown 
+            <ChevronRight 
               className={cn(
                 "h-4 w-4 transition-transform duration-200",
-                isExpanded && "rotate-180"
+                isExpanded && "rotate-90"
               )} 
             />
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-0.5 mt-0.5">
-          {items.map(item => (
-            <NavItem key={item.path} item={item} indent />
-          ))}
+        <CollapsibleContent className="mt-0.5">
+          <div className="relative ml-[22px] pl-4 border-l-2 border-sidebar-border space-y-0.5">
+            {items.map(item => (
+              <NavItem key={item.path} item={item} />
+            ))}
+          </div>
         </CollapsibleContent>
       </Collapsible>
     );
