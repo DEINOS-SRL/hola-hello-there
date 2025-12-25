@@ -146,12 +146,15 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
 
           <div className="space-y-2">
             <Label>Empresa (opcional)</Label>
-            <Select value={empresaId} onValueChange={(value) => setValue('empresa_id', value)}>
+            <Select 
+              value={empresaId || "global"} 
+              onValueChange={(value) => setValue('empresa_id', value === "global" ? "" : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Global (todas las empresas)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Global</SelectItem>
+                <SelectItem value="global">Global</SelectItem>
                 {empresas?.map((e) => (
                   <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
                 ))}
