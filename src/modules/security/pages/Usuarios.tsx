@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, UserCheck, UserX, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, UserCheck, UserX, Edit, Trash2, Loader2, Shield } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { UsuarioModal } from '@/components/modals/UsuarioModal';
+import { AsignarRolesModal } from '@/components/modals/AsignarRolesModal';
 
 export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +42,8 @@ export default function Usuarios() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [rolesModalOpen, setRolesModalOpen] = useState(false);
+  const [userForRoles, setUserForRoles] = useState<any>(null);
   const { toast } = useToast();
 
   const { data: usuarios, isLoading, error, refetch } = useQuery({
@@ -95,6 +98,11 @@ export default function Usuarios() {
   const openCreateModal = () => {
     setEditingUser(null);
     setModalOpen(true);
+  };
+
+  const openRolesModal = (user: any) => {
+    setUserForRoles(user);
+    setRolesModalOpen(true);
   };
 
   const filtered = usuarios?.filter((u: any) => 
@@ -189,6 +197,9 @@ export default function Usuarios() {
                           <DropdownMenuItem onClick={() => openEditModal(user)}>
                             <Edit className="mr-2 h-4 w-4" />Editar
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openRolesModal(user)}>
+                            <Shield className="mr-2 h-4 w-4" />Asignar Roles
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleUserStatus(user.id, user.activo || false)}>
                             {user.activo ? (
                               <><UserX className="mr-2 h-4 w-4" />Desactivar</>
@@ -221,6 +232,13 @@ export default function Usuarios() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         usuario={editingUser}
+        onSuccess={refetch}
+      />
+
+      <AsignarRolesModal
+        open={rolesModalOpen}
+        onOpenChange={setRolesModalOpen}
+        usuario={userForRoles}
         onSuccess={refetch}
       />
 
