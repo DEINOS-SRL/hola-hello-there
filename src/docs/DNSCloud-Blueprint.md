@@ -82,23 +82,23 @@ El Shell arma rutas y menú leyendo manifests desde `src/app/moduleRegistry.ts`.
 
 ## Reglas de autorización
 
-| Concepto | Implementación |
-|----------|----------------|
-| Rutas protegidas | RouteGuard valida permisos |
-| Acciones UI | Botones/menús se ocultan por permisos |
-| Filtrado de datos | Siempre filtrar por `empresaId` |
+| Concepto          | Implementación                        |
+| ----------------- | ------------------------------------- |
+| Rutas protegidas  | RouteGuard valida permisos            |
+| Acciones UI       | Botones/menús se ocultan por permisos |
+| Filtrado de datos | Siempre filtrar por `empresaId`       |
 
 ### Ejemplo de RouteGuard
 
 ```typescript
 const RouteGuard = ({ requiredPermissions, children }) => {
   const { user, hasPermission } = useAuth();
-  
+
   if (!user) return <Navigate to="/login" />;
-  
+
   const hasAccess = requiredPermissions.every(p => hasPermission(p));
   if (!hasAccess) return <Navigate to="/unauthorized" />;
-  
+
   return children;
 };
 ```
@@ -149,12 +149,12 @@ Estilo limpio, moderno, calmado.
 
 ### Paleta de colores
 
-| Token | Valor | Uso |
-|-------|-------|-----|
-| `--background` | #FFFFFF | Fondo principal |
-| `--primary` | #22C55E | Acciones principales |
-| `--muted` | #F0FDFA | Fondos secundarios |
-| `--foreground` | Grises elegantes | Texto |
+| Token          | Valor            | Uso                  |
+| -------------- | ---------------- | -------------------- |
+| `--background` | #FFFFFF          | Fondo principal      |
+| `--primary`    | #22C55E          | Acciones principales |
+| `--muted`      | #F0FDFA          | Fondos secundarios   |
+| `--foreground` | Grises elegantes | Texto                |
 
 ### Tipografía
 
@@ -204,15 +204,15 @@ Implementar módulos por **"vertical slices"**:
 
 ### Tablas principales de seguridad
 
-| Tabla | Descripción |
-|-------|-------------|
-| `seg_empresas` | Tenants/empresas |
-| `seg_usuarios` | Usuarios del sistema |
-| `seg_roles` | Roles por empresa |
-| `seg_permisos` | Catálogo de permisos |
-| `seg_rol_permiso` | Relación rol-permisos |
-| `seg_usuario_rol` | Asignación usuario-rol-aplicación |
-| `seg_aplicaciones` | Módulos/aplicaciones del sistema |
+| Tabla              | Descripción                       |
+| ------------------ | --------------------------------- |
+| `seg_empresas`     | Tenants/empresas                  |
+| `seg_usuarios`     | Usuarios del sistema              |
+| `seg_roles`        | Roles por empresa                 |
+| `seg_permisos`     | Catálogo de permisos              |
+| `seg_rol_permiso`  | Relación rol-permisos             |
+| `seg_usuario_rol`  | Asignación usuario-rol-aplicación |
+| `seg_aplicaciones` | Módulos/aplicaciones del sistema  |
 
 ### Políticas RLS
 
@@ -224,12 +224,12 @@ Todas las tablas deben tener RLS habilitado y filtrar por `empresa_id` cuando co
 
 ### Nomenclatura
 
-| Tipo | Convención | Ejemplo |
-|------|------------|---------|
-| Componentes | PascalCase | `UserCard.tsx` |
-| Hooks | camelCase con prefix `use` | `useAuth.ts` |
-| Permisos | `modulo.accion` | `equipos.read` |
-| Archivos | kebab-case o PascalCase | `user-service.ts` |
+| Tipo        | Convención                 | Ejemplo           |
+| ----------- | -------------------------- | ----------------- |
+| Componentes | PascalCase                 | `UserCard.tsx`    |
+| Hooks       | camelCase con prefix `use` | `useAuth.ts`      |
+| Permisos    | `modulo.accion`            | `equipos.read`    |
+| Archivos    | kebab-case o PascalCase    | `user-service.ts` |
 
 ### Imports
 
@@ -269,6 +269,6 @@ import type { User } from '@/types/auth';
 
 ## Changelog
 
-| Fecha | Cambio |
-|-------|--------|
+| Fecha      | Cambio                   |
+| ---------- | ------------------------ |
 | 2025-01-XX | Documento inicial creado |
