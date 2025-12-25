@@ -44,7 +44,6 @@ import HabilitacionesVencimientos from '@/modules/habilitaciones/pages/Vencimien
 // Partes Diarios
 import PartesIndex from '@/modules/partes/pages/Index';
 import PartesRegistro from '@/modules/partes/pages/Registro';
-import PartesHistorial from '@/modules/partes/pages/Historial';
 
 // Mapeo de rutas a componentes implementados
 const implementedRoutes: Record<string, React.ComponentType> = {
