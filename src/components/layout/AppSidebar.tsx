@@ -53,6 +53,7 @@ const configMenuItems = [
 ];
 
 const SIDEBAR_COLLAPSED_KEY = 'dnscloud-sidebar-collapsed';
+const SIDEBAR_EXPANDED_MODULES_KEY = 'dnscloud-sidebar-expanded-modules';
 const SIDEBAR_MIN_WIDTH = 68;
 const SIDEBAR_MAX_WIDTH = 260;
 const SIDEBAR_COLLAPSE_THRESHOLD = 120;
@@ -68,7 +69,14 @@ export function AppSidebar() {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     return stored === 'true';
   });
-  const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  const [expandedModules, setExpandedModules] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(SIDEBAR_EXPANDED_MODULES_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const { user, empresa, isAdmin } = useAuth();
@@ -165,11 +173,14 @@ export function AppSidebar() {
   }, [modulosArbol]); // Solo ejecutar cuando cambian los módulos, no en cada navegación
 
   const toggleModule = (moduleId: string) => {
-    setExpandedModules(prev => 
-      prev.includes(moduleId) 
+    setExpandedModules(prev => {
+      const newExpanded = prev.includes(moduleId) 
         ? prev.filter(id => id !== moduleId)
-        : [...prev, moduleId]
-    );
+        : [...prev, moduleId];
+      // Persistir en localStorage
+      localStorage.setItem(SIDEBAR_EXPANDED_MODULES_KEY, JSON.stringify(newExpanded));
+      return newExpanded;
+    });
   };
 
   // Filtrar módulos según permisos del usuario
@@ -439,7 +450,7 @@ export function AppSidebar() {
             </Tooltip>
           )}
         </div>
-        <CollapsibleContent className="mt-0.5 animate-accordion-down data-[state=closed]:animate-accordion-up">
+        <CollapsibleContent className="mt-0.5 overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
           <div className={cn(
             "relative ml-[22px] pl-4 border-l-2 space-y-0.5 transition-all duration-300 ease-out",
             hasActiveItem 
