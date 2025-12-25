@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, Key, MoreHorizontal, Edit, Trash2, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,31 +32,31 @@ export default function Roles() {
   const { data: roles, isLoading, error, refetch } = useQuery({
     queryKey: ['roles'],
     queryFn: async () => {
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('seg_roles')
-        .select(`*, seg_empresas(nombre)`)
+      const { data: rolesData, error: rolesError } = await segClient
+        .from('roles')
+        .select(`*, empresas(nombre)`)
         .order('nombre', { ascending: true });
 
       if (rolesError) throw rolesError;
 
-      const { data: permCounts } = await supabase
-        .from('seg_rol_permiso')
+      const { data: permCounts } = await segClient
+        .from('rol_permiso')
         .select('rol_id');
 
       const counts: Record<string, number> = {};
-      permCounts?.forEach(p => {
+      permCounts?.forEach((p: any) => {
         counts[p.rol_id] = (counts[p.rol_id] || 0) + 1;
       });
 
-      return rolesData?.map(r => ({ ...r, permisos_count: counts[r.id] || 0 }));
+      return rolesData?.map((r: any) => ({ ...r, permisos_count: counts[r.id] || 0 }));
     },
   });
 
   const confirmDelete = async () => {
     if (!rolToDelete) return;
     
-    const { error } = await supabase
-      .from('seg_roles')
+    const { error } = await segClient
+      .from('roles')
       .delete()
       .eq('id', rolToDelete.id);
 
@@ -80,7 +80,7 @@ export default function Roles() {
     setModalOpen(true);
   };
 
-  const filtered = roles?.filter(r => 
+  const filtered = roles?.filter((r: any) => 
     r.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -141,7 +141,7 @@ export default function Roles() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(rol => (
+                {filtered.map((rol: any) => (
                   <TableRow key={rol.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -157,7 +157,7 @@ export default function Roles() {
                     <TableCell>
                       <Badge variant="secondary">{rol.permisos_count} permisos</Badge>
                     </TableCell>
-                    <TableCell>{rol.seg_empresas?.nombre || 'Global'}</TableCell>
+                    <TableCell>{rol.empresas?.nombre || 'Global'}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

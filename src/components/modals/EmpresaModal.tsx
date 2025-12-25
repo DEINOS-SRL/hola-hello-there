@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
   DialogContent,
@@ -79,17 +79,17 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
       };
 
       if (isEditing) {
-        const { error } = await supabase
-          .from('seg_empresas')
+        const { error } = await segClient
+          .from('empresas')
           .update(payload)
           .eq('id', empresa.id);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Empresa actualizada correctamente' });
       } else {
-        const { error } = await supabase
-          .from('seg_empresas')
-          .insert([payload] as any);
+        const { error } = await segClient
+          .from('empresas')
+          .insert([payload]);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Empresa creada correctamente' });

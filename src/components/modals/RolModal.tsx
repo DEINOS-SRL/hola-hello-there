@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
   DialogContent,
@@ -48,7 +48,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
   const { data: empresas } = useQuery({
     queryKey: ['empresas-select'],
     queryFn: async () => {
-      const { data } = await supabase.from('seg_empresas').select('id, nombre').order('nombre');
+      const { data } = await segClient.from('empresas').select('id, nombre').order('nombre');
       return data || [];
     },
   });
@@ -95,17 +95,17 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
       };
 
       if (isEditing) {
-        const { error } = await supabase
-          .from('seg_roles')
+        const { error } = await segClient
+          .from('roles')
           .update(payload)
           .eq('id', rol.id);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Rol actualizado correctamente' });
       } else {
-        const { error } = await supabase
-          .from('seg_roles')
-          .insert([payload] as any);
+        const { error } = await segClient
+          .from('roles')
+          .insert([payload]);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Rol creado correctamente' });
@@ -155,7 +155,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="global">Global</SelectItem>
-                {empresas?.map((e) => (
+                {empresas?.map((e: any) => (
                   <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
                 ))}
               </SelectContent>

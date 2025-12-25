@@ -1,6 +1,6 @@
-import { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useAuth } from '@/core/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 
 interface PermissionsContextType {
   permissions: string[];
@@ -32,12 +32,12 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
     // Si es admin, darle todos los permisos (superuser)
     if (isAdmin) {
       // Cargar todos los permisos disponibles
-      const { data: allPermisos } = await supabase
-        .from('seg_permisos')
+      const { data: allPermisos } = await segClient
+        .from('permisos')
         .select('nombre');
       
       if (allPermisos) {
-        setPermissions(allPermisos.map(p => p.nombre));
+        setPermissions(allPermisos.map((p: any) => p.nombre));
       }
       setIsLoadingPermissions(false);
       return;
@@ -45,8 +45,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
 
     try {
       // Obtener roles del usuario
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('seg_usuario_rol')
+      const { data: userRoles, error: rolesError } = await segClient
+        .from('usuario_rol')
         .select('rol_id')
         .eq('usuario_id', user.id);
 
@@ -56,12 +56,12 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
         return;
       }
 
-      const rolIds = userRoles.map(r => r.rol_id);
+      const rolIds = userRoles.map((r: any) => r.rol_id);
 
       // Obtener permisos de esos roles
-      const { data: rolePermisos, error: permisosError } = await supabase
-        .from('seg_rol_permiso')
-        .select('permiso_id, seg_permisos(nombre)')
+      const { data: rolePermisos, error: permisosError } = await segClient
+        .from('rol_permiso')
+        .select('permiso_id, permisos(nombre)')
         .in('rol_id', rolIds);
 
       if (permisosError || !rolePermisos) {
@@ -73,7 +73,7 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
       // Extraer nombres únicos de permisos
       const permissionNames = [...new Set(
         rolePermisos
-          .map((rp: any) => rp.seg_permisos?.nombre)
+          .map((rp: any) => rp.permisos?.nombre)
           .filter(Boolean)
       )];
 

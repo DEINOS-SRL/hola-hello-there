@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, MoreHorizontal, UserCheck, UserX, Edit, Trash2, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,9 +46,9 @@ export default function Usuarios() {
   const { data: usuarios, isLoading, error, refetch } = useQuery({
     queryKey: ['usuarios'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('seg_usuarios')
-        .select(`*, seg_empresas(nombre)`)
+      const { data, error } = await segClient
+        .from('usuarios')
+        .select(`*, empresas(nombre)`)
         .order('nombre', { ascending: true });
       if (error) throw error;
       return data;
@@ -56,8 +56,8 @@ export default function Usuarios() {
   });
 
   const toggleUserStatus = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from('seg_usuarios')
+    const { error } = await segClient
+      .from('usuarios')
       .update({ activo: !currentStatus })
       .eq('id', id);
 
@@ -72,8 +72,8 @@ export default function Usuarios() {
   const confirmDelete = async () => {
     if (!userToDelete) return;
     
-    const { error } = await supabase
-      .from('seg_usuarios')
+    const { error } = await segClient
+      .from('usuarios')
       .delete()
       .eq('id', userToDelete.id);
 
@@ -97,7 +97,7 @@ export default function Usuarios() {
     setModalOpen(true);
   };
 
-  const filtered = usuarios?.filter(u => 
+  const filtered = usuarios?.filter((u: any) => 
     u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -159,7 +159,7 @@ export default function Usuarios() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(user => (
+                {filtered.map((user: any) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -172,7 +172,7 @@ export default function Usuarios() {
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                    <TableCell>{user.seg_empresas?.nombre || '-'}</TableCell>
+                    <TableCell>{user.empresas?.nombre || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={user.activo ? 'default' : 'secondary'}>
                         {user.activo ? 'Activo' : 'Inactivo'}

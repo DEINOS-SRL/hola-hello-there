@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { supabase } from '@/integrations/supabase/client';
+import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
   DialogContent,
@@ -127,17 +127,17 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
       };
 
       if (isEditing) {
-        const { error } = await supabase
-          .from('seg_aplicaciones')
+        const { error } = await segClient
+          .from('aplicaciones')
           .update(payload)
           .eq('id', aplicacion.id);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Aplicación actualizada correctamente' });
       } else {
-        const { error } = await supabase
-          .from('seg_aplicaciones')
-          .insert([payload] as any);
+        const { error } = await segClient
+          .from('aplicaciones')
+          .insert([payload]);
 
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Aplicación creada correctamente' });
