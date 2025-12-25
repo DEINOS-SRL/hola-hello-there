@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, UserCheck, UserX, Edit, Trash2, Loader2, Shield } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, UserCheck, UserX, Edit, Trash2, Loader2, Shield, X, Filter } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -38,6 +45,7 @@ import { AsignarRolesModal } from '@/components/modals/AsignarRolesModal';
 
 export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRolFilter, setSelectedRolFilter] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -132,11 +140,27 @@ export default function Usuarios() {
     setRolesModalOpen(true);
   };
 
-  const filtered = usuarios?.filter((u: any) => 
-    u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Obtener lista única de roles para el filtro
+  const availableRoles = usuarios
+    ? [...new Set(usuarios.flatMap((u: any) => u.roles?.map((r: any) => r.rol) || []))]
+        .filter(Boolean)
+        .sort()
+    : [];
+
+  // Filtrado por búsqueda y rol
+  const filtered = usuarios?.filter((u: any) => {
+    const matchesSearch = 
+      u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = 
+      selectedRolFilter === 'all' ||
+      (selectedRolFilter === 'sin-rol' && (!u.roles || u.roles.length === 0)) ||
+      (u.roles?.some((r: any) => r.rol === selectedRolFilter));
+    
+    return matchesSearch && matchesRole;
+  }) || [];
 
   if (error) {
     return (
@@ -160,7 +184,7 @@ export default function Usuarios() {
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -170,6 +194,34 @@ export default function Usuarios() {
                 onChange={e => setSearchTerm(e.target.value)} 
               />
             </div>
+            
+            {/* Filtro por rol */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={selectedRolFilter} onValueChange={setSelectedRolFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los roles</SelectItem>
+                  <SelectItem value="sin-rol">Sin rol asignado</SelectItem>
+                  {availableRoles.map((rol: string) => (
+                    <SelectItem key={rol} value={rol}>{rol}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedRolFilter !== 'all' && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={() => setSelectedRolFilter('all')}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
             <Badge variant="outline">{filtered.length} usuarios</Badge>
           </div>
         </CardHeader>
