@@ -1,8 +1,8 @@
 import type { ModuleManifest } from '@/shared/types/module';
 
 export const securityManifest: ModuleManifest = {
-  moduleId: 'security',
-  name: 'Seguridad',
+  moduleId: 'administracion',
+  name: 'Administración',
   description: 'Gestión de empresas, usuarios, roles y permisos',
   permissions: [
     { key: 'security.empresas.read', name: 'Ver empresas', description: 'Permite ver la lista de empresas' },
@@ -23,9 +23,9 @@ export const securityManifest: ModuleManifest = {
   ],
   routes: [],
   navItems: [
-    { label: 'Empresas', path: '/seguridad/empresas', icon: 'Building2', requiredPermissions: ['security.empresas.read'] },
-    { label: 'Usuarios', path: '/seguridad/usuarios', icon: 'Users', requiredPermissions: ['security.usuarios.read'] },
-    { label: 'Roles', path: '/seguridad/roles', icon: 'Shield', requiredPermissions: ['security.roles.read'] },
-    { label: 'Módulos', path: '/seguridad/modulos', icon: 'LayoutGrid', requiredPermissions: ['security.modulos.read'] },
+    { label: 'Empresas', path: '/configuracion/administracion/empresas', icon: 'Building2', requiredPermissions: ['security.empresas.read'] },
+    { label: 'Usuarios', path: '/configuracion/administracion/usuarios', icon: 'Users', requiredPermissions: ['security.usuarios.read'] },
+    { label: 'Roles', path: '/configuracion/administracion/roles', icon: 'Shield', requiredPermissions: ['security.roles.read'] },
+    { label: 'Módulos', path: '/configuracion/administracion/modulos', icon: 'LayoutGrid', requiredPermissions: ['security.modulos.read'] },
   ],
 };

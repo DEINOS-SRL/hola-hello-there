@@ -39,10 +39,8 @@ const mainMenuItems = [
   { name: 'Favoritos', href: '#favoritos', icon: Bookmark, isSection: true },
 ];
 
-// Items del footer
-const footerItems = [
-  { name: 'Configuración', href: '/configuracion', icon: Settings },
-];
+// Items del footer (ya no incluye Configuración que ahora es módulo dinámico)
+const footerItems: { name: string; href: string; icon: LucideIcon }[] = [];
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
