@@ -139,18 +139,30 @@ export function AppSidebar() {
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
-  // Expandir automáticamente el módulo activo
+  // Expandir automáticamente el módulo activo solo al montar o cambiar de módulo padre
   useEffect(() => {
     if (modulosArbol.length > 0) {
-      const activeModuleId = modulosArbol.find(m => 
+      const activeModule = modulosArbol.find(m => 
         isActive(m.ruta) || m.hijos.some(h => isActive(h.ruta))
-      )?.id;
+      );
       
-      if (activeModuleId && !expandedModules.includes(activeModuleId)) {
-        setExpandedModules(prev => [...prev, activeModuleId]);
+      // Solo expandir si cambiamos a un módulo diferente (no al navegar dentro del mismo)
+      if (activeModule && !expandedModules.includes(activeModule.id)) {
+        // Verificar si la ruta anterior era del mismo módulo
+        const wasInSameModule = modulosArbol.some(m => 
+          m.id === activeModule.id && (
+            m.ruta === location.pathname || 
+            m.hijos.some(h => h.ruta === location.pathname)
+          )
+        );
+        
+        if (!wasInSameModule) {
+          setExpandedModules(prev => [...prev, activeModule.id]);
+        }
       }
     }
-  }, [location.pathname, modulosArbol]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modulosArbol]); // Solo ejecutar cuando cambian los módulos, no en cada navegación
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules(prev => 
