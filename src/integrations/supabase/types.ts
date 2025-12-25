@@ -19,24 +19,30 @@ export type Database = {
           activa: boolean | null
           created_at: string | null
           descripcion: string | null
+          icono: string | null
           id: string
           nombre: string
+          ruta: string | null
           updated_at: string | null
         }
         Insert: {
           activa?: boolean | null
           created_at?: string | null
           descripcion?: string | null
+          icono?: string | null
           id?: string
           nombre: string
+          ruta?: string | null
           updated_at?: string | null
         }
         Update: {
           activa?: boolean | null
           created_at?: string | null
           descripcion?: string | null
+          icono?: string | null
           id?: string
           nombre?: string
+          ruta?: string | null
           updated_at?: string | null
         }
         Relationships: []
