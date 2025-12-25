@@ -9,11 +9,13 @@ import {
   AppWindow,
   ChevronLeft,
   ChevronRight,
-  Settings,
-  LayoutGrid
+  LayoutGrid,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -32,7 +34,12 @@ const securityMenuItems = [
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { isAdmin } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
   const location = useLocation();
+
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
@@ -134,6 +141,44 @@ export function AppSidebar() {
         )}
       </nav>
 
+      {/* Theme Toggle */}
+      <div className="p-3 border-t border-sidebar-border">
+        {collapsed ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="w-full h-10 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                {resolvedTheme === "dark" ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {resolvedTheme === "dark" ? "Modo Claro" : "Modo Oscuro"}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            className="w-full justify-start gap-3 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          >
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+            <span>{resolvedTheme === "dark" ? "Modo Claro" : "Modo Oscuro"}</span>
+          </Button>
+        )}
+      </div>
     </aside>
   );
 }

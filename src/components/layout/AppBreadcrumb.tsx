@@ -14,6 +14,7 @@ const routeLabels: Record<string, string> = {
   dashboard: 'Dashboard',
   modulos: 'Módulos',
   perfil: 'Perfil',
+  configuracion: 'Configuración',
   seguridad: 'Seguridad',
   usuarios: 'Usuarios',
   empresas: 'Empresas',
