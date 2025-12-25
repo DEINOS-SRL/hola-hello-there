@@ -43,6 +43,29 @@ const getIconByName = (iconName: string): LucideIcon => {
   return DefaultIcon;
 };
 
+// Función para resaltar texto que coincide con la búsqueda
+const HighlightText = ({ text, search }: { text: string; search: string }) => {
+  if (!search.trim()) return <>{text}</>;
+  
+  const searchLower = search.toLowerCase().trim();
+  const textLower = text.toLowerCase();
+  const index = textLower.indexOf(searchLower);
+  
+  if (index === -1) return <>{text}</>;
+  
+  const before = text.slice(0, index);
+  const match = text.slice(index, index + search.length);
+  const after = text.slice(index + search.length);
+  
+  return (
+    <>
+      {before}
+      <span className="bg-primary/20 text-primary rounded-sm px-0.5">{match}</span>
+      {after}
+    </>
+  );
+};
+
 // Items fijos del menú principal
 const mainMenuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -362,7 +385,7 @@ export function AppSidebar() {
             <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
           )}
           <IconComponent className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>{modulo.nombre}</span>}
+          {!collapsed && <span><HighlightText text={modulo.nombre} search={moduleSearch} /></span>}
         </RouterNavLink>
         
         {/* Botón de favorito visible en hover */}
@@ -477,7 +500,7 @@ export function AppSidebar() {
             >
               <div className="flex items-center gap-3">
                 <ModuleIcon className="h-4 w-4 shrink-0" />
-                <span>{modulo.nombre}</span>
+                <span><HighlightText text={modulo.nombre} search={moduleSearch} /></span>
                 {/* Contador de items cuando está colapsado */}
                 {!isExpanded && modulo.hijos.length > 0 && (
                   <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
@@ -741,7 +764,7 @@ export function AppSidebar() {
 
           {/* Filtro de búsqueda de módulos */}
           {!collapsed && visibleModules.length > 3 && (
-            <div className="px-2 pb-1">
+            <div className="px-2 pb-1 space-y-1">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                 <Input
@@ -760,6 +783,12 @@ export function AppSidebar() {
                   </button>
                 )}
               </div>
+              {/* Contador de resultados */}
+              {moduleSearch.trim() && (
+                <p className="text-[10px] text-muted-foreground px-1">
+                  {filteredModules.length} de {visibleModules.length} módulos
+                </p>
+              )}
             </div>
           )}
           
