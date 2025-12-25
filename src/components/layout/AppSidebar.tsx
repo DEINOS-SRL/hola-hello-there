@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { 
@@ -52,8 +52,13 @@ const configMenuItems = [
   { name: 'Preferencias', href: '/configuracion/preferencias', icon: LucideIcons.Sliders, description: 'Ajustes personales' },
 ];
 
+const SIDEBAR_COLLAPSED_KEY = 'dnscloud-sidebar-collapsed';
+
 export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    return stored === 'true';
+  });
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const { user, empresa, isAdmin } = useAuth();
   const { hasAnyPermission } = usePermissions();
@@ -61,6 +66,12 @@ export function AppSidebar() {
   const { arbol: modulosArbol, isLoading } = useModulosDB();
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
+
+  // Persistir estado colapsado en localStorage
+  const handleSetCollapsed = useCallback((value: boolean) => {
+    setCollapsed(value);
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(value));
+  }, []);
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
@@ -408,7 +419,7 @@ export function AppSidebar() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setCollapsed(true)}
+              onClick={() => handleSetCollapsed(true)}
               className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
             >
               <PanelLeftClose className="h-4 w-4" />
@@ -427,7 +438,7 @@ export function AppSidebar() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setCollapsed(false)}
+              onClick={() => handleSetCollapsed(false)}
               className="w-full h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
             >
               <PanelLeft className="h-4 w-4 transition-transform duration-300" />
