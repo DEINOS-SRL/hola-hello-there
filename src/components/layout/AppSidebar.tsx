@@ -307,6 +307,25 @@ export function AppSidebar() {
     });
   }, [visibleModules, moduleSearch]);
 
+  // Auto-expandir módulos cuando hay coincidencia en submódulos
+  useEffect(() => {
+    if (!moduleSearch.trim()) return;
+    
+    const searchLower = moduleSearch.toLowerCase().trim();
+    const modulesToExpand = filteredModules
+      .filter(modulo => 
+        modulo.hijos.some(hijo => hijo.nombre.toLowerCase().includes(searchLower))
+      )
+      .map(m => m.id);
+    
+    if (modulesToExpand.length > 0) {
+      setExpandedModules(prev => {
+        const newExpanded = [...new Set([...prev, ...modulesToExpand])];
+        return newExpanded;
+      });
+    }
+  }, [moduleSearch, filteredModules]);
+
   // Verificar si algún item del módulo está activo
   const isModuleActive = (modulo: ModuloConHijos) => {
     if (isActive(modulo.ruta)) return true;
@@ -789,11 +808,16 @@ export function AppSidebar() {
                   </button>
                 )}
               </div>
-              {/* Contador de resultados */}
+              {/* Contador de resultados y hint */}
               {moduleSearch.trim() && (
-                <p className="text-[10px] text-muted-foreground px-1">
-                  {filteredModules.length} de {visibleModules.length} módulos
-                </p>
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-[10px] text-muted-foreground">
+                    {filteredModules.length} de {visibleModules.length} módulos
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60">
+                    <kbd className="px-1 py-0.5 text-[9px] font-mono bg-muted/30 rounded">Esc</kbd> limpiar
+                  </p>
+                </div>
               )}
             </div>
           )}
