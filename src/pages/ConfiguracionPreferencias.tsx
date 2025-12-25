@@ -1,4 +1,4 @@
-import { Sliders, Palette, Globe, Clock, Languages, Loader2, Sun, Moon, Monitor, MousePointer2 } from 'lucide-react';
+import { Sliders, Palette, Globe, Clock, Languages, Loader2, Sun, Moon, Monitor, MousePointer2, Sparkles, Trash2, Volume2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -120,17 +120,17 @@ export default function ConfiguracionPreferencias() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <MousePointer2 className="h-4 w-4 text-muted-foreground" />
-                  <Label htmlFor="preservar-scroll" className="font-medium">Preservar posición de scroll</Label>
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="animaciones-reducidas" className="font-medium">Animaciones reducidas</Label>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Mantiene la posición del scroll al navegar entre páginas
+                  Reduce las animaciones para mejorar el rendimiento
                 </p>
               </div>
               <Switch
-                id="preservar-scroll"
-                checked={preferencias?.preservar_scroll ?? true}
-                onCheckedChange={(checked) => updatePreferencias({ preservar_scroll: checked })}
+                id="animaciones-reducidas"
+                checked={preferencias?.animaciones_reducidas ?? false}
+                onCheckedChange={(checked) => updatePreferencias({ animaciones_reducidas: checked })}
                 disabled={isSaving}
               />
             </div>
@@ -207,6 +207,77 @@ export default function ConfiguracionPreferencias() {
                   <SelectItem value="yyyy-MM-dd">AAAA-MM-DD</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Comportamiento */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sliders className="h-5 w-5 text-primary" />
+              Comportamiento
+            </CardTitle>
+            <CardDescription>Configura cómo se comporta la aplicación</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-3">
+              {/* Preservar scroll */}
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <MousePointer2 className="h-4 w-4 text-muted-foreground" />
+                    <Label htmlFor="preservar-scroll" className="font-medium">Preservar scroll</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Mantiene la posición al navegar
+                  </p>
+                </div>
+                <Switch
+                  id="preservar-scroll"
+                  checked={preferencias?.preservar_scroll ?? true}
+                  onCheckedChange={(checked) => updatePreferencias({ preservar_scroll: checked })}
+                  disabled={isSaving}
+                />
+              </div>
+
+              {/* Confirmar eliminar */}
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                    <Label htmlFor="confirmar-eliminar" className="font-medium">Confirmar al eliminar</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Pide confirmación antes de borrar
+                  </p>
+                </div>
+                <Switch
+                  id="confirmar-eliminar"
+                  checked={preferencias?.confirmar_eliminar ?? true}
+                  onCheckedChange={(checked) => updatePreferencias({ confirmar_eliminar: checked })}
+                  disabled={isSaving}
+                />
+              </div>
+
+              {/* Sonidos de notificación */}
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-4 w-4 text-muted-foreground" />
+                    <Label htmlFor="sonidos-notificacion" className="font-medium">Sonidos</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Reproduce sonidos de alerta
+                  </p>
+                </div>
+                <Switch
+                  id="sonidos-notificacion"
+                  checked={preferencias?.sonidos_notificacion ?? true}
+                  onCheckedChange={(checked) => updatePreferencias({ sonidos_notificacion: checked })}
+                  disabled={isSaving}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
