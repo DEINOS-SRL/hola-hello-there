@@ -21,6 +21,8 @@ import {
   ChevronsDownUp,
   Search,
   X,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -82,6 +84,7 @@ const configMenuItems = [
 
 const SIDEBAR_COLLAPSED_KEY = 'dnscloud-sidebar-collapsed';
 const SIDEBAR_EXPANDED_MODULES_KEY = 'dnscloud-sidebar-expanded-modules';
+const SIDEBAR_PINNED_KEY = 'dnscloud-sidebar-pinned';
 const SIDEBAR_MIN_WIDTH = 68;
 const SIDEBAR_MAX_WIDTH = 260;
 const SIDEBAR_COLLAPSE_THRESHOLD = 120;
@@ -97,6 +100,10 @@ export function AppSidebar() {
 
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    return stored === 'true';
+  });
+  const [pinned, setPinned] = useState(() => {
+    const stored = localStorage.getItem(SIDEBAR_PINNED_KEY);
     return stored === 'true';
   });
   const [expandedModules, setExpandedModules] = useState<string[]>(() => {
@@ -157,9 +164,23 @@ export function AppSidebar() {
 
   // Persistir estado colapsado en localStorage
   const handleSetCollapsed = useCallback((value: boolean) => {
+    // Si está fijado, no permitir colapsar
+    if (pinned && value === true) return;
     setCollapsed(value);
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(value));
-  }, []);
+  }, [pinned]);
+
+  // Toggle para fijar/desfijar el sidebar
+  const togglePinned = useCallback(() => {
+    const newPinned = !pinned;
+    setPinned(newPinned);
+    localStorage.setItem(SIDEBAR_PINNED_KEY, String(newPinned));
+    // Si se fija, asegurar que esté expandido
+    if (newPinned && collapsed) {
+      setCollapsed(false);
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'false');
+    }
+  }, [pinned, collapsed]);
 
   // Handle drag resize
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -678,25 +699,56 @@ export function AppSidebar() {
             </div>
           </div>
           <div className={cn(
-            "transition-all duration-300 ease-in-out overflow-hidden",
+            "flex items-center gap-1 transition-all duration-300 ease-in-out overflow-hidden",
             collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
           )}>
+            {/* Botón fijar sidebar */}
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={togglePinned}
+                  className={cn(
+                    "h-7 w-7 shrink-0 transition-colors",
+                    pinned 
+                      ? "text-primary hover:text-primary/80 hover:bg-sidebar-accent" 
+                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  )}
+                >
+                  {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                <span>{pinned ? 'Desfijar menú' : 'Fijar menú expandido'}</span>
+              </TooltipContent>
+            </Tooltip>
+            
+            {/* Botón colapsar */}
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handleSetCollapsed(true)}
-                  className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+                  disabled={pinned}
+                  className={cn(
+                    "h-7 w-7 shrink-0",
+                    pinned 
+                      ? "text-sidebar-foreground/30 cursor-not-allowed" 
+                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  )}
                 >
                   <PanelLeftClose className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-                <span>Colapsar menú</span>
-                <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
-                  {shortcutKey}
-                </kbd>
+                <span>{pinned ? 'Desfija para colapsar' : 'Colapsar menú'}</span>
+                {!pinned && (
+                  <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                    {shortcutKey}
+                  </kbd>
+                )}
               </TooltipContent>
             </Tooltip>
           </div>
