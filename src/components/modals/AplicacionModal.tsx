@@ -4,6 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Eye, Edit3, FolderOpen, Github } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -268,8 +271,32 @@ export function AplicacionModal({ open, onOpenChange, aplicacion, onSuccess }: A
                   <TabsContent value="preview" className="mt-2">
                     <div className="min-h-[200px] max-h-[300px] overflow-auto rounded-md border bg-muted/30 p-4">
                       {prdDocumento ? (
-                        <article className="prose prose-sm dark:prose-invert prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 max-w-none">
-                          <ReactMarkdown>{prdDocumento}</ReactMarkdown>
+                        <article className="prose prose-sm dark:prose-invert prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-table:my-2 prose-th:border prose-th:border-border prose-th:p-2 prose-th:bg-muted prose-td:border prose-td:border-border prose-td:p-2 max-w-none">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              code({ node, className, children, ...props }) {
+                                const match = /language-(\w+)/.exec(className || '');
+                                const isInline = !match && !String(children).includes('\n');
+                                return !isInline && match ? (
+                                  <SyntaxHighlighter
+                                    style={oneDark}
+                                    language={match[1]}
+                                    PreTag="div"
+                                    className="rounded-md text-sm !my-2"
+                                  >
+                                    {String(children).replace(/\n$/, '')}
+                                  </SyntaxHighlighter>
+                                ) : (
+                                  <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              },
+                            }}
+                          >
+                            {prdDocumento}
+                          </ReactMarkdown>
                         </article>
                       ) : (
                         <p className="text-muted-foreground italic">Sin contenido para mostrar</p>
