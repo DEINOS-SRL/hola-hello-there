@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useModulosDB } from '@/modules/security/hooks/useModulos';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -84,9 +84,9 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   '/habilitaciones/vencimientos': HabilitacionesVencimientos,
 };
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedLayout() {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -94,12 +94,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
-  return <AppLayout>{children}</AppLayout>;
+
+  return (
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
+  );
 }
 
 // Rutas estáticas del sistema (configuracion ahora es dinámica)
@@ -135,28 +139,27 @@ export function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      
-      {/* Rutas protegidas estáticas */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/modulos" element={<ProtectedRoute><Modulos /></ProtectedRoute>} />
-      <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
-      
-      {/* Rutas dinámicas de módulos desde BD */}
-      {dynamicRoutes.map(({ path, component: Component }) => (
-        <Route 
-          key={path} 
-          path={path} 
-          element={
-            <ProtectedRoute>
-              <Component />
-            </ProtectedRoute>
-          } 
-        />
-      ))}
-      
-      {/* Redirect legacy */}
-      <Route path="/empleados" element={<Navigate to="/rrhh/empleados" replace />} />
-      
+
+      {/* Rutas protegidas (layout persistente) */}
+      <Route element={<ProtectedLayout />}>
+        {/* Rutas protegidas estáticas */}
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="modulos" element={<Modulos />} />
+        <Route path="perfil" element={<Perfil />} />
+
+        {/* Rutas dinámicas de módulos desde BD */}
+        {dynamicRoutes.map(({ path, component: Component }) => (
+          <Route
+            key={path}
+            path={path.startsWith('/') ? path.slice(1) : path}
+            element={<Component />}
+          />
+        ))}
+
+        {/* Redirect legacy */}
+        <Route path="empleados" element={<Navigate to="/rrhh/empleados" replace />} />
+      </Route>
+
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
