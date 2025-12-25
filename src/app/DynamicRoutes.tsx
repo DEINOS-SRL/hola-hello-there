@@ -25,6 +25,8 @@ import ModulosAdmin from '@/modules/security/pages/Modulos';
 import RRHHIndex from '@/modules/rrhh/pages/Index';
 import RRHHEmpleados from '@/modules/rrhh/pages/Empleados';
 import RRHHAsistencia from '@/modules/rrhh/pages/Asistencia';
+import ConocimientoIndex from '@/modules/conocimiento/pages/Index';
+import ConocimientoSGI from '@/modules/conocimiento/pages/SGI';
 
 // Mapeo de rutas a componentes implementados
 const implementedRoutes: Record<string, React.ComponentType> = {
@@ -36,6 +38,8 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   '/rrhh': RRHHIndex,
   '/rrhh/empleados': RRHHEmpleados,
   '/rrhh/asistencia': RRHHAsistencia,
+  '/conocimiento': ConocimientoIndex,
+  '/conocimiento/sgi': ConocimientoSGI,
 };
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
