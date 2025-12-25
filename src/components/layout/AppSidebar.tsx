@@ -3,7 +3,7 @@ import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { 
   Home, 
-  LayoutGrid,
+  Star,
   ChevronRight,
   LucideIcon,
   Settings,
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/core/security/permissions';
 import { useModulosDB, type ModuloConHijos } from '@/modules/security/hooks/useModulos';
+import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -33,7 +34,6 @@ const getIconByName = (iconName: string): LucideIcon => {
 // Items fijos del menú principal
 const mainMenuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Módulos', href: '/modulos', icon: LayoutGrid },
 ];
 
 // Items del footer
@@ -48,6 +48,7 @@ export function AppSidebar() {
   const { hasAnyPermission } = usePermissions();
   const location = useLocation();
   const { arbol: modulosArbol, isLoading } = useModulosDB();
+  const { favoritos, isLoading: isLoadingFavoritos } = useFavoritos();
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
@@ -356,6 +357,63 @@ export function AppSidebar() {
             <NavItem key={item.href} item={item} icon={item.icon} />
           ))}
         </div>
+
+        {/* Favoritos */}
+        {favoritos.length > 0 && (
+          <>
+            <div className="border-t border-sidebar-border my-2" />
+            <div className="space-y-1">
+              {!collapsed && (
+                <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider px-3 py-1 flex items-center gap-1.5">
+                  <Star className="h-3 w-3" />
+                  Favoritos
+                </p>
+              )}
+              
+              {isLoadingFavoritos ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                favoritos.map(fav => {
+                  const IconComponent = getIconByName(fav.modulo.icono);
+                  const active = isActive(fav.modulo.ruta);
+                  
+                  const content = (
+                    <RouterNavLink
+                      key={fav.id}
+                      to={fav.modulo.ruta}
+                      className={cn(
+                        "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm",
+                        "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                        active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+                      )}
+                    >
+                      {active && (
+                        <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
+                      )}
+                      <IconComponent className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span>{fav.modulo.nombre}</span>}
+                    </RouterNavLink>
+                  );
+
+                  if (collapsed) {
+                    return (
+                      <Tooltip key={fav.id} delayDuration={0}>
+                        <TooltipTrigger asChild>{content}</TooltipTrigger>
+                        <TooltipContent side="right" className="font-medium">
+                          {fav.modulo.nombre}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+
+                  return content;
+                })
+              )}
+            </div>
+          </>
+        )}
 
         {/* Separador */}
         <div className="border-t border-sidebar-border my-2" />

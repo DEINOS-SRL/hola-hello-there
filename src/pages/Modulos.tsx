@@ -11,7 +11,8 @@ import {
   ArrowRight,
   AppWindow,
   ClipboardList,
-  Loader2
+  Loader2,
+  Star
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,8 @@ import { ViewMode } from '@/types/auth';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { segClient } from '@/modules/security/services/segClient';
+import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Mapeo de nombres de iconos a componentes
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -41,14 +44,16 @@ interface ModuleData {
   icono: string | null;
   ruta: string | null;
   hasAccess: boolean;
+  modulo_id?: string; // ID del módulo en seg.modulos para favoritos
 }
 
 export default function Modulos() {
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const navigate = useNavigate();
+  const { toggleFavorito, isFavorito, isAdding, isRemoving } = useFavoritos();
 
   // Fetch aplicaciones from database
-  const { data: aplicaciones, isLoading } = useQuery({
+  const { data: aplicaciones, isLoading: isLoadingApps } = useQuery({
     queryKey: ['aplicaciones-modulos'],
     queryFn: async () => {
       const { data, error } = await segClient
@@ -61,16 +66,33 @@ export default function Modulos() {
     }
   });
 
-  // Transform data for display
-  const modules: ModuleData[] = (aplicaciones ?? []).map(app => ({
-    id: app.id,
-    nombre: app.nombre,
-    descripcion: app.descripcion,
-    activa: app.activa,
-    icono: app.icono ?? 'AppWindow',
-    ruta: app.ruta ?? null,
-    // Los módulos activos y con ruta tienen acceso
-    hasAccess: app.activa === true && app.ruta !== null,
+  // Fetch modulos from database (para favoritos)
+  const { data: modulos, isLoading: isLoadingModulos } = useQuery({
+    queryKey: ['modulos-para-favoritos'],
+    queryFn: async () => {
+      const { data, error } = await segClient
+        .from('modulos')
+        .select('id, nombre, ruta, icono, descripcion, activo')
+        .eq('activo', true)
+        .order('nombre');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const isLoading = isLoadingApps || isLoadingModulos;
+
+  // Transform data for display - usar modulos en lugar de aplicaciones
+  const modules: ModuleData[] = (modulos ?? []).map(mod => ({
+    id: mod.id,
+    nombre: mod.nombre,
+    descripcion: mod.descripcion,
+    activa: mod.activo,
+    icono: mod.icono ?? 'AppWindow',
+    ruta: mod.ruta ?? null,
+    hasAccess: mod.activo === true && mod.ruta !== null,
+    modulo_id: mod.id,
   }));
 
   const accessibleModules = modules.filter(m => m.hasAccess);
@@ -139,6 +161,9 @@ export default function Modulos() {
                   key={module.id} 
                   module={module} 
                   onClick={() => handleModuleClick(module)}
+                  isFavorite={module.modulo_id ? isFavorito(module.modulo_id) : false}
+                  onToggleFavorite={() => module.modulo_id && toggleFavorito(module.modulo_id)}
+                  isTogglingFavorite={isAdding || isRemoving}
                 />
               ))}
             </div>
@@ -149,6 +174,9 @@ export default function Modulos() {
                   key={module.id} 
                   module={module}
                   onClick={() => handleModuleClick(module)}
+                  isFavorite={module.modulo_id ? isFavorito(module.modulo_id) : false}
+                  onToggleFavorite={() => module.modulo_id && toggleFavorito(module.modulo_id)}
+                  isTogglingFavorite={isAdding || isRemoving}
                 />
               ))}
             </div>
@@ -194,13 +222,24 @@ export default function Modulos() {
 function ModuleCard({ 
   module, 
   disabled,
-  onClick 
+  onClick,
+  isFavorite,
+  onToggleFavorite,
+  isTogglingFavorite
 }: { 
   module: ModuleData; 
   disabled?: boolean;
   onClick?: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+  isTogglingFavorite?: boolean;
 }) {
   const Icon = iconMap[module.icono ?? 'AppWindow'] ?? AppWindow;
+  
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleFavorite?.();
+  };
   
   return (
     <Card 
@@ -223,15 +262,40 @@ function ModuleCard({
               disabled ? "text-muted-foreground" : "text-primary"
             )} />
           </div>
-          {!module.activa && (
-            <Badge variant="secondary">Próximamente</Badge>
-          )}
-          {module.activa && !module.hasAccess && (
-            <Badge variant="outline" className="gap-1">
-              <Lock className="h-3 w-3" />
-              Sin acceso
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {!disabled && onToggleFavorite && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleFavoriteClick}
+                    disabled={isTogglingFavorite}
+                  >
+                    <Star className={cn(
+                      "h-4 w-4 transition-colors",
+                      isFavorite 
+                        ? "fill-yellow-400 text-yellow-400" 
+                        : "text-muted-foreground hover:text-yellow-400"
+                    )} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {!module.activa && (
+              <Badge variant="secondary">Próximamente</Badge>
+            )}
+            {module.activa && !module.hasAccess && (
+              <Badge variant="outline" className="gap-1">
+                <Lock className="h-3 w-3" />
+                Sin acceso
+              </Badge>
+            )}
+          </div>
         </div>
         <CardTitle className="text-lg mt-3">{module.nombre}</CardTitle>
         <CardDescription>{module.descripcion}</CardDescription>
@@ -251,13 +315,24 @@ function ModuleCard({
 function ModuleListItem({ 
   module, 
   disabled,
-  onClick 
+  onClick,
+  isFavorite,
+  onToggleFavorite,
+  isTogglingFavorite
 }: { 
   module: ModuleData; 
   disabled?: boolean;
   onClick?: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+  isTogglingFavorite?: boolean;
 }) {
   const Icon = iconMap[module.icono ?? 'AppWindow'] ?? AppWindow;
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleFavorite?.();
+  };
   
   return (
     <div 
@@ -285,6 +360,29 @@ function ModuleListItem({
       </div>
 
       <div className="flex items-center gap-2">
+        {!disabled && onToggleFavorite && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleFavoriteClick}
+                disabled={isTogglingFavorite}
+              >
+                <Star className={cn(
+                  "h-4 w-4 transition-colors",
+                  isFavorite 
+                    ? "fill-yellow-400 text-yellow-400" 
+                    : "text-muted-foreground hover:text-yellow-400"
+                )} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            </TooltipContent>
+          </Tooltip>
+        )}
         {!module.activa && (
           <Badge variant="secondary">Próximamente</Badge>
         )}
