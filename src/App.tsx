@@ -22,6 +22,7 @@ import ModulosAdmin from "./modules/security/pages/Modulos";
 // Importar páginas del módulo de RRHH
 import RRHHIndex from "./modules/rrhh/pages/Index";
 import RRHHEmpleados from "./modules/rrhh/pages/Empleados";
+import RRHHAsistencia from "./modules/rrhh/pages/Asistencia";
 // Legacy route (redirect)
 import Empleados from "./modules/employees/pages/Empleados";
 import ResetPassword from "./pages/ResetPassword";
@@ -77,6 +78,7 @@ function AppRoutes() {
       {/* Rutas del módulo de RRHH */}
       <Route path="/rrhh" element={<ProtectedRoute><RRHHIndex /></ProtectedRoute>} />
       <Route path="/rrhh/empleados" element={<ProtectedRoute><RRHHEmpleados /></ProtectedRoute>} />
+      <Route path="/rrhh/asistencia" element={<ProtectedRoute><RRHHAsistencia /></ProtectedRoute>} />
       {/* Redirect legacy empleados route */}
       <Route path="/empleados" element={<Navigate to="/rrhh/empleados" replace />} />
       <Route path="*" element={<NotFound />} />
