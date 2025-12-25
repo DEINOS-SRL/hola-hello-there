@@ -1,11 +1,22 @@
-import { Sliders, Palette, Globe, Clock, Languages } from 'lucide-react';
+import { Sliders, Palette, Globe, Clock, Languages, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { usePreferencias } from '@/hooks/usePreferencias';
 
 export default function ConfiguracionPreferencias() {
+  const { preferencias, isLoading, updatePreferencias, isSaving } = usePreferencias();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -43,7 +54,11 @@ export default function ConfiguracionPreferencias() {
             <div className="space-y-2">
               <Label htmlFor="density" className="font-medium">Densidad de la interfaz</Label>
               <p className="text-sm text-muted-foreground mb-2">Ajusta el espaciado entre elementos</p>
-              <Select defaultValue="comfortable">
+              <Select 
+                value={preferencias?.densidad_ui || 'comfortable'}
+                onValueChange={(value) => updatePreferencias({ densidad_ui: value })}
+                disabled={isSaving}
+              >
                 <SelectTrigger id="density">
                   <SelectValue placeholder="Seleccionar densidad" />
                 </SelectTrigger>
@@ -72,7 +87,11 @@ export default function ConfiguracionPreferencias() {
                 <Languages className="h-4 w-4 text-muted-foreground" />
                 <Label htmlFor="language" className="font-medium">Idioma</Label>
               </div>
-              <Select defaultValue="es">
+              <Select 
+                value={preferencias?.idioma || 'es'}
+                onValueChange={(value) => updatePreferencias({ idioma: value })}
+                disabled={isSaving}
+              >
                 <SelectTrigger id="language">
                   <SelectValue placeholder="Seleccionar idioma" />
                 </SelectTrigger>
@@ -89,30 +108,38 @@ export default function ConfiguracionPreferencias() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <Label htmlFor="timezone" className="font-medium">Zona horaria</Label>
               </div>
-              <Select defaultValue="america-buenos_aires">
+              <Select 
+                value={preferencias?.zona_horaria || 'America/Buenos_Aires'}
+                onValueChange={(value) => updatePreferencias({ zona_horaria: value })}
+                disabled={isSaving}
+              >
                 <SelectTrigger id="timezone">
                   <SelectValue placeholder="Seleccionar zona horaria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="america-buenos_aires">América/Buenos Aires (GMT-3)</SelectItem>
-                  <SelectItem value="america-santiago">América/Santiago (GMT-3)</SelectItem>
-                  <SelectItem value="america-bogota">América/Bogotá (GMT-5)</SelectItem>
-                  <SelectItem value="america-mexico_city">América/Ciudad de México (GMT-6)</SelectItem>
-                  <SelectItem value="europe-madrid">Europa/Madrid (GMT+1)</SelectItem>
+                  <SelectItem value="America/Buenos_Aires">América/Buenos Aires (GMT-3)</SelectItem>
+                  <SelectItem value="America/Santiago">América/Santiago (GMT-3)</SelectItem>
+                  <SelectItem value="America/Bogota">América/Bogotá (GMT-5)</SelectItem>
+                  <SelectItem value="America/Mexico_City">América/Ciudad de México (GMT-6)</SelectItem>
+                  <SelectItem value="Europe/Madrid">Europa/Madrid (GMT+1)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Separator />
             <div className="space-y-2">
               <Label htmlFor="dateFormat" className="font-medium">Formato de fecha</Label>
-              <Select defaultValue="dd-mm-yyyy">
+              <Select 
+                value={preferencias?.formato_fecha || 'dd/MM/yyyy'}
+                onValueChange={(value) => updatePreferencias({ formato_fecha: value })}
+                disabled={isSaving}
+              >
                 <SelectTrigger id="dateFormat">
                   <SelectValue placeholder="Seleccionar formato" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dd-mm-yyyy">DD/MM/AAAA</SelectItem>
-                  <SelectItem value="mm-dd-yyyy">MM/DD/AAAA</SelectItem>
-                  <SelectItem value="yyyy-mm-dd">AAAA-MM-DD</SelectItem>
+                  <SelectItem value="dd/MM/yyyy">DD/MM/AAAA</SelectItem>
+                  <SelectItem value="MM/dd/yyyy">MM/DD/AAAA</SelectItem>
+                  <SelectItem value="yyyy-MM-dd">AAAA-MM-DD</SelectItem>
                 </SelectContent>
               </Select>
             </div>
