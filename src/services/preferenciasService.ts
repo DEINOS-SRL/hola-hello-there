@@ -17,6 +17,8 @@ export interface PreferenciasUsuario {
   formato_fecha: string;
   densidad_ui: string;
   tema: string;
+  // Comportamiento
+  preservar_scroll: boolean;
 }
 
 const defaultPreferencias: Omit<PreferenciasUsuario, 'id' | 'usuario_id'> = {
@@ -32,6 +34,7 @@ const defaultPreferencias: Omit<PreferenciasUsuario, 'id' | 'usuario_id'> = {
   formato_fecha: 'dd/MM/yyyy',
   densidad_ui: 'comfortable',
   tema: 'system',
+  preservar_scroll: true,
 };
 
 export async function getPreferencias(usuarioId: string): Promise<PreferenciasUsuario> {

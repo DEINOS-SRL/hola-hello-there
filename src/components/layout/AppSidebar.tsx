@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePreferenciasGlobal } from '@/contexts/PreferenciasContext';
 import { usePermissions } from '@/core/security/permissions';
 import { useModulosDB, type ModuloConHijos } from '@/modules/security/hooks/useModulos';
 import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
@@ -119,6 +120,7 @@ export function AppSidebar() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const { user, empresa, isAdmin } = useAuth();
+  const { preservarScroll } = usePreferenciasGlobal();
   const { hasAnyPermission } = usePermissions();
   const location = useLocation();
   const { arbol: modulosArbol, isLoading } = useModulosDB();
@@ -129,7 +131,7 @@ export function AppSidebar() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navScrollRef = useRef<HTMLElement>(null);
 
-  useScrollRestoration(navScrollRef, SIDEBAR_NAV_SCROLL_KEY, [location.pathname]);
+  useScrollRestoration(navScrollRef, SIDEBAR_NAV_SCROLL_KEY, [location.pathname], { enabled: preservarScroll, debug: true });
 
   // Búsqueda con debounce y persistencia en sessionStorage
   const [moduleSearchInput, setModuleSearchInput] = useState(() => {
