@@ -556,30 +556,52 @@ export function AppSidebar() {
             <TooltipTrigger asChild>
               <div 
                 className={cn(
-                  "flex items-center justify-center p-2 rounded-md cursor-pointer",
+                  "relative flex items-center justify-center p-2 rounded-md cursor-pointer",
                   "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                   hasActiveItem && "bg-primary/10 text-primary"
                 )}
                 onClick={() => toggleModule(modulo.id)}
               >
                 <ModuleIcon className="h-5 w-5" />
+                {/* Indicador de item activo */}
+                {hasActiveItem && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary ring-2 ring-sidebar-background animate-pulse-soft" />
+                )}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8} className="font-medium z-[9999] bg-popover border border-border shadow-lg">
-              <p className="font-semibold mb-1">{modulo.nombre}</p>
-              <div className="space-y-1">
-                {modulo.hijos.map(hijo => (
-                  <RouterNavLink 
-                    key={hijo.id} 
-                    to={hijo.ruta}
-                    className={cn(
-                      "block text-sm py-1 hover:text-primary",
-                      isActive(hijo.ruta) && "text-primary font-medium"
-                    )}
-                  >
-                    {hijo.nombre}
-                  </RouterNavLink>
-                ))}
+            <TooltipContent 
+              side="right" 
+              sideOffset={8} 
+              className="z-[9999] bg-popover border border-border shadow-lg p-3 animate-scale-in min-w-[180px]"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <ModuleIcon className="h-4 w-4 text-primary" />
+                <p className="font-semibold text-sm text-foreground">{modulo.nombre}</p>
+              </div>
+              <div className="border-t border-border/50 mb-2" />
+              <div className="space-y-0.5">
+                {modulo.hijos.map(hijo => {
+                  const HijoIcon = getIconByName(hijo.icono);
+                  return (
+                    <RouterNavLink 
+                      key={hijo.id} 
+                      to={hijo.ruta}
+                      className={cn(
+                        "flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all duration-200",
+                        "hover:bg-accent hover:text-accent-foreground",
+                        isActive(hijo.ruta) 
+                          ? "bg-primary/10 text-primary font-medium border-l-2 border-primary pl-1.5" 
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <HijoIcon className={cn(
+                        "h-3.5 w-3.5 shrink-0",
+                        isActive(hijo.ruta) ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      {hijo.nombre}
+                    </RouterNavLink>
+                  );
+                })}
               </div>
             </TooltipContent>
           </Tooltip>
