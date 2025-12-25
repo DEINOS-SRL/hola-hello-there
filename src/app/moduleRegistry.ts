@@ -4,7 +4,7 @@ import type { ModuleManifest } from '@/shared/types/module';
 import { securityManifest } from '@/modules/security/manifest';
 import { employeesManifest } from '@/modules/employees/manifest';
 import { equiposManifest } from '@/modules/equipos/manifest';
-import { movimientosManifest } from '@/modules/movimientos/manifest';
+import { operacionManifest } from '@/modules/operacion/manifest';
 import { partesDiariosManifest } from '@/modules/partes-diarios/manifest';
 import { habilitacionesManifest } from '@/modules/habilitaciones/manifest';
 
@@ -13,7 +13,7 @@ export const moduleRegistry: ModuleManifest[] = [
   securityManifest,
   employeesManifest,
   equiposManifest,
-  movimientosManifest,
+  operacionManifest,
   partesDiariosManifest,
   habilitacionesManifest,
 ];

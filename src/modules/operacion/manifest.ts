@@ -1,10 +1,11 @@
 import type { ModuleManifest } from '@/shared/types/module';
 
-export const movimientosManifest: ModuleManifest = {
-  moduleId: 'movimientos',
-  name: 'Movimientos',
-  description: 'Gestión de movimientos y operaciones',
+export const operacionManifest: ModuleManifest = {
+  moduleId: 'operacion',
+  name: 'Operación',
+  description: 'Gestión de operaciones, movimientos y actividades',
   permissions: [
+    // Permisos de Movimientos (submódulo)
     { key: 'movimientos.read', name: 'Ver movimientos', description: 'Permite ver la lista de movimientos' },
     { key: 'movimientos.create', name: 'Crear movimientos', description: 'Permite crear nuevos movimientos' },
     { key: 'movimientos.update', name: 'Editar movimientos', description: 'Permite editar movimientos existentes' },
@@ -13,6 +14,19 @@ export const movimientosManifest: ModuleManifest = {
   ],
   routes: [],
   navItems: [
-    { label: 'Movimientos', path: '/movimientos', icon: 'ArrowLeftRight', requiredPermissions: ['movimientos.read'] },
+    { 
+      label: 'Operación', 
+      path: '/operacion', 
+      icon: 'Workflow', 
+      requiredPermissions: ['movimientos.read'],
+      children: [
+        { 
+          label: 'Movimientos', 
+          path: '/operacion/movimientos', 
+          icon: 'ArrowLeftRight', 
+          requiredPermissions: ['movimientos.read'] 
+        },
+      ],
+    },
   ],
 };
