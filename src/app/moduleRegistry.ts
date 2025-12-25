@@ -2,6 +2,7 @@ import type { ModuleManifest } from '@/shared/types/module';
 
 // Import de manifests de módulos
 import { securityManifest } from '@/modules/security/manifest';
+import { rrhhManifest } from '@/modules/rrhh/manifest';
 import { employeesManifest } from '@/modules/employees/manifest';
 import { equiposManifest } from '@/modules/equipos/manifest';
 import { operacionManifest } from '@/modules/operacion/manifest';
@@ -11,6 +12,7 @@ import { habilitacionesManifest } from '@/modules/habilitaciones/manifest';
 // Registro central de todos los módulos
 export const moduleRegistry: ModuleManifest[] = [
   securityManifest,
+  rrhhManifest,
   employeesManifest,
   equiposManifest,
   operacionManifest,
