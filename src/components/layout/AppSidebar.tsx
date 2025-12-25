@@ -47,7 +47,9 @@ const mainMenuItems = [
 // Submenús de Configuración
 const configMenuItems = [
   { name: 'Administración', href: '/configuracion/administracion', icon: UserCog, description: 'Usuarios, roles y permisos' },
-  { name: 'Perfil', href: '/perfil', icon: Users, description: 'Mi perfil de usuario' },
+  { name: 'Empresa actual', href: '/configuracion/empresa', icon: Building2, description: 'Datos de mi empresa' },
+  { name: 'Notificaciones', href: '/configuracion/notificaciones', icon: LucideIcons.Bell, description: 'Preferencias de alertas' },
+  { name: 'Preferencias', href: '/configuracion/preferencias', icon: LucideIcons.Sliders, description: 'Ajustes personales' },
 ];
 
 export function AppSidebar() {
