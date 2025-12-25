@@ -28,6 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { playPopSound } from '@/lib/sounds';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { FavoritoConModulo } from '@/modules/security/hooks/useFavoritos';
 
@@ -243,6 +244,9 @@ export function SortableFavorites({
       const oldIndex = favoritos.findIndex(f => f.id === active.id);
       const newIndex = favoritos.findIndex(f => f.id === over.id);
       const newOrder = arrayMove(favoritos, oldIndex, newIndex);
+      
+      // Reproducir sonido sutil al soltar
+      playPopSound();
       onReorder(newOrder);
     }
   };
