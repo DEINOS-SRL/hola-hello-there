@@ -607,9 +607,9 @@ export function AppSidebar() {
             </Tooltip>
           )}
         </div>
-        <CollapsibleContent className="mt-0.5 overflow-hidden">
+        <CollapsibleContent className="mt-0.5 data-[state=open]:animate-none data-[state=closed]:animate-none">
           <div className={cn(
-            "relative ml-[22px] pl-4 border-l-2 space-y-0.5",
+            "relative ml-[22px] pl-4 border-l-2 space-y-0.5 transition-[border-color] duration-300",
             hasActiveItem 
               ? "border-primary hover:border-primary/80" 
               : "border-sidebar-border hover:border-primary/40"
@@ -767,7 +767,7 @@ export function AppSidebar() {
               />
             </button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="overflow-hidden">
+          <CollapsibleContent className="data-[state=open]:animate-none data-[state=closed]:animate-none">
             {isLoadingFavoritos ? (
               <div className="flex items-center justify-center py-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
