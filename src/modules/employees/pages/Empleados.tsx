@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Plus, Search, MoreHorizontal, Edit, Trash2, Loader2, UserCheck, Clock, UserX } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ import {
 import { useEmpleados } from '../hooks/useEmpleados';
 import { EmpleadoModal } from '../components/EmpleadoModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActionParam } from '@/hooks/useActionParam';
 import type { Empleado } from '../types';
 
 const estadoBadgeVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -66,6 +67,16 @@ export default function Empleados() {
     isCreating,
     isUpdating,
   } = useEmpleados();
+
+  // Detectar ?action=new para abrir modal automáticamente
+  const handleAction = useCallback((action: string) => {
+    if (action === 'new') {
+      setEditingEmpleado(null);
+      setModalOpen(true);
+    }
+  }, []);
+
+  useActionParam({ onAction: handleAction });
 
   const filtered = useMemo(() => {
     if (!searchTerm) return empleados;
