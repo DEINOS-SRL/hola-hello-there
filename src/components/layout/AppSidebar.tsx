@@ -1161,7 +1161,7 @@ export function AppSidebar() {
                   <Input
                     ref={searchInputRef}
                     type="text"
-                    placeholder={`Buscar... (${shortcutSearch})`}
+                    placeholder={shortcutSearch}
                     value={moduleSearchInput}
                     onChange={(e) => setModuleSearchInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -1170,7 +1170,7 @@ export function AppSidebar() {
                         (e.target as HTMLInputElement).blur();
                       }
                     }}
-                    className="h-8 pl-8 pr-8 text-xs bg-transparent border-transparent placeholder:text-sidebar-foreground/30 text-sidebar-foreground focus:bg-sidebar-accent/30 focus:border-sidebar-border/50 transition-colors"
+                    className="h-8 pl-8 pr-8 text-xs bg-transparent border-sidebar-border/50 placeholder:text-sidebar-foreground/30 text-sidebar-foreground focus:bg-sidebar-accent/30 focus:border-primary/50 transition-colors"
                   />
                   {moduleSearchInput && (
                     <button
@@ -1216,6 +1216,34 @@ export function AppSidebar() {
                   </p>
                 </div>
               )}
+            </div>
+          )}
+          
+          {/* Botón expandir/colapsar en modo colapsado */}
+          {isCollapsed && collapsibleModuleIds.length > 0 && (
+            <div className="flex justify-center pb-2">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleAllModules}
+                    className="h-8 w-8 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  >
+                    {allExpanded ? (
+                      <ChevronsDownUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronsUpDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                  <span>{allExpanded ? 'Colapsar todos' : 'Expandir todos'}</span>
+                  <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                    {shortcutModules}
+                  </kbd>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
           
