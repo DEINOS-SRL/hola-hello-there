@@ -958,39 +958,10 @@ export function AppSidebar() {
         </div>
       </div>
 
-      {/* Botón para expandir cuando está colapsado - Solo desktop */}
-      {!isMobile && (
-        <div className={cn(
-          "border-b border-sidebar-border overflow-hidden transition-all duration-300 ease-in-out",
-          isCollapsed ? "p-2 max-h-14 opacity-100" : "max-h-0 p-0 opacity-0"
-        )}>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleSetCollapsed(false)}
-                className="w-full h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-              >
-                <PanelLeft className="h-4 w-4 transition-transform duration-300" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-              <span>Expandir menú</span>
-              <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
-                {shortcutKey}
-              </kbd>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <nav ref={navScrollRef} className="flex-1 py-3 px-2 space-y-1 overflow-y-auto overscroll-contain">
+      {/* Sección fija: Dashboard + Favoritos */}
+      <div className="px-2 pt-3 pb-2 space-y-1">
         {/* Dashboard */}
-        <div className="space-y-0.5">
-          <NavItem item={{ name: 'Dashboard', href: '/dashboard', icon: Home }} icon={Home} />
-        </div>
+        <NavItem item={{ name: 'Dashboard', href: '/dashboard', icon: Home }} icon={Home} />
 
         {/* Favoritos - Con popover cuando está colapsado igual que los módulos */}
         {isCollapsed ? (
@@ -1077,7 +1048,7 @@ export function AppSidebar() {
                 <CollapsibleTrigger asChild>
                   <button
                     className={cn(
-                      "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm mt-1",
+                      "flex items-center justify-between w-full px-3 py-2 rounded-md transition-all duration-200 text-sm",
                       "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                     )}
                   >
@@ -1166,9 +1137,13 @@ export function AppSidebar() {
             </CollapsibleContent>
           </Collapsible>
         )}
+      </div>
 
-        {/* Separador */}
-        <div className="border-t border-sidebar-border my-2" />
+      {/* Separador antes del área scrolleable */}
+      <div className="border-t border-sidebar-border mx-2" />
+
+      {/* Navigation - Área scrolleable con módulos */}
+      <nav ref={navScrollRef} className="flex-1 py-2 px-2 space-y-1 overflow-y-auto overscroll-contain">
 
         {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
