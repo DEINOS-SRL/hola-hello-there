@@ -823,6 +823,7 @@ export default function Feedbacks() {
                 <TableHead>Tipo</TableHead>
                 <TableHead>Usuario</TableHead>
                 <TableHead className="max-w-[300px]">Mensaje</TableHead>
+                <TableHead>Asignado a</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
@@ -831,7 +832,7 @@ export default function Feedbacks() {
             <TableBody>
               {filteredFeedbacks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No se encontraron feedbacks
                   </TableCell>
                 </TableRow>
@@ -862,6 +863,18 @@ export default function Feedbacks() {
                             </Badge>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {feedback.asignado_a ? (
+                          <div className="flex items-center gap-1.5">
+                            <UserPlus className="h-3.5 w-3.5 text-primary" />
+                            <span className="text-sm">
+                              {usuariosAsignables.find(u => u.id === feedback.asignado_a)?.nombre || 'Usuario'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Sin asignar</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Select
