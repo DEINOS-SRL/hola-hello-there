@@ -472,21 +472,34 @@ export function AppSidebar() {
     };
 
     const content = (
-      <div className="group/item relative flex items-center">
-        <RouterNavLink
-          to={modulo.ruta}
-          className={cn(
-            "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm flex-1",
-            "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-            active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+      <div className="group/item relative flex items-center w-full">
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <RouterNavLink
+              to={modulo.ruta}
+              className={cn(
+                "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm flex-1 min-w-0",
+                "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+              )}
+            >
+              {active && (
+                <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
+              )}
+              <IconComponent className="h-4 w-4 shrink-0" />
+              {!collapsed && (
+                <span className="truncate text-left">
+                  <HighlightText text={modulo.nombre} search={moduleSearch} />
+                </span>
+              )}
+            </RouterNavLink>
+          </TooltipTrigger>
+          {!collapsed && modulo.nombre.length > 18 && (
+            <TooltipContent side="top" sideOffset={4} className="text-xs z-[9999]">
+              {modulo.nombre}
+            </TooltipContent>
           )}
-        >
-          {active && (
-            <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
-          )}
-          <IconComponent className="h-4 w-4 shrink-0" />
-          {!collapsed && <span><HighlightText text={modulo.nombre} search={moduleSearch} /></span>}
-        </RouterNavLink>
+        </Tooltip>
         
         {/* Botón de favorito visible en hover */}
         {showFavoriteToggle && !collapsed && (
@@ -496,7 +509,7 @@ export function AppSidebar() {
                 onClick={handleToggleFavorite}
                 disabled={isAdding || isRemoving}
                 className={cn(
-                  "absolute right-1 p-1 rounded transition-all duration-200",
+                  "absolute right-1 p-1 rounded transition-all duration-200 shrink-0",
                   isFav 
                     ? "opacity-100 text-yellow-500" 
                     : "opacity-0 group-hover/item:opacity-100 text-sidebar-foreground/50 hover:text-yellow-500"
@@ -617,7 +630,7 @@ export function AppSidebar() {
     return (
       <Collapsible open={isExpanded} onOpenChange={() => toggleModule(modulo.id)}>
         <div className="group/parent relative flex items-center">
-          <Tooltip delayDuration={0}>
+          <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
               <CollapsibleTrigger asChild>
                 <button
@@ -627,25 +640,32 @@ export function AppSidebar() {
                     hasActiveItem && "text-primary font-medium"
                   )}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <ModuleIcon className="h-4 w-4 shrink-0" />
-                    <span><HighlightText text={modulo.nombre} search={moduleSearch} /></span>
+                    <span className="truncate text-left">
+                      <HighlightText text={modulo.nombre} search={moduleSearch} />
+                    </span>
                     {/* Contador de items cuando está colapsado */}
                     {!isExpanded && modulo.hijos.length > 0 && (
-                      <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
+                      <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-muted text-muted-foreground shrink-0">
                         {modulo.hijos.length}
                       </span>
                     )}
                   </div>
                   <ChevronRight 
                     className={cn(
-                      "h-4 w-4 transition-transform duration-200",
+                      "h-4 w-4 shrink-0 transition-transform duration-200",
                       isExpanded && "rotate-90"
                     )} 
                   />
                 </button>
               </CollapsibleTrigger>
             </TooltipTrigger>
+            {modulo.nombre.length > 16 && (
+              <TooltipContent side="top" sideOffset={4} className="text-xs z-[9999]">
+                {modulo.nombre}
+              </TooltipContent>
+            )}
             {/* Tooltip con submódulos cuando está colapsado */}
             {!isExpanded && modulo.hijos.length > 0 && (
               <TooltipContent 
