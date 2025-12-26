@@ -13,6 +13,7 @@ import {
   Feedback,
   UsuarioAsignable
 } from '../services/feedbacksService';
+import { crearNotificacion } from '../services/notificacionesService';
 import { toast } from 'sonner';
 import { segClient } from '../services/segClient';
 import { playNotificationSound } from '@/lib/sounds';
@@ -114,11 +115,33 @@ export function useFeedbacks() {
 
   // Mutation para asignar feedback
   const asignarMutation = useMutation({
-    mutationFn: ({ feedbackId, asignadoA, asignadoPor }: { 
+    mutationFn: async ({ feedbackId, asignadoA, asignadoPor, empresaId, feedbackTipo }: { 
       feedbackId: string; 
       asignadoA: string | null; 
-      asignadoPor: string 
-    }) => asignarFeedback(feedbackId, asignadoA, asignadoPor),
+      asignadoPor: string;
+      empresaId?: string;
+      feedbackTipo?: string;
+    }) => {
+      const result = await asignarFeedback(feedbackId, asignadoA, asignadoPor);
+      
+      // Crear notificación para el usuario asignado
+      if (asignadoA && empresaId) {
+        try {
+          await crearNotificacion({
+            empresa_id: empresaId,
+            usuario_id: asignadoA,
+            titulo: 'Nuevo feedback asignado',
+            mensaje: `Se te ha asignado un feedback de tipo "${feedbackTipo || 'general'}" para seguimiento.`,
+            tipo: 'message',
+          });
+        } catch (err) {
+          console.error('Error creating notification:', err);
+          // No bloqueamos la asignación si falla la notificación
+        }
+      }
+      
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
       toast.success('Feedback asignado correctamente');

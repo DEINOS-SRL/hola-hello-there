@@ -50,3 +50,26 @@ export async function marcarTodasComoLeidas(): Promise<void> {
     throw error;
   }
 }
+
+export interface CreateNotificacionInput {
+  empresa_id: string;
+  usuario_id: string;
+  titulo: string;
+  mensaje: string;
+  tipo: Notificacion['tipo'];
+}
+
+export async function crearNotificacion(input: CreateNotificacionInput): Promise<Notificacion> {
+  const { data, error } = await segClient
+    .from('notificaciones')
+    .insert(input)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating notificacion:', error);
+    throw error;
+  }
+
+  return data;
+}
