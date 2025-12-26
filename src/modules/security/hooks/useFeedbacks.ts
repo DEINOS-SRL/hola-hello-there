@@ -1,0 +1,99 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { 
+  getFeedbacks, 
+  createFeedback, 
+  updateFeedback, 
+  respondToFeedback,
+  CreateFeedbackInput,
+  UpdateFeedbackInput,
+  Feedback 
+} from '../services/feedbacksService';
+import { toast } from 'sonner';
+
+export function useFeedbacks() {
+  const queryClient = useQueryClient();
+
+  const { data: feedbacks, isLoading, error, refetch } = useQuery({
+    queryKey: ['feedbacks'],
+    queryFn: getFeedbacks,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createFeedback,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+      toast.success('Feedback enviado correctamente');
+    },
+    onError: (error) => {
+      console.error('Error creating feedback:', error);
+      toast.error('Error al enviar el feedback');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateFeedbackInput }) => 
+      updateFeedback(id, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+      toast.success('Feedback actualizado');
+    },
+    onError: (error) => {
+      console.error('Error updating feedback:', error);
+      toast.error('Error al actualizar el feedback');
+    },
+  });
+
+  const respondMutation = useMutation({
+    mutationFn: ({ id, respuesta, respondidoPor }: { 
+      id: string; 
+      respuesta: string; 
+      respondidoPor: string 
+    }) => respondToFeedback(id, respuesta, respondidoPor),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+      toast.success('Respuesta enviada');
+    },
+    onError: (error) => {
+      console.error('Error responding to feedback:', error);
+      toast.error('Error al responder el feedback');
+    },
+  });
+
+  const getStatusBadgeVariant = (estado: Feedback['estado']) => {
+    switch (estado) {
+      case 'pendiente': return 'secondary';
+      case 'en_revision': return 'default';
+      case 'resuelto': return 'success';
+      case 'cerrado': return 'outline';
+      default: return 'secondary';
+    }
+  };
+
+  const getTipoBadgeVariant = (tipo: Feedback['tipo']) => {
+    switch (tipo) {
+      case 'bug': return 'destructive';
+      case 'queja': return 'destructive';
+      case 'mejora': return 'default';
+      case 'sugerencia': return 'secondary';
+      case 'consulta': return 'outline';
+      case 'ayuda': return 'outline';
+      case 'acceso-permiso': return 'secondary';
+      default: return 'secondary';
+    }
+  };
+
+  return {
+    feedbacks: feedbacks || [],
+    isLoading,
+    error,
+    refetch,
+    createFeedback: createMutation.mutate,
+    updateFeedback: updateMutation.mutate,
+    respondToFeedback: respondMutation.mutate,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isResponding: respondMutation.isPending,
+    getStatusBadgeVariant,
+    getTipoBadgeVariant,
+  };
+}
