@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { format } from 'date-fns';
+import { useActionParam } from '@/hooks/useActionParam';
 import { es } from 'date-fns/locale';
 import { 
   FileSpreadsheet, Plus, Search, Filter, MoreHorizontal, 
@@ -73,6 +74,16 @@ export default function Presupuestos() {
   const [presupuestoToDelete, setPresupuestoToDelete] = useState<Presupuesto | null>(null);
   const [sortField, setSortField] = useState<'fecha' | 'monto_total' | 'numero'>('fecha');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Detectar action=new en la URL para abrir modal desde acciones rápidas
+  const handleUrlAction = useCallback((action: string) => {
+    if (action === 'new') {
+      setSelectedPresupuesto(null);
+      setModalOpen(true);
+    }
+  }, []);
+
+  useActionParam({ onAction: handleUrlAction });
 
   const filteredPresupuestos = useMemo(() => {
     if (!presupuestos) return [];
