@@ -73,3 +73,50 @@ export function useMovimientos() {
     isDeleting: deleteMutation.isPending,
   };
 }
+
+// Hook para datos del wizard
+export function useWizardData() {
+  const clientesQuery = useQuery({
+    queryKey: ['clientes'],
+    queryFn: movimientosService.getClientes,
+  });
+
+  const unidadesQuery = useQuery({
+    queryKey: ['unidades_negocio'],
+    queryFn: movimientosService.getUnidadesNegocio,
+  });
+
+  const equiposQuery = useQuery({
+    queryKey: ['recursos_equipos'],
+    queryFn: movimientosService.getRecursosEquipos,
+  });
+
+  const operariosQuery = useQuery({
+    queryKey: ['recursos_operarios'],
+    queryFn: movimientosService.getRecursosOperarios,
+  });
+
+  return {
+    clientes: clientesQuery.data || [],
+    unidades: unidadesQuery.data || [],
+    equipos: equiposQuery.data || [],
+    operarios: operariosQuery.data || [],
+    isLoading: clientesQuery.isLoading || unidadesQuery.isLoading || equiposQuery.isLoading || operariosQuery.isLoading,
+  };
+}
+
+export function useTiposMovimiento(unidadNegocioId?: string) {
+  return useQuery({
+    queryKey: ['tipos_movimiento', unidadNegocioId],
+    queryFn: () => movimientosService.getTiposMovimiento(unidadNegocioId),
+    enabled: !!unidadNegocioId,
+  });
+}
+
+export function useSubtiposMovimiento(tipoMovimientoId?: string) {
+  return useQuery({
+    queryKey: ['subtipos_movimiento', tipoMovimientoId],
+    queryFn: () => movimientosService.getSubtiposMovimiento(tipoMovimientoId),
+    enabled: !!tipoMovimientoId,
+  });
+}
