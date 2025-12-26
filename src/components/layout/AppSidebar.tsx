@@ -1163,7 +1163,7 @@ export function AppSidebar() {
                       <Input
                         ref={searchInputRef}
                         type="text"
-                        placeholder=""
+                        placeholder="Buscar..."
                         value={moduleSearchInput}
                         onChange={(e) => setModuleSearchInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -1172,7 +1172,7 @@ export function AppSidebar() {
                             (e.target as HTMLInputElement).blur();
                           }
                         }}
-                        className="h-8 pl-7 pr-8 text-xs bg-transparent border-sidebar-border/50 placeholder:text-sidebar-foreground/30 text-sidebar-foreground focus:bg-sidebar-accent/30 focus:border-primary/50 transition-colors"
+                        className="h-8 pl-8 pr-8 text-xs bg-transparent border-sidebar-border/50 placeholder:text-sidebar-foreground/30 text-sidebar-foreground focus:bg-sidebar-accent/30 focus:border-primary/50 transition-colors"
                       />
                       {moduleSearchInput && (
                         <button
