@@ -31,6 +31,7 @@ import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
 import { useEmpleados } from '@/modules/employees/hooks/useEmpleados';
 import { useMovimientos } from '@/modules/operacion/hooks/useMovimientos';
 import { usePresupuestos } from '@/modules/comercial/hooks/usePresupuestos';
+import { useEquipos } from '@/modules/equipos/hooks/useEquipos';
 
 // Función para obtener icono dinámicamente por nombre
 const getIconByName = (iconName: string): LucideIcon => {
@@ -133,6 +134,7 @@ export function CommandSearch() {
   const { empleados } = useEmpleados();
   const { movimientos } = useMovimientos();
   const { data: presupuestos } = usePresupuestos();
+  const { data: equipos } = useEquipos();
 
   // Detectar si es Mac
   const isMac = useMemo(() => 
@@ -204,8 +206,24 @@ export function CommandSearch() {
       });
     });
 
+    // Últimos 5 equipos
+    const recentEquipos = [...(equipos || [])]
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 5);
+
+    recentEquipos.forEach(eq => {
+      records.push({
+        id: `eq-${eq.id}`,
+        label: `${eq.codigo} - ${eq.nombre}`,
+        description: `Equipo · ${eq.tipo_equipo?.nombre || 'Sin tipo'} · ${eq.estado}`,
+        icon: Truck,
+        route: `/equipos/listado?action=edit&id=${eq.id}`,
+        keywords: ['editar', 'equipo', eq.codigo, eq.nombre, eq.tipo_equipo?.nombre || '', eq.estado],
+      });
+    });
+
     return records;
-  }, [empleados, movimientos, presupuestos]);
+  }, [empleados, movimientos, presupuestos, equipos]);
 
   // Módulos favoritos
   const favoritosModulos = useMemo(() => 
