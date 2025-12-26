@@ -223,10 +223,11 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
           fecha_envio_supervisor: new Date().toISOString(),
           estado: 'en_ejecucion',
         });
+        // Guardar tareas - solo enviar hora como string "HH:mm", no como timestamp
         await movimientosService.saveTareas(movimientoId, data.tareas.map(t => ({
           descripcion: t.descripcion,
-          hora_inicio: t.hora_inicio || null,
-          hora_fin: t.hora_fin || null,
+          hora_inicio: t.hora_inicio ? `${data.fecha_movimiento}T${t.hora_inicio}:00` : null,
+          hora_fin: t.hora_fin ? `${data.fecha_movimiento}T${t.hora_fin}:00` : null,
         })));
         // Actualizar kilometrajes
         for (const km of data.kilometrajes) {

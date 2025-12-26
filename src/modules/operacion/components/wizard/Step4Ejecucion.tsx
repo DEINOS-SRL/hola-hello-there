@@ -67,11 +67,85 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
     }
   }, [equiposAsignados]);
 
+  // Helper para convertir hora string "HH:mm" a minutos para comparar
+  const timeToMinutes = (time: string): number => {
+    if (!time) return -1;
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Helper para convertir minutos a hora string "HH:mm"
+  const minutesToTime = (minutes: number): string => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  // Validar y ajustar horarios de tareas
+  const validateAndAdjustTimes = (newTareas: TareaRow[], changedIndex: number): TareaRow[] => {
+    const result = [...newTareas];
+    const current = result[changedIndex];
+    
+    // Validar que hora_fin no sea antes de hora_inicio
+    if (current.hora_inicio && current.hora_fin) {
+      const inicio = timeToMinutes(current.hora_inicio);
+      const fin = timeToMinutes(current.hora_fin);
+      if (fin <= inicio) {
+        result[changedIndex].hora_fin = minutesToTime(inicio + 30); // Mínimo 30 min de duración
+        toast.warning('La hora de fin debe ser posterior al inicio');
+      }
+    }
+
+    // Ajustar tareas anteriores si hay superposición
+    for (let i = changedIndex - 1; i >= 0; i--) {
+      const prev = result[i];
+      const curr = result[i + 1];
+      if (prev.hora_fin && curr.hora_inicio) {
+        const prevFin = timeToMinutes(prev.hora_fin);
+        const currInicio = timeToMinutes(curr.hora_inicio);
+        if (prevFin > currInicio) {
+          result[i].hora_fin = curr.hora_inicio;
+          toast.info(`Tarea ${i + 1}: hora fin ajustada para evitar superposición`);
+        }
+      }
+    }
+
+    // Ajustar tareas posteriores si hay superposición
+    for (let i = changedIndex + 1; i < result.length; i++) {
+      const prev = result[i - 1];
+      const curr = result[i];
+      if (prev.hora_fin && curr.hora_inicio) {
+        const prevFin = timeToMinutes(prev.hora_fin);
+        const currInicio = timeToMinutes(curr.hora_inicio);
+        if (currInicio < prevFin) {
+          result[i].hora_inicio = prev.hora_fin;
+          // Ajustar hora_fin si queda antes de hora_inicio
+          if (curr.hora_fin) {
+            const newInicio = timeToMinutes(result[i].hora_inicio);
+            const currFin = timeToMinutes(curr.hora_fin);
+            if (currFin <= newInicio) {
+              result[i].hora_fin = minutesToTime(newInicio + 30);
+            }
+          }
+          toast.info(`Tarea ${i + 1}: hora inicio ajustada para evitar superposición`);
+        }
+      }
+    }
+
+    return result;
+  };
+
   const handleTareaChange = (index: number, field: keyof TareaRow, value: string) => {
     const newTareas = [...tareas];
     newTareas[index] = { ...newTareas[index], [field]: value };
-    setTareas(newTareas);
-    updateData({ tareas: newTareas });
+    
+    // Validar horarios solo cuando se cambia hora_inicio o hora_fin
+    const adjustedTareas = (field === 'hora_inicio' || field === 'hora_fin') 
+      ? validateAndAdjustTimes(newTareas, index)
+      : newTareas;
+    
+    setTareas(adjustedTareas);
+    updateData({ tareas: adjustedTareas });
   };
 
   const addTarea = () => {
