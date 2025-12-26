@@ -122,6 +122,11 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
       const stepConfig = STEPS[currentStep - 1];
       
       if (currentStep === 1) {
+        // Validar empresa_id antes de crear
+        if (!movimientoId && !empresa?.id) {
+          throw new Error('No tiene una empresa asignada. Contacte al administrador.');
+        }
+        
         // Crear o actualizar movimiento en Step 1
         if (movimientoId) {
           await movimientosService.update(movimientoId, {
@@ -136,7 +141,7 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
           });
         } else {
           const newMov = await movimientosService.create({
-            empresa_id: empresa?.id || '',
+            empresa_id: empresa!.id,
             fecha_movimiento: data.fecha_movimiento,
             cliente_id: data.cliente_id || null,
             presupuesto_id: data.presupuesto_id || null,
