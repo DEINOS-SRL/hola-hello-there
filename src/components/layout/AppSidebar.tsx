@@ -807,8 +807,8 @@ export function AppSidebar() {
     <aside 
       className={cn(
         "bg-sidebar flex flex-col h-screen",
-        // Mobile: posición fija con z-index alto
-        isMobile && "fixed left-0 top-0 z-50 animate-slide-in-right shadow-2xl",
+        // Mobile: posición fija con animación desde la izquierda
+        isMobile && "fixed left-0 top-0 z-50 animate-slide-in-from-left shadow-2xl",
         // Desktop: sticky normal
         !isMobile && "sticky top-0 relative",
         (!isDragging || isResetting) && !isMobile && "transition-[width] duration-300 ease-in-out"
@@ -1147,51 +1147,6 @@ export function AppSidebar() {
 
         {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
-          <div className={cn(
-            "flex items-center justify-between px-3 py-1 transition-all duration-300 ease-in-out",
-            collapsed ? "h-0 opacity-0 py-0 overflow-hidden" : "h-auto opacity-100"
-          )}>
-            <Tooltip delayDuration={300}>
-              <TooltipTrigger asChild>
-                <p className="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider whitespace-nowrap cursor-help">
-                  Secciones/Módulos
-                </p>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8} className="text-xs z-[9999] max-w-[200px]">
-                <p className="font-medium mb-1">Navegación principal</p>
-                <p className="text-muted-foreground text-[10px]">
-                  Accede a las diferentes áreas funcionales de la plataforma organizadas por secciones.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-            {collapsibleModuleIds.length > 0 && (
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={toggleAllModules}
-                    className={cn(
-                      "p-0.5 rounded transition-all duration-200",
-                      allExpanded 
-                        ? "text-primary bg-primary/10 hover:bg-primary/20" 
-                        : "text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                    )}
-                  >
-                    {allExpanded ? (
-                      <ChevronsDownUp className="h-3.5 w-3.5" />
-                    ) : (
-                      <ChevronsUpDown className="h-3.5 w-3.5" />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="text-xs z-[9999]">
-                  <span>{allExpanded ? 'Colapsar todos' : 'Expandir todos'}</span>
-                  <kbd className="ml-2 px-1 py-0.5 text-[9px] font-mono bg-muted/50 rounded border border-border/50">
-                    {shortcutModules}
-                  </kbd>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
 
           {/* Filtro de búsqueda de módulos */}
           {!isCollapsed && visibleModules.length > 3 && (
