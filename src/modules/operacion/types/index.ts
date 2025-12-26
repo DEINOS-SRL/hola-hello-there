@@ -142,6 +142,7 @@ export interface Movimiento {
 }
 
 export interface MovimientoInsert {
+  empresa_id: string;
   fecha_movimiento?: string;
   cliente_id?: string | null;
   presupuesto_id?: string | null;
@@ -157,7 +158,6 @@ export interface MovimientoInsert {
   hora_fin_programada?: string | null;
   supervisor_id?: string | null;
   estado?: EstadoMovimiento;
-  empresa_id?: string | null;
 }
 
 export interface MovimientoUpdate {
