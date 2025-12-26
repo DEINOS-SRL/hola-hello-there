@@ -1017,7 +1017,7 @@ export default function Feedbacks() {
 
       {/* Detail Modal */}
       <Dialog open={!!selectedFeedback} onOpenChange={() => setSelectedFeedback(null)}>
-        <DialogContent className="sm:max-w-2xl max-h-[95vh] flex flex-col overflow-hidden">
+        <DialogContent className="sm:max-w-2xl h-[95vh] max-h-[95vh] flex flex-col overflow-hidden">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               {selectedFeedback && (
@@ -1181,7 +1181,7 @@ export default function Feedbacks() {
                 </div>
                 
                 {/* Lista de comentarios */}
-                <ScrollArea className="max-h-40">
+                <ScrollArea className="h-52 rounded-md border bg-muted/20">
                   {isLoadingComentarios ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1276,7 +1276,7 @@ export default function Feedbacks() {
                   Historial de estados
                 </Label>
                 
-                <ScrollArea className="max-h-32">
+                <ScrollArea className="h-40 rounded-md border bg-muted/20">
                   {isLoadingHistorial ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1288,19 +1288,23 @@ export default function Feedbacks() {
                   ) : (
                     <div className="space-y-2">
                       {historial.map((item) => (
-                        <div key={item.id} className="flex items-center gap-2 text-xs">
-                          <span className="text-muted-foreground">
-                            {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
-                          </span>
-                          <span className="font-medium">{item.usuario_nombre || 'Sistema'}</span>
-                          <span className="text-muted-foreground">cambió de</span>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            {estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo'}
-                          </Badge>
-                          <span className="text-muted-foreground">→</span>
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
-                          </Badge>
+                        <div key={item.id} className="rounded-md border bg-background/40 p-2">
+                          <div className="flex items-center justify-between gap-2 text-xs">
+                            <span className="font-medium">{item.usuario_nombre || 'Sistema'}</span>
+                            <span className="text-muted-foreground">
+                              {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                            <span className="text-muted-foreground">Estado:</span>
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                              {estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo'}
+                            </Badge>
+                            <span className="text-muted-foreground">→</span>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                              {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
+                            </Badge>
+                          </div>
                         </div>
                       ))}
                     </div>
