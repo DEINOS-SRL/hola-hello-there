@@ -1316,9 +1316,18 @@ export default function Feedbacks() {
                           const colorNuevo = getEstadoColor(item.estado_nuevo);
                           
                           return (
-                            <div key={item.id} className="relative pl-8 animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
-                              {/* Ícono del estado nuevo */}
-                              <div className={`absolute left-0 top-0 w-6 h-6 rounded-full ${colorNuevo} flex items-center justify-center shadow-sm`}>
+                            <div 
+                              key={item.id} 
+                              className="relative pl-8 opacity-0 animate-timeline-enter" 
+                              style={{ 
+                                animationDelay: `${idx * 100}ms`,
+                                animationFillMode: 'forwards'
+                              }}
+                            >
+                              {/* Ícono del estado nuevo con animación de escala */}
+                              <div 
+                                className={`absolute left-0 top-0 w-6 h-6 rounded-full ${colorNuevo} flex items-center justify-center shadow-md transition-transform hover:scale-110`}
+                              >
                                 <IconNuevo className="h-3 w-3" />
                               </div>
                               
