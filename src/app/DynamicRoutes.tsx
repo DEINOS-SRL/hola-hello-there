@@ -40,6 +40,8 @@ const ConocimientoSGI = lazy(() => import('@/modules/conocimiento/pages/SGI'));
 const OperacionIndex = lazy(() => import('@/modules/operacion/pages/Index'));
 const OperacionMovimientos = lazy(() => import('@/modules/operacion/pages/Movimientos'));
 const OperacionPartesEquipos = lazy(() => import('@/modules/operacion/pages/PartesEquipos'));
+const OperacionClientes = lazy(() => import('@/modules/operacion/pages/Clientes'));
+const OperacionConfiguracionLineas = lazy(() => import('@/modules/operacion/pages/ConfiguracionLineas'));
 
 const EquiposIndex = lazy(() => import('@/modules/equipos/pages/Index'));
 const EquiposListado = lazy(() => import('@/modules/equipos/pages/Listado'));
@@ -95,6 +97,8 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   '/operacion': OperacionIndex,
   '/operacion/movimientos': OperacionMovimientos,
   '/operacion/partes-equipos': OperacionPartesEquipos,
+  '/operacion/clientes': OperacionClientes,
+  '/operacion/configuracion-lineas': OperacionConfiguracionLineas,
   // Equipos
   '/equipos': EquiposIndex,
   '/equipos/listado': EquiposListado,
