@@ -52,7 +52,7 @@ function buildModuloTree(modulos: ModuloDB[]): ModuloConHijos[] {
 
 export function useModulosDB() {
   const query = useQuery({
-    queryKey: ['modulos-sidebar'],
+    queryKey: ['modulos-sidebar', 'labels-v1'],
     queryFn: async () => {
       const { data, error } = await segClient
         .from('modulos')
@@ -60,9 +60,20 @@ export function useModulosDB() {
         .eq('activo', true)
         .order('orden', { ascending: true })
         .order('nombre', { ascending: true });
-      
+
       if (error) throw error;
-      return data as ModuloDB[];
+
+      const labelOverrides: Record<string, string> = {
+        '/equipos/listado': 'Maestro de Equipos',
+        '/rrhh/empleados': 'Maestro de Empleados',
+      };
+
+      const modulos = (data as ModuloDB[]).map((m) => {
+        const override = labelOverrides[m.ruta];
+        return override ? { ...m, nombre: override } : m;
+      });
+
+      return modulos;
     },
     staleTime: 1000 * 60 * 5, // 5 minutos de cache
   });
