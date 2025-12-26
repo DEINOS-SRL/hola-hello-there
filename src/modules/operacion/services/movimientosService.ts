@@ -433,6 +433,9 @@ export const movimientosService = {
   },
 
   async assignEmpleados(movimientoId: string, empleados: { empleado_id: string; rol_asignado: string }[]): Promise<void> {
+    // Filtrar empleados con UUIDs válidos (no vacíos)
+    const validEmpleados = empleados.filter(emp => emp.empleado_id && emp.empleado_id.trim() !== '');
+    
     // Eliminar asignaciones existentes
     await movClient
       .from('movimientos_empleados')
@@ -440,10 +443,10 @@ export const movimientosService = {
       .eq('movimiento_id', movimientoId);
     
     // Insertar nuevas asignaciones
-    if (empleados.length > 0) {
+    if (validEmpleados.length > 0) {
       const { error } = await movClient
         .from('movimientos_empleados')
-        .insert(empleados.map(emp => ({ 
+        .insert(validEmpleados.map(emp => ({ 
           movimiento_id: movimientoId, 
           empleado_id: emp.empleado_id,
           rol_asignado: emp.rol_asignado
@@ -492,6 +495,9 @@ export const movimientosService = {
   },
 
   async assignEquiposEqu(movimientoId: string, equipoIds: string[]): Promise<void> {
+    // Filtrar equipos con UUIDs válidos (no vacíos)
+    const validEquipoIds = equipoIds.filter(id => id && id.trim() !== '');
+    
     // Eliminar asignaciones existentes
     await movClient
       .from('movimientos_equipos_equ')
@@ -499,10 +505,10 @@ export const movimientosService = {
       .eq('movimiento_id', movimientoId);
     
     // Insertar nuevas asignaciones
-    if (equipoIds.length > 0) {
+    if (validEquipoIds.length > 0) {
       const { error } = await movClient
         .from('movimientos_equipos_equ')
-        .insert(equipoIds.map(equipo_id => ({ 
+        .insert(validEquipoIds.map(equipo_id => ({ 
           movimiento_id: movimientoId, 
           equipo_id 
         })));
