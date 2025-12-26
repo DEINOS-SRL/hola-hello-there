@@ -18,6 +18,7 @@ export interface Feedback {
   asignado_a: string | null;
   asignado_at: string | null;
   asignado_por: string | null;
+  destacado: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -50,6 +51,7 @@ export interface UpdateFeedbackInput {
   asignado_a?: string | null;
   asignado_at?: string | null;
   asignado_por?: string | null;
+  destacado?: boolean;
 }
 
 // Función para subir archivos al bucket
@@ -77,6 +79,7 @@ export async function getFeedbacks(): Promise<Feedback[]> {
   const { data, error } = await segClient
     .from('feedbacks')
     .select('*')
+    .order('destacado', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -85,6 +88,23 @@ export async function getFeedbacks(): Promise<Feedback[]> {
   }
 
   return data || [];
+}
+
+// Función para togglear destacado
+export async function toggleDestacado(id: string, destacado: boolean): Promise<Feedback> {
+  const { data, error } = await segClient
+    .from('feedbacks')
+    .update({ destacado })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error toggling destacado:', error);
+    throw error;
+  }
+
+  return data;
 }
 
 export async function getFeedbackById(id: string): Promise<Feedback | null> {
