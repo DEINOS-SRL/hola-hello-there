@@ -12,6 +12,7 @@ import {
 } from '../services/feedbacksService';
 import { toast } from 'sonner';
 import { segClient } from '../services/segClient';
+import { playNotificationSound } from '@/lib/sounds';
 
 export function useFeedbacks() {
   const queryClient = useQueryClient();
@@ -34,6 +35,8 @@ export function useFeedbacks() {
         },
         (payload) => {
           console.log('Nuevo feedback recibido:', payload);
+          // Reproducir sonido de notificación
+          playNotificationSound();
           toast.info('Nuevo feedback recibido', {
             description: `Tipo: ${payload.new?.tipo || 'desconocido'}`,
             duration: 5000,

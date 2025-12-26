@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MessageSquare, Send, Loader2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { MessageSquare, Send, Loader2, Paperclip, X, FileIcon, ImageIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
+import { uploadFeedbackAttachment } from '@/modules/security/services/feedbacksService';
 
 const feedbackTypes = [
   { value: 'sugerencia', label: 'Sugerencia' },
@@ -30,6 +31,18 @@ const feedbackTypes = [
   { value: 'consulta', label: 'Consulta' },
   { value: 'ayuda', label: 'Ayuda' },
   { value: 'acceso-permiso', label: 'Acceso/Permiso' },
+];
+
+const MAX_FILES = 5;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = [
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
 ];
 
 interface FeedbackModalProps {
@@ -42,6 +55,46 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const { createFeedback, isCreating } = useFeedbacks();
   const [tipo, setTipo] = useState<string>('');
   const [mensaje, setMensaje] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    
+    // Validar cantidad
+    if (files.length + selectedFiles.length > MAX_FILES) {
+      toast.error(`Máximo ${MAX_FILES} archivos permitidos`);
+      return;
+    }
+
+    // Validar cada archivo
+    const validFiles: File[] = [];
+    for (const file of selectedFiles) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} excede el tamaño máximo de 10MB`);
+        continue;
+      }
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast.error(`${file.name} no es un tipo de archivo permitido`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    setFiles(prev => [...prev, ...validFiles]);
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const isImage = (file: File) => file.type.startsWith('image/');
 
   const handleSubmit = async () => {
     if (!tipo) {
@@ -61,29 +114,52 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       return;
     }
 
-    createFeedback({
-      usuario_id: user.id,
-      usuario_email: user.email || undefined,
-      usuario_nombre: user.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : undefined,
-      tipo: tipo as any,
-      mensaje: mensaje.trim(),
-      empresa_id: empresa?.id || undefined,
-    }, {
-      onSuccess: () => {
-        setTipo('');
-        setMensaje('');
-        onOpenChange(false);
+    try {
+      setIsUploading(true);
+      
+      // Subir archivos si hay
+      let archivosUrls: string[] = [];
+      if (files.length > 0) {
+        const uploadPromises = files.map(file => 
+          uploadFeedbackAttachment(file, user.id)
+        );
+        archivosUrls = await Promise.all(uploadPromises);
       }
-    });
+
+      createFeedback({
+        usuario_id: user.id,
+        usuario_email: user.email || undefined,
+        usuario_nombre: user.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : undefined,
+        tipo: tipo as any,
+        mensaje: mensaje.trim(),
+        empresa_id: empresa?.id || undefined,
+        archivos_adjuntos: archivosUrls.length > 0 ? archivosUrls : undefined,
+      }, {
+        onSuccess: () => {
+          setTipo('');
+          setMensaje('');
+          setFiles([]);
+          onOpenChange(false);
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast.error('Error al subir los archivos');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleClose = () => {
-    if (!isCreating) {
+    if (!isCreating && !isUploading) {
       setTipo('');
       setMensaje('');
+      setFiles([]);
       onOpenChange(false);
     }
   };
+
+  const isSubmitting = isCreating || isUploading;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -101,7 +177,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="tipo">Tipo de feedback</Label>
-            <Select value={tipo} onValueChange={setTipo} disabled={isCreating}>
+            <Select value={tipo} onValueChange={setTipo} disabled={isSubmitting}>
               <SelectTrigger id="tipo">
                 <SelectValue placeholder="Selecciona un tipo..." />
               </SelectTrigger>
@@ -122,7 +198,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               placeholder="Describe tu sugerencia, problema o consulta..."
               value={mensaje}
               onChange={(e) => setMensaje(e.target.value)}
-              disabled={isCreating}
+              disabled={isSubmitting}
               rows={5}
               maxLength={1000}
               className="resize-none"
@@ -131,17 +207,82 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               {mensaje.length}/1000 caracteres
             </p>
           </div>
+
+          {/* Archivos adjuntos */}
+          <div className="space-y-2">
+            <Label>Archivos adjuntos (opcional)</Label>
+            <div className="flex flex-col gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept={ALLOWED_TYPES.join(',')}
+                onChange={handleFileSelect}
+                className="hidden"
+                disabled={isSubmitting || files.length >= MAX_FILES}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSubmitting || files.length >= MAX_FILES}
+                className="w-full"
+              >
+                <Paperclip className="h-4 w-4 mr-2" />
+                Adjuntar archivos ({files.length}/{MAX_FILES})
+              </Button>
+              
+              {/* Lista de archivos */}
+              {files.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {files.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-muted rounded-md"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        {isImage(file) ? (
+                          <ImageIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        ) : (
+                          <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        )}
+                        <span className="text-sm truncate">{file.name}</span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          ({(file.size / 1024).toFixed(0)} KB)
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        disabled={isSubmitting}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-muted-foreground">
+                Formatos: imágenes, PDF, Word, Excel. Máx 10MB por archivo.
+              </p>
+            </div>
+          </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isCreating}>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={isCreating}>
-            {isCreating ? (
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Enviando...
+                {isUploading ? 'Subiendo...' : 'Enviando...'}
               </>
             ) : (
               <>

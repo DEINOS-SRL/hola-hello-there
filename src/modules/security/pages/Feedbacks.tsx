@@ -17,9 +17,13 @@ import {
   MessageCircle,
   Sparkles,
   MessageSquareOff,
+  Download,
+  Paperclip,
+  ExternalLink,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -120,6 +124,42 @@ export default function Feedbacks() {
     sinRespuesta: feedbacks.filter(f => !f.respuesta).length,
   };
 
+  // Función para exportar a CSV
+  const exportToCSV = () => {
+    if (filteredFeedbacks.length === 0) {
+      toast.error('No hay feedbacks para exportar');
+      return;
+    }
+
+    const headers = ['Tipo', 'Usuario', 'Email', 'Mensaje', 'Estado', 'Respuesta', 'Fecha'];
+    const rows = filteredFeedbacks.map(fb => [
+      tipoLabels[fb.tipo],
+      fb.usuario_nombre || 'Sin nombre',
+      fb.usuario_email || '',
+      `"${fb.mensaje.replace(/"/g, '""')}"`,
+      estadoLabels[fb.estado],
+      fb.respuesta ? `"${fb.respuesta.replace(/"/g, '""')}"` : '',
+      new Date(fb.created_at).toLocaleDateString('es-AR'),
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `feedbacks_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success(`Exportados ${filteredFeedbacks.length} feedbacks`);
+  };
+
   const handleOpenDetail = (feedback: Feedback) => {
     setSelectedFeedback(feedback);
     setRespuesta(feedback.respuesta || '');
@@ -173,15 +213,23 @@ export default function Feedbacks() {
           </div>
         </div>
         
-        {/* Contador de pendientes destacado */}
-        {stats.pendientes > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg animate-pulse-soft">
-            <Clock className="h-5 w-5 text-amber-500" />
-            <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
-              {stats.pendientes} {stats.pendientes === 1 ? 'pendiente' : 'pendientes'}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Contador de pendientes destacado */}
+          {stats.pendientes > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg animate-pulse-soft">
+              <Clock className="h-5 w-5 text-amber-500" />
+              <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                {stats.pendientes} {stats.pendientes === 1 ? 'pendiente' : 'pendientes'}
+              </span>
+            </div>
+          )}
+          
+          {/* Botón de exportar CSV */}
+          <Button variant="outline" onClick={exportToCSV} disabled={filteredFeedbacks.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -419,6 +467,38 @@ export default function Feedbacks() {
                   })}
                 </p>
               </div>
+
+              {/* Archivos adjuntos */}
+              {selectedFeedback.archivos_adjuntos && selectedFeedback.archivos_adjuntos.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    <Paperclip className="h-4 w-4" />
+                    Archivos adjuntos ({selectedFeedback.archivos_adjuntos.length})
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedFeedback.archivos_adjuntos.map((url, idx) => {
+                      const fileName = url.split('/').pop() || `archivo-${idx + 1}`;
+                      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                      return (
+                        <a
+                          key={idx}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80 transition-colors"
+                        >
+                          {isImage ? (
+                            <img src={url} alt={fileName} className="h-8 w-8 object-cover rounded" />
+                          ) : (
+                            <ExternalLink className="h-3 w-3" />
+                          )}
+                          <span className="truncate max-w-[100px]">{fileName}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Respuesta existente */}
               {selectedFeedback.respuesta && (

@@ -1,4 +1,5 @@
 import { segClient } from './segClient';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Feedback {
   id: string;
@@ -12,6 +13,7 @@ export interface Feedback {
   respondido_por: string | null;
   respondido_at: string | null;
   empresa_id: string | null;
+  archivos_adjuntos: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +25,7 @@ export interface CreateFeedbackInput {
   tipo: Feedback['tipo'];
   mensaje: string;
   empresa_id?: string;
+  archivos_adjuntos?: string[];
 }
 
 export interface UpdateFeedbackInput {
@@ -30,6 +33,27 @@ export interface UpdateFeedbackInput {
   respuesta?: string;
   respondido_por?: string;
   respondido_at?: string;
+}
+
+// Función para subir archivos al bucket
+export async function uploadFeedbackAttachment(file: File, userId: string): Promise<string> {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+  
+  const { data, error } = await supabase.storage
+    .from('feedback-attachments')
+    .upload(fileName, file);
+
+  if (error) {
+    console.error('Error uploading file:', error);
+    throw error;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('feedback-attachments')
+    .getPublicUrl(data.path);
+
+  return urlData.publicUrl;
 }
 
 export async function getFeedbacks(): Promise<Feedback[]> {
