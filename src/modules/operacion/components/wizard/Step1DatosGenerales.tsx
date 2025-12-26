@@ -63,7 +63,6 @@ export function Step1DatosGenerales({ data, updateData }: Step1Props) {
                   !selectedDate && 'text-muted-foreground'
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
                 {selectedDate ? format(selectedDate, 'PPP', { locale: es }) : 'Seleccionar fecha'}
               </Button>
             </PopoverTrigger>

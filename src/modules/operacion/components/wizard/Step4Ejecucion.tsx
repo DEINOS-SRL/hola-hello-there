@@ -67,6 +67,78 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
     }
   }, [equiposAsignados]);
 
+  // Helper para convertir hora string "HH:mm" a minutos para comparar
+  const timeToMinutes = (time: string): number => {
+    if (!time) return -1;
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Helper para convertir minutos a hora string "HH:mm"
+  const minutesToTime = (minutes: number): string => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  // Validar y ajustar horarios de una tarea cuando pierde foco
+  const validateTaskOnBlur = (index: number) => {
+    const newTareas = [...tareas];
+    const current = newTareas[index];
+    
+    // Solo validar si ambos horarios están completos
+    if (!current.hora_inicio || !current.hora_fin) {
+      return;
+    }
+    
+    const inicio = timeToMinutes(current.hora_inicio);
+    const fin = timeToMinutes(current.hora_fin);
+    
+    // Validar que hora_fin no sea antes de hora_inicio
+    if (fin <= inicio) {
+      newTareas[index].hora_fin = minutesToTime(inicio + 30);
+      toast.warning('La hora de fin debe ser posterior al inicio');
+    }
+
+    // Ajustar tareas anteriores si hay superposición
+    for (let i = index - 1; i >= 0; i--) {
+      const prev = newTareas[i];
+      const curr = newTareas[i + 1];
+      if (prev.hora_fin && curr.hora_inicio) {
+        const prevFin = timeToMinutes(prev.hora_fin);
+        const currInicio = timeToMinutes(curr.hora_inicio);
+        if (prevFin > currInicio) {
+          newTareas[i].hora_fin = curr.hora_inicio;
+          toast.info(`Tarea ${i + 1}: hora fin ajustada para evitar superposición`);
+        }
+      }
+    }
+
+    // Ajustar tareas posteriores si hay superposición
+    for (let i = index + 1; i < newTareas.length; i++) {
+      const prev = newTareas[i - 1];
+      const curr = newTareas[i];
+      if (prev.hora_fin && curr.hora_inicio) {
+        const prevFin = timeToMinutes(prev.hora_fin);
+        const currInicio = timeToMinutes(curr.hora_inicio);
+        if (currInicio < prevFin) {
+          newTareas[i].hora_inicio = prev.hora_fin;
+          if (curr.hora_fin) {
+            const newInicio = timeToMinutes(newTareas[i].hora_inicio);
+            const currFin = timeToMinutes(curr.hora_fin);
+            if (currFin <= newInicio) {
+              newTareas[i].hora_fin = minutesToTime(newInicio + 30);
+            }
+          }
+          toast.info(`Tarea ${i + 1}: hora inicio ajustada para evitar superposición`);
+        }
+      }
+    }
+
+    setTareas(newTareas);
+    updateData({ tareas: newTareas });
+  };
+
   const handleTareaChange = (index: number, field: keyof TareaRow, value: string) => {
     const newTareas = [...tareas];
     newTareas[index] = { ...newTareas[index], [field]: value };
@@ -107,39 +179,48 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Solo se permiten imágenes');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('La imagen no puede superar 5MB');
-      return;
-    }
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
     setIsUploading(true);
+    const newUrls: string[] = [...data.remitos_urls];
+
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${movimientoId || 'nuevo'}_${Date.now()}.${fileExt}`;
-      const filePath = `remitos/${fileName}`;
+      for (const file of Array.from(files)) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name}: Solo se permiten imágenes`);
+          continue;
+        }
 
-      const { error: uploadError } = await movClient.storage
-        .from('remitos-operacion')
-        .upload(filePath, file, { upsert: true });
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name}: La imagen no puede superar 5MB`);
+          continue;
+        }
 
-      if (uploadError) throw uploadError;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${movimientoId || 'nuevo'}_${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const filePath = `remitos/${fileName}`;
 
-      const { data: urlData } = movClient.storage
-        .from('remitos-operacion')
-        .getPublicUrl(filePath);
+        const { error: uploadError } = await movClient.storage
+          .from('remitos-operacion')
+          .upload(filePath, file, { upsert: true });
 
-      updateData({ remito_url: urlData.publicUrl });
-      toast.success('Imagen subida correctamente');
+        if (uploadError) {
+          toast.error(`${file.name}: Error al subir`);
+          continue;
+        }
+
+        const { data: urlData } = movClient.storage
+          .from('remitos-operacion')
+          .getPublicUrl(filePath);
+
+        newUrls.push(urlData.publicUrl);
+      }
+
+      updateData({ remitos_urls: newUrls });
+      toast.success(`${files.length === 1 ? 'Imagen subida' : `${files.length} imágenes subidas`} correctamente`);
     } catch (error: any) {
       toast.error(`Error al subir: ${error.message}`);
     } finally {
@@ -150,8 +231,9 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
     }
   };
 
-  const handleRemoveImage = () => {
-    updateData({ remito_url: '' });
+  const handleRemoveImage = (index: number) => {
+    const newUrls = data.remitos_urls.filter((_, i) => i !== index);
+    updateData({ remitos_urls: newUrls });
   };
 
   return (
@@ -205,6 +287,7 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
                         type="time"
                         value={tarea.hora_fin}
                         onChange={(e) => handleTareaChange(index, 'hora_fin', e.target.value)}
+                        onBlur={() => validateTaskOnBlur(index)}
                         className="border-0 focus-visible:ring-0 p-0 h-8 w-24"
                       />
                     </TableCell>
@@ -273,57 +356,64 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
         </Card>
       )}
 
-      {/* Remito con Upload */}
+      {/* Remitos con Upload múltiple */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileImage className="h-4 w-4 text-primary" />
-            Imagen del Remito
+            Imágenes de Remitos
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {!data.remito_url ? (
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="remito-upload"
-                />
-                <label htmlFor="remito-upload" className="cursor-pointer">
-                  <div className="flex flex-col items-center gap-2">
-                    {isUploading ? (
-                      <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                    ) : (
-                      <Upload className="h-10 w-10 text-muted-foreground" />
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      {isUploading ? 'Subiendo...' : 'Haz clic o arrastra una imagen del remito'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">JPG, PNG o WEBP. Máximo 5MB</p>
+            {/* Mostrar imágenes existentes */}
+            {data.remitos_urls.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {data.remitos_urls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img 
+                      src={url} 
+                      alt={`Remito ${index + 1}`} 
+                      className="w-full aspect-square object-cover rounded-lg border shadow-sm"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleRemoveImage(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   </div>
-                </label>
-              </div>
-            ) : (
-              <div className="relative inline-block">
-                <img 
-                  src={data.remito_url} 
-                  alt="Remito" 
-                  className="max-w-sm rounded-lg border shadow-sm"
-                />
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute -top-2 -right-2 h-8 w-8 rounded-full"
-                  onClick={handleRemoveImage}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                ))}
               </div>
             )}
+
+            {/* Área de upload */}
+            <div className="border-2 border-dashed rounded-lg p-6 text-center">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                id="remito-upload"
+              />
+              <label htmlFor="remito-upload" className="cursor-pointer">
+                <div className="flex flex-col items-center gap-2">
+                  {isUploading ? (
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {isUploading ? 'Subiendo...' : 'Haz clic o arrastra imágenes de remitos'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG o WEBP. Máximo 5MB por imagen</p>
+                </div>
+              </label>
+            </div>
           </div>
         </CardContent>
       </Card>

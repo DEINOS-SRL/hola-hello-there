@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, UserCog, Truck, Users, X, Calendar } from 'lucide-react';
+import { Clock, UserCog, Truck, Users, X, Calendar, Search } from 'lucide-react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import { useWizardData } from '../../hooks/useMovimientos';
 import { movimientosService } from '../../services/movimientosService';
 import type { WizardMovimientoData } from '../../types';
@@ -158,163 +160,205 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
     </div>
   );
 
-  const RecursosContent = () => (
-    <div className="space-y-6">
-      {/* Equipos Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2 text-base font-medium">
-            <Truck className="h-4 w-4 text-primary" />
-            Equipos
-            {data.equipos_asignados_equ.length > 0 && (
-              <Badge variant="secondary">{data.equipos_asignados_equ.length}</Badge>
-            )}
-          </Label>
-        </div>
+  const RecursosContent = () => {
+    const [equipoOpen, setEquipoOpen] = useState(false);
+    const [empleadoOpen, setEmpleadoOpen] = useState(false);
+    const [equipoSearch, setEquipoSearch] = useState('');
+    const [empleadoSearch, setEmpleadoSearch] = useState('');
 
-        {/* Selected Equipment Cards */}
-        {selectedEquipos.length > 0 && (
-          <div className="flex flex-wrap gap-3 mb-4">
-            {selectedEquipos.map((equipo: any) => (
-              <Card 
-                key={equipo.id} 
-                className="border-2 border-primary bg-primary/5 relative group"
-              >
-                <button
-                  onClick={() => toggleEquipo(equipo.id)}
-                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-                <CardContent className="p-4 text-center">
-                  <div className="w-20 h-16 bg-muted rounded-md flex items-center justify-center mb-2 mx-auto">
-                    <Truck className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <p className="font-semibold text-sm">{equipo.codigo}</p>
-                  {equipo.numero_interno && (
-                    <p className="text-xs text-muted-foreground">Interno: {equipo.numero_interno}</p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+    const filteredEquipos = useMemo(() => {
+      return equiposEqu.filter((eq: any) => 
+        !data.equipos_asignados_equ.includes(eq.id) &&
+        (eq.codigo?.toLowerCase().includes(equipoSearch.toLowerCase()) ||
+         eq.nombre?.toLowerCase().includes(equipoSearch.toLowerCase()) ||
+         eq.numero_interno?.toLowerCase().includes(equipoSearch.toLowerCase()))
+      );
+    }, [equiposEqu, data.equipos_asignados_equ, equipoSearch]);
 
-        {/* Equipment selection */}
-        <div className="border rounded-lg p-3">
-          <Label className="text-xs text-muted-foreground mb-2 block">Buscar y añadir equipos</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-            {equiposEqu.filter((eq: any) => !data.equipos_asignados_equ.includes(eq.id)).map((equipo: any) => (
-              <div
-                key={equipo.id}
-                className="flex items-center gap-2 p-2 rounded border border-border hover:border-primary/50 cursor-pointer transition-colors"
-                onClick={() => toggleEquipo(equipo.id)}
-              >
-                <Checkbox
-                  checked={false}
-                  onCheckedChange={() => toggleEquipo(equipo.id)}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{equipo.codigo}</p>
-                  <p className="text-xs text-muted-foreground truncate">{equipo.nombre}</p>
-                </div>
-              </div>
-            ))}
-            {equiposEqu.length === 0 && (
-              <p className="text-muted-foreground col-span-full text-center py-4 text-sm">
-                No hay equipos disponibles
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+    const filteredEmpleados = useMemo(() => {
+      return empleados.filter((emp: any) => 
+        !data.empleados_asignados.some(e => e.empleado_id === emp.id) &&
+        (`${emp.apellido} ${emp.nombre}`.toLowerCase().includes(empleadoSearch.toLowerCase()) ||
+         emp.legajo?.toLowerCase().includes(empleadoSearch.toLowerCase()))
+      );
+    }, [empleados, data.empleados_asignados, empleadoSearch]);
 
-      {/* Operarios Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2 text-base font-medium">
-            <Users className="h-4 w-4 text-primary" />
-            Operarios
-            {data.empleados_asignados.length > 0 && (
-              <Badge variant="secondary">{data.empleados_asignados.length}</Badge>
-            )}
-          </Label>
-        </div>
+    return (
+      <div className="space-y-6">
+        {/* Grid de 2 columnas para equipos y operarios */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Equipos Section */}
+          <div className="space-y-4">
+            {/* Label + Autocomplete en la misma fila */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <Label className="flex items-center gap-2 text-base font-medium whitespace-nowrap">
+                <Truck className="h-4 w-4 text-primary" />
+                Equipos
+                {data.equipos_asignados_equ.length > 0 && (
+                  <Badge variant="secondary">{data.equipos_asignados_equ.length}</Badge>
+                )}
+              </Label>
 
-        {/* Selected Employees Cards */}
-        {selectedEmpleados.length > 0 && (
-          <div className="flex flex-wrap gap-3 mb-4">
-            {selectedEmpleados.map((empleado: any) => {
-              const asignado = data.empleados_asignados.find(e => e.empleado_id === empleado.id);
-              return (
-                <Card 
-                  key={empleado.id} 
-                  className="border-2 border-primary bg-primary/5 relative group"
-                >
-                  <button
-                    onClick={() => toggleEmpleado(empleado.id)}
-                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              {/* Equipment autocomplete */}
+              <Popover open={equipoOpen} onOpenChange={setEquipoOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 flex-1 md:flex-none">
+                    <Search className="h-4 w-4" />
+                    Añadir equipo
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Buscar equipo..." 
+                      value={equipoSearch}
+                      onValueChange={setEquipoSearch}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No se encontraron equipos</CommandEmpty>
+                      <CommandGroup>
+                        {filteredEquipos.slice(0, 10).map((equipo: any) => (
+                          <CommandItem
+                            key={equipo.id}
+                            onSelect={() => {
+                              toggleEquipo(equipo.id);
+                              setEquipoSearch('');
+                            }}
+                          >
+                            <Truck className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <div className="flex-1">
+                              <p className="font-medium">{equipo.codigo}</p>
+                              <p className="text-xs text-muted-foreground">{equipo.nombre}</p>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Selected Equipment Cards */}
+            {selectedEquipos.length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                {selectedEquipos.map((equipo: any) => (
+                  <Card 
+                    key={equipo.id} 
+                    className="border-2 border-primary bg-primary/5 relative group"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
-                      <Users className="h-6 w-6 text-primary" />
-                    </div>
-                    <p className="font-semibold text-sm">{empleado.apellido}</p>
-                    <p className="text-xs text-muted-foreground">{empleado.nombre}</p>
-                    <Select
-                      value={asignado?.rol_asignado || 'operario'}
-                      onValueChange={(v) => updateEmpleadoRol(empleado.id, v)}
+                    <button
+                      onClick={() => toggleEquipo(equipo.id)}
+                      className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     >
-                      <SelectTrigger className="mt-2 h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="operario">Operario</SelectItem>
-                        <SelectItem value="lider">Líder</SelectItem>
-                        <SelectItem value="conductor">Conductor</SelectItem>
-                        <SelectItem value="ayudante">Ayudante</SelectItem>
-                        <SelectItem value="apoyo">Apoyo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Employee selection */}
-        <div className="border rounded-lg p-3">
-          <Label className="text-xs text-muted-foreground mb-2 block">Buscar y añadir operarios</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-            {empleados.filter((emp: any) => !data.empleados_asignados.some(e => e.empleado_id === emp.id)).map((empleado: any) => (
-              <div
-                key={empleado.id}
-                className="flex items-center gap-2 p-2 rounded border border-border hover:border-primary/50 cursor-pointer transition-colors"
-                onClick={() => toggleEmpleado(empleado.id)}
-              >
-                <Checkbox
-                  checked={false}
-                  onCheckedChange={() => toggleEmpleado(empleado.id)}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{empleado.apellido}, {empleado.nombre}</p>
-                  <p className="text-xs text-muted-foreground">{empleado.cargo || empleado.legajo}</p>
-                </div>
+                      <X className="h-3 w-3" />
+                    </button>
+                    <CardContent className="p-4 text-center">
+                      <div className="w-20 h-16 bg-muted rounded-md flex items-center justify-center mb-2 mx-auto">
+                        <Truck className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <p className="font-semibold text-sm">{equipo.codigo}</p>
+                      {equipo.numero_interno && (
+                        <p className="text-xs text-muted-foreground">Interno: {equipo.numero_interno}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            ))}
-            {empleados.length === 0 && (
-              <p className="text-muted-foreground col-span-full text-center py-4 text-sm">
-                No hay empleados disponibles
-              </p>
+            )}
+          </div>
+
+          {/* Operarios Section */}
+          <div className="space-y-4">
+            {/* Label + Autocomplete en la misma fila */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <Label className="flex items-center gap-2 text-base font-medium whitespace-nowrap">
+                <Users className="h-4 w-4 text-primary" />
+                Operarios
+                {data.empleados_asignados.length > 0 && (
+                  <Badge variant="secondary">{data.empleados_asignados.length}</Badge>
+                )}
+              </Label>
+
+              {/* Employee autocomplete */}
+              <Popover open={empleadoOpen} onOpenChange={setEmpleadoOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 flex-1 md:flex-none">
+                    <Search className="h-4 w-4" />
+                    Añadir operario
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Buscar operario..." 
+                      value={empleadoSearch}
+                      onValueChange={setEmpleadoSearch}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No se encontraron operarios</CommandEmpty>
+                      <CommandGroup>
+                        {filteredEmpleados.slice(0, 10).map((empleado: any) => (
+                          <CommandItem
+                            key={empleado.id}
+                            onSelect={() => {
+                              toggleEmpleado(empleado.id);
+                              setEmpleadoSearch('');
+                            }}
+                          >
+                            <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <div className="flex-1">
+                              <p className="font-medium">{empleado.apellido}, {empleado.nombre}</p>
+                              <p className="text-xs text-muted-foreground">{empleado.cargo || empleado.legajo}</p>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Selected Employees Cards - solo con rol Reporta/Operario */}
+            {selectedEmpleados.length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                {selectedEmpleados.map((empleado: any, index: number) => {
+                  const isFirst = index === 0;
+                  return (
+                    <Card 
+                      key={empleado.id} 
+                      className="border-2 border-primary bg-primary/5 relative group"
+                    >
+                      <button
+                        onClick={() => toggleEmpleado(empleado.id)}
+                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                      <CardContent className="p-4 text-center">
+                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
+                          <Users className="h-6 w-6 text-primary" />
+                        </div>
+                        <p className="font-semibold text-sm">{empleado.apellido}</p>
+                        <p className="text-xs text-muted-foreground">{empleado.nombre}</p>
+                        <Badge 
+                          variant={isFirst ? "default" : "secondary"} 
+                          className="mt-2 text-xs"
+                        >
+                          {isFirst ? 'Reporta' : 'Operario'}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Mobile: Card-style tabs
   if (isMobile) {
