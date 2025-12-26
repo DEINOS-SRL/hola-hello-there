@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { X, Plus, Camera, Loader2, Clock, CheckCircle2, Circle, Save } from 'lucide-react';
+import { X, Plus, Camera, Loader2, Clock, CheckCircle2, Circle, Save, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -334,6 +335,19 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
     <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+          {/* Alerta si no tiene empresa */}
+          {!empresa && (
+            <div className="px-6 pt-6">
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Sin empresa asignada</AlertTitle>
+                <AlertDescription>
+                  No tienes una empresa asignada a tu cuenta. Contacta al administrador para poder registrar partes diarios.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+          
           {/* Header fijo con progreso */}
           <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0 space-y-4">
             <div className="flex items-center justify-between">
@@ -663,7 +677,8 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
               <Button 
                 type="submit" 
                 form="parte-diario-form"
-                disabled={createMutation.isPending || !progress.actividades}
+                disabled={createMutation.isPending || !progress.actividades || !empresa}
+                title={!empresa ? 'Necesitas una empresa asignada' : undefined}
               >
                 {createMutation.isPending && (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
