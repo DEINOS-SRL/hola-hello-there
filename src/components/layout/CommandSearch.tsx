@@ -26,6 +26,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
 import { useModulosDB } from '@/modules/security/hooks/useModulos';
 import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
 import { useEmpleados } from '@/modules/employees/hooks/useEmpleados';
@@ -124,6 +125,11 @@ interface EditableRecord {
   icon: LucideIcon;
   route: string;
   keywords: string[];
+  badge?: {
+    text: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    className?: string;
+  };
 }
 
 export function CommandSearch() {
@@ -190,19 +196,34 @@ export function CommandSearch() {
       });
     });
 
+    // Configuración de badges para estados de presupuesto
+    const presupuestoBadgeConfig: Record<string, { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string }> = {
+      borrador: { text: 'Borrador', variant: 'secondary', className: 'bg-gray-100 text-gray-700 border-gray-300' },
+      enviado: { text: 'Enviado', variant: 'default', className: 'bg-blue-100 text-blue-700 border-blue-300' },
+      aprobado: { text: 'Aprobado', variant: 'default', className: 'bg-green-100 text-green-700 border-green-300' },
+      rechazado: { text: 'Rechazado', variant: 'destructive', className: 'bg-red-100 text-red-700 border-red-300' },
+      vencido: { text: 'Vencido', variant: 'outline', className: 'bg-orange-100 text-orange-700 border-orange-300' },
+    };
+
     // Últimos 5 presupuestos
     const recentPresupuestos = [...(presupuestos || [])]
       .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
       .slice(0, 5);
 
     recentPresupuestos.forEach(pres => {
+      const badgeConfig = presupuestoBadgeConfig[pres.estado];
       records.push({
         id: `pres-${pres.id}`,
         label: `${pres.numero} - ${pres.cliente}`,
-        description: `Presupuesto · ${pres.estado}`,
+        description: 'Presupuesto',
         icon: DollarSign,
         route: `/comercial/presupuestos?action=edit&id=${pres.id}`,
         keywords: ['editar', 'presupuesto', pres.numero, pres.cliente, pres.estado],
+        badge: badgeConfig ? {
+          text: badgeConfig.text,
+          variant: badgeConfig.variant,
+          className: badgeConfig.className,
+        } : undefined,
       });
     });
 
@@ -311,11 +332,21 @@ export function CommandSearch() {
                   <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted mr-3">
                     <record.icon className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{record.label}</span>
-                    <span className="text-xs text-muted-foreground">{record.description}</span>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="font-medium truncate">{record.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{record.description}</span>
+                      {record.badge && (
+                        <Badge 
+                          variant={record.badge.variant} 
+                          className={`text-[10px] px-1.5 py-0 h-4 ${record.badge.className}`}
+                        >
+                          {record.badge.text}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <Edit className="ml-auto h-3 w-3 text-muted-foreground" />
+                  <Edit className="ml-auto h-3 w-3 text-muted-foreground shrink-0" />
                 </CommandItem>
               ))}
             </CommandGroup>
