@@ -14,12 +14,38 @@ const routeLabels: Record<string, string> = {
   dashboard: 'Dashboard',
   modulos: 'Módulos',
   perfil: 'Perfil',
+  // Configuración
   configuracion: 'Configuración',
+  empresa: 'Empresa',
+  notificaciones: 'Notificaciones',
+  preferencias: 'Preferencias',
+  administracion: 'Administración',
+  // Seguridad
   seguridad: 'Seguridad',
   usuarios: 'Usuarios',
   empresas: 'Empresas',
   roles: 'Roles',
   aplicaciones: 'Aplicaciones',
+  // Módulos
+  empleados: 'Empleados',
+  equipos: 'Equipos',
+  listado: 'Listado',
+  mantenimientos: 'Mantenimientos',
+  partes: 'Partes',
+  operacion: 'Operación',
+  movimientos: 'Movimientos',
+  'partes-equipos': 'Partes de Equipos',
+  habilitaciones: 'Habilitaciones',
+  certificaciones: 'Certificaciones',
+  vencimientos: 'Vencimientos',
+  rrhh: 'RRHH',
+  asistencia: 'Asistencia',
+  horarios: 'Horarios',
+  comercial: 'Comercial',
+  presupuestos: 'Presupuestos',
+  seguimientos: 'Seguimientos',
+  conocimiento: 'Conocimiento',
+  sgi: 'SGI',
 };
 
 export function AppBreadcrumb() {
