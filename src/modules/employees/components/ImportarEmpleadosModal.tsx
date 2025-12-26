@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmpleados } from '../hooks/useEmpleados';
+import { empleadosService } from '../services/empleadosService';
 import type { EmpleadoInsert } from '../types';
 
 interface ImportarEmpleadosModalProps {
@@ -140,6 +141,17 @@ export function ImportarEmpleadosModal({ open, onOpenChange }: ImportarEmpleados
       const errors: { row: number; message: string }[] = [];
       let success = 0;
       
+      // Obtener lista actual de empleados para validar DNIs duplicados
+      const empleadosActuales = await empleadosService.getAll();
+      const dnisExistentes = new Set(
+        empleadosActuales
+          .filter(e => e.dni)
+          .map(e => e.dni!.toLowerCase().replace(/\./g, '').trim())
+      );
+      
+      // También trackear DNIs del archivo para detectar duplicados internos
+      const dnisEnArchivo = new Set<string>();
+      
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const rowNumber = i + 2; // +2 por header y 0-index
@@ -154,6 +166,26 @@ export function ImportarEmpleadosModal({ open, onOpenChange }: ImportarEmpleados
             continue;
           }
           
+          // Validar DNI duplicado
+          const dniRaw = row[3]?.trim();
+          if (dniRaw) {
+            const dniNormalizado = dniRaw.toLowerCase().replace(/\./g, '').trim();
+            
+            // Verificar si ya existe en la base de datos
+            if (dnisExistentes.has(dniNormalizado)) {
+              errors.push({ row: rowNumber, message: `DNI ${dniRaw} ya existe en la base de datos` });
+              continue;
+            }
+            
+            // Verificar si ya apareció en el archivo
+            if (dnisEnArchivo.has(dniNormalizado)) {
+              errors.push({ row: rowNumber, message: `DNI ${dniRaw} está duplicado en el archivo` });
+              continue;
+            }
+            
+            dnisEnArchivo.add(dniNormalizado);
+          }
+          
           // Validar estado
           const estadoRaw = row[11]?.trim().toLowerCase() || 'activo';
           const estado = ['activo', 'licencia', 'baja'].includes(estadoRaw) 
@@ -165,7 +197,7 @@ export function ImportarEmpleadosModal({ open, onOpenChange }: ImportarEmpleados
             legajo: row[0]?.trim() || null,
             nombre,
             apellido,
-            dni: row[3]?.trim() || null,
+            dni: dniRaw || null,
             fecha_nacimiento: row[4]?.trim() || null,
             fecha_ingreso: row[5]?.trim() || null,
             cargo: row[6]?.trim() || null,
@@ -177,6 +209,12 @@ export function ImportarEmpleadosModal({ open, onOpenChange }: ImportarEmpleados
           };
           
           await create(empleado);
+          
+          // Agregar el DNI al set de existentes para evitar duplicados en el mismo lote
+          if (dniRaw) {
+            dnisExistentes.add(dniRaw.toLowerCase().replace(/\./g, '').trim());
+          }
+          
           success++;
         } catch (err: any) {
           errors.push({ row: rowNumber, message: err.message || 'Error desconocido' });

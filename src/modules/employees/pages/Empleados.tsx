@@ -181,6 +181,41 @@ export default function Empleados() {
           <p className="text-muted-foreground">Gestiona los empleados de tu empresa</p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Botón Exportar */}
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              const csvContent = [
+                TEMPLATE_HEADERS.join(','),
+                ...empleados.map(emp => [
+                  emp.legajo || '',
+                  emp.nombre,
+                  emp.apellido,
+                  emp.dni || '',
+                  emp.fecha_nacimiento || '',
+                  emp.fecha_ingreso || '',
+                  emp.cargo || '',
+                  emp.departamento || '',
+                  emp.email || '',
+                  emp.telefono || '',
+                  emp.direccion || '',
+                  emp.estado,
+                ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+              ].join('\n');
+              const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = `empleados_${new Date().toISOString().split('T')[0]}.csv`;
+              link.click();
+              URL.revokeObjectURL(link.href);
+            }}
+            disabled={empleados.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Exportar
+          </Button>
+          
+          {/* Botón Importar con dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -189,11 +224,16 @@ export default function Empleados() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setImportModalOpen(true)}>
+              <DropdownMenuItem 
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setTimeout(() => setImportModalOpen(true), 0);
+                }}
+              >
                 <Upload className="mr-2 h-4 w-4" />
                 Importar desde CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
+              <DropdownMenuItem onSelect={() => {
                 const csvContent = [
                   TEMPLATE_HEADERS.join(','),
                   TEMPLATE_EXAMPLE.join(','),
@@ -210,6 +250,7 @@ export default function Empleados() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
           <Button onClick={handleOpenCreate}>
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Empleado
