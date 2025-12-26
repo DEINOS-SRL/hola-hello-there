@@ -65,13 +65,22 @@ const quickActions: QuickAction[] = [
     keywords: ['crear', 'agregar', 'empleado', 'persona', 'rrhh'],
   },
   {
+    id: 'new-equipo',
+    label: 'Nuevo Equipo',
+    description: 'Registrar un nuevo equipo',
+    icon: Truck,
+    action: 'navigate',
+    target: '/equipos/listado?action=new',
+    keywords: ['crear', 'agregar', 'equipo', 'maquinaria', 'vehículo'],
+  },
+  {
     id: 'new-movement',
     label: 'Nuevo Movimiento',
     description: 'Registrar movimiento de equipo',
     icon: Truck,
     action: 'navigate',
     target: '/operacion/movimientos?action=new',
-    keywords: ['crear', 'movimiento', 'equipo', 'traslado'],
+    keywords: ['crear', 'movimiento', 'traslado'],
   },
   {
     id: 'new-part',
