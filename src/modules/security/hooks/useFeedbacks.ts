@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getFeedbacks, 
@@ -10,6 +11,7 @@ import {
   Feedback 
 } from '../services/feedbacksService';
 import { toast } from 'sonner';
+import { segClient } from '../services/segClient';
 
 export function useFeedbacks() {
   const queryClient = useQueryClient();
@@ -18,6 +20,44 @@ export function useFeedbacks() {
     queryKey: ['feedbacks'],
     queryFn: getFeedbacks,
   });
+
+  // Realtime subscription para nuevos feedbacks
+  useEffect(() => {
+    const channel = segClient
+      .channel('feedbacks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'seg',
+          table: 'feedbacks'
+        },
+        (payload) => {
+          console.log('Nuevo feedback recibido:', payload);
+          toast.info('Nuevo feedback recibido', {
+            description: `Tipo: ${payload.new?.tipo || 'desconocido'}`,
+            duration: 5000,
+          });
+          queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'seg',
+          table: 'feedbacks'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      segClient.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const createMutation = useMutation({
     mutationFn: createFeedback,
