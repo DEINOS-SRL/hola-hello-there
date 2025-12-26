@@ -124,8 +124,54 @@ export function Step2LineaServicio({ data, updateData }: Step2Props) {
         </div>
       </div>
 
-      {/* Campos dinámicos según el subtipo seleccionado */}
-      {camposAdicionales.length > 0 && (
+      {/* Campos fijos para "Servicio de DTM" */}
+      {tipos.find(t => t.id === data.tipo_movimiento_id)?.nombre === 'Servicio de DTM' && (
+        <div className="border-t pt-6 mt-6">
+          <h3 className="text-lg font-semibold mb-4">Detalles del Servicio DTM</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Tipo de Servicio */}
+            <div className="space-y-2">
+              <Label>Tipo de Servicio</Label>
+              <Select
+                value={data.campos_dinamicos['tipo_servicio'] || ''}
+                onValueChange={(v) => handleCampoDinamicoChange('tipo_servicio', v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paquetizado">Paquetizado</SelectItem>
+                  <SelectItem value="eventual">Eventual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Km en DTM */}
+            <div className="space-y-2">
+              <Label>Km en DTM</Label>
+              <Input
+                type="number"
+                value={data.campos_dinamicos['km_dtm'] || ''}
+                onChange={(e) => handleCampoDinamicoChange('km_dtm', e.target.value)}
+                placeholder="Cantidad de kilómetros"
+              />
+            </div>
+            
+            {/* Actividad */}
+            <div className="space-y-2">
+              <Label>Actividad</Label>
+              <Input
+                value={data.campos_dinamicos['actividad'] || ''}
+                onChange={(e) => handleCampoDinamicoChange('actividad', e.target.value)}
+                placeholder="Descripción de la actividad"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Campos dinámicos según el subtipo seleccionado (para otros tipos) */}
+      {tipos.find(t => t.id === data.tipo_movimiento_id)?.nombre !== 'Servicio de DTM' && camposAdicionales.length > 0 && (
         <div className="border-t pt-6 mt-6">
           <h3 className="text-lg font-semibold mb-4">Detalles del Servicio</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
