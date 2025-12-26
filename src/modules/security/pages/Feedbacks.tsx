@@ -117,6 +117,7 @@ export default function Feedbacks() {
   const [search, setSearch] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('all');
   const [filterEstado, setFilterEstado] = useState<string>('all');
+  const [filterModulo, setFilterModulo] = useState<string>('all');
   const [filterSinRespuesta, setFilterSinRespuesta] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [respuesta, setRespuesta] = useState('');
@@ -129,8 +130,10 @@ export default function Feedbacks() {
       fb.usuario_nombre?.toLowerCase().includes(search.toLowerCase());
     const matchesTipo = filterTipo === 'all' || fb.tipo === filterTipo;
     const matchesEstado = filterEstado === 'all' || fb.estado === filterEstado;
+    const matchesModulo = filterModulo === 'all' || fb.modulo_referencia === filterModulo || 
+      (filterModulo === 'sin-modulo' && !fb.modulo_referencia);
     const matchesSinRespuesta = !filterSinRespuesta || !fb.respuesta;
-    return matchesSearch && matchesTipo && matchesEstado && matchesSinRespuesta;
+    return matchesSearch && matchesTipo && matchesEstado && matchesModulo && matchesSinRespuesta;
   });
 
   const stats = {
@@ -338,6 +341,23 @@ export default function Feedbacks() {
                 {Object.entries(estadoLabels).map(([value, label]) => (
                   <SelectItem key={value} value={value}>{label}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Filtro por módulo */}
+            <Select value={filterModulo} onValueChange={setFilterModulo}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Módulo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los módulos</SelectItem>
+                <SelectItem value="sin-modulo">Sin módulo asignado</SelectItem>
+                <SelectItem value="general">General / Plataforma</SelectItem>
+                <SelectItem value="dashboard">Dashboard</SelectItem>
+                {moduleRegistry.map((m) => (
+                  <SelectItem key={m.moduleId} value={m.moduleId}>{m.name}</SelectItem>
+                ))}
+                <SelectItem value="otro">Otro / Nueva funcionalidad</SelectItem>
               </SelectContent>
             </Select>
             

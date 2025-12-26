@@ -1,7 +1,10 @@
-import { Users, Building2, Shield, AppWindow, TrendingUp, Clock } from 'lucide-react';
+import { Users, Building2, Shield, AppWindow, TrendingUp, Clock, MessageSquare, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
+import { moduleRegistry } from '@/app/moduleRegistry';
 
 const stats = [
   { name: 'Usuarios Activos', value: '24', icon: Users, change: '+12%', color: 'text-primary' },
@@ -17,8 +20,38 @@ const recentActivity = [
   { id: 4, action: 'Módulo activado', description: 'Módulo de Reportes fue habilitado', time: 'Hace 2 días' },
 ];
 
+// Helper para obtener nombre de módulo
+const getModuloLabel = (moduloId: string): string => {
+  if (moduloId === 'general') return 'General';
+  if (moduloId === 'dashboard') return 'Dashboard';
+  if (moduloId === 'otro') return 'Otro';
+  if (moduloId === 'sin-modulo') return 'Sin asignar';
+  const modulo = moduleRegistry.find(m => m.moduleId === moduloId);
+  return modulo?.name || moduloId;
+};
+
 export default function Dashboard() {
   const { user, empresa } = useAuth();
+  const { feedbacks } = useFeedbacks();
+
+  // Calcular estadísticas de feedbacks
+  const feedbackStats = {
+    total: feedbacks.length,
+    pendientes: feedbacks.filter(f => f.estado === 'pendiente').length,
+    resueltos: feedbacks.filter(f => f.estado === 'resuelto').length,
+  };
+
+  // Agrupar feedbacks por módulo
+  const feedbacksPorModulo = feedbacks.reduce((acc, fb) => {
+    const modulo = fb.modulo_referencia || 'sin-modulo';
+    acc[modulo] = (acc[modulo] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Ordenar por cantidad y tomar top 5
+  const topModulos = Object.entries(feedbacksPorModulo)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -61,6 +94,58 @@ export default function Dashboard() {
           );
         })}
       </div>
+
+      {/* Feedbacks Stats Section */}
+      {feedbacks.length > 0 && (
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          {/* Resumen de feedbacks */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-primary" />
+                Feedbacks
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{feedbackStats.total}</div>
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center gap-1 text-xs">
+                  <AlertCircle className="h-3 w-3 text-amber-500" />
+                  <span className="text-muted-foreground">{feedbackStats.pendientes} pendientes</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  <span className="text-muted-foreground">{feedbackStats.resueltos} resueltos</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Feedbacks por módulo */}
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Feedbacks por Módulo</CardTitle>
+              <CardDescription className="text-xs">Top 5 módulos con más feedbacks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {topModulos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hay feedbacks aún</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {topModulos.map(([modulo, count]) => (
+                    <Badge key={modulo} variant="secondary" className="gap-1">
+                      {getModuloLabel(modulo)}
+                      <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-xs font-bold">
+                        {count}
+                      </span>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -113,10 +198,10 @@ export default function Dashboard() {
                 href="/configuracion/administracion/roles"
               />
               <QuickActionCard
-                icon={AppWindow}
-                title="Ver Módulos"
-                description="Explorar aplicaciones"
-                href="/modulos"
+                icon={MessageSquare}
+                title="Ver Feedbacks"
+                description="Revisar sugerencias"
+                href="/configuracion/administracion/feedbacks"
               />
             </div>
           </CardContent>
