@@ -865,16 +865,58 @@ export default function Feedbacks() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {feedback.asignado_a ? (
-                          <div className="flex items-center gap-1.5">
-                            <UserPlus className="h-3.5 w-3.5 text-primary" />
-                            <span className="text-sm">
-                              {usuariosAsignables.find(u => u.id === feedback.asignado_a)?.nombre || 'Usuario'}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Sin asignar</span>
-                        )}
+                        <Select
+                          value={feedback.asignado_a || 'sin-asignar'}
+                          onValueChange={(value) => {
+                            const asignadoA = value === 'sin-asignar' ? null : value;
+                            if (user) {
+                              asignarFeedback({
+                                feedbackId: feedback.id,
+                                asignadoA,
+                                asignadoPor: user.id,
+                                empresaId: (user as any).user_metadata?.empresa_id,
+                                feedbackTipo: feedback.tipo,
+                              });
+                            }
+                          }}
+                          disabled={isAsignando}
+                        >
+                          <SelectTrigger className="w-[160px] h-8">
+                            <SelectValue>
+                              {feedback.asignado_a ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-semibold text-primary">
+                                    {(() => {
+                                      const usr = usuariosAsignables.find(u => u.id === feedback.asignado_a);
+                                      if (!usr) return '?';
+                                      return `${usr.nombre?.charAt(0) || ''}${usr.apellido?.charAt(0) || ''}`.toUpperCase();
+                                    })()}
+                                  </div>
+                                  <span className="text-sm truncate">
+                                    {usuariosAsignables.find(u => u.id === feedback.asignado_a)?.nombre || 'Usuario'}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">Sin asignar</span>
+                              )}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sin-asignar">
+                              <span className="text-muted-foreground">Sin asignar</span>
+                            </SelectItem>
+                            {usuariosAsignables.map((u) => (
+                              <SelectItem key={u.id} value={u.id}>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-semibold text-primary">
+                                    {`${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase()}
+                                  </div>
+                                  <span>{u.nombre} {u.apellido}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <Select
