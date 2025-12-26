@@ -1,14 +1,24 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { X, Plus, Camera, Trash2, Loader2, Clock } from 'lucide-react';
+import { X, Plus, Camera, Loader2, Clock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Form,
   FormControl,
@@ -20,7 +30,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -28,7 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
 import { useCreateParteDiario, useUploadNovedadFoto } from '../hooks/usePartesDiarios';
 import { 
   ESTADO_ANIMO_LABELS, 
@@ -64,7 +72,6 @@ interface ParteDiarioModalProps {
   empleadoId: string;
 }
 
-// Helper to get current time rounded to nearest 15 min
 function getCurrentTime(): string {
   const now = new Date();
   const minutes = Math.floor(now.getMinutes() / 15) * 15;
@@ -76,6 +83,7 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
   const createMutation = useCreateParteDiario();
   const uploadMutation = useUploadNovedadFoto();
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
   const [newActividad, setNewActividad] = useState({
     descripcion: '',
     hora_desde: getCurrentTime(),
@@ -98,6 +106,26 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
   });
 
   const novedades = form.watch('novedades');
+  const actividades = form.watch('actividades');
+  const observaciones = form.watch('observaciones_adicionales');
+
+  const hasUnsavedData = actividades.length > 0 || novedades.length > 0 || (observaciones && observaciones.trim().length > 0) || newActividad.descripcion.trim().length > 0;
+
+  const handleClose = (shouldClose: boolean) => {
+    if (!shouldClose) return;
+    
+    if (hasUnsavedData) {
+      setShowConfirmClose(true);
+    } else {
+      resetAndClose();
+    }
+  };
+
+  const resetAndClose = () => {
+    form.reset();
+    setNewActividad({ descripcion: '', hora_desde: getCurrentTime(), hora_hasta: getCurrentTime() });
+    onOpenChange(false);
+  };
 
   const handleAddActividad = () => {
     if (!newActividad.descripcion.trim()) return;
@@ -108,7 +136,6 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
       hora_hasta: newActividad.hora_hasta,
     });
     
-    // Reset with hora_hasta as new hora_desde
     setNewActividad({
       descripcion: '',
       hora_desde: newActividad.hora_hasta,
@@ -175,21 +202,22 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
       })),
       novedades: novedadesValidas,
     });
-    form.reset();
-    setNewActividad({ descripcion: '', hora_desde: getCurrentTime(), hora_hasta: getCurrentTime() });
-    onOpenChange(false);
+    resetAndClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 scrollbar-hide">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b sticky top-0 bg-card z-10 shadow-sm">
-          <DialogTitle>Parte Diario de Tareas</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+          {/* Header fijo */}
+          <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+            <DialogTitle>Parte Diario de Tareas</DialogTitle>
+          </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-            <div className="px-6 py-4 space-y-6">
+          {/* Contenido scrolleable */}
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
+            <Form {...form}>
+              <form id="parte-diario-form" onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-4 space-y-6">
                 {/* Estado de ánimo */}
                 <FormField
                   control={form.control}
@@ -225,7 +253,6 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                 <div className="space-y-4">
                   <FormLabel className="text-base">Actividades realizadas</FormLabel>
                   
-                  {/* Lista de actividades agregadas */}
                   {actividadFields.length > 0 && (
                     <div className="space-y-2">
                       {actividadFields.map((field, index) => (
@@ -254,7 +281,6 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                     </div>
                   )}
 
-                  {/* Input para nueva actividad */}
                   <div className="p-4 border rounded-lg space-y-3 bg-background">
                     <div className="flex gap-2">
                       <div className="flex items-center gap-2">
@@ -368,7 +394,6 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                         )}
                       />
 
-                      {/* Fotos */}
                       <div className="space-y-2">
                         <div className="flex flex-wrap gap-2">
                           {novedad.fotos.map((foto, photoIndex) => (
@@ -429,27 +454,50 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                     </FormItem>
                   )}
                 />
-              </div>
+              </form>
+            </Form>
+          </div>
 
-            {/* Footer sticky con fondo sólido */}
-            <div className="flex justify-end gap-2 p-4 border-t bg-card sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
-                Enviar Parte
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          {/* Footer fijo - fuera del scroll */}
+          <div className="flex justify-end gap-2 p-4 border-t shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleClose(true)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              form="parte-diario-form"
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              Enviar Parte
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmación al cerrar */}
+      <AlertDialog open={showConfirmClose} onOpenChange={setShowConfirmClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Descartar cambios?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tienes datos sin guardar. Si cierras ahora, perderás todos los cambios realizados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={resetAndClose} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
