@@ -65,7 +65,8 @@ const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
 
     return (
       <FormItemContext.Provider value={{ id }}>
-        <div ref={ref} className={cn("space-y-2", className)} {...props} />
+        {/* Más espacio en mobile para mejor touch target */}
+        <div ref={ref} className={cn("space-y-2 sm:space-y-2", className)} {...props} />
       </FormItemContext.Provider>
     );
   },
