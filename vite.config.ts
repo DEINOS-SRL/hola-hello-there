@@ -5,7 +5,22 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  // Generar versión automática basada en fecha de compilación
+  // Formato: YYYY.MM.DD.HHmm (ej: 2024.12.26.1430)
+  const buildDate = new Date();
+  const year = buildDate.getFullYear();
+  const month = String(buildDate.getMonth() + 1).padStart(2, '0');
+  const day = String(buildDate.getDate()).padStart(2, '0');
+  const hours = String(buildDate.getHours()).padStart(2, '0');
+  const minutes = String(buildDate.getMinutes()).padStart(2, '0');
+  const autoVersion = `${year}.${month}.${day}.${hours}${minutes}`;
+  
+  return {
+    define: {
+      __APP_VERSION__: JSON.stringify(autoVersion),
+      __BUILD_TIME__: JSON.stringify(buildDate.toISOString()),
+    },
   server: {
     host: "::",
     port: 8080,
@@ -63,4 +78,5 @@ export default defineConfig(({ mode }) => ({
     // Evita "Invalid hook call" por duplicación de React en dependencias.
     dedupe: ["react", "react-dom"],
   },
-}));
+  };
+});

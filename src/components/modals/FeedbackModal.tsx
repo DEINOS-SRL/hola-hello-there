@@ -223,10 +223,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md sm:max-h-[95vh] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
+          <DialogTitle className="flex items-center gap-3">
+            <MessageSquare className="h-5 w-5 text-primary ml-1" />
             Enviar Feedback
           </DialogTitle>
           <DialogDescription>
@@ -234,7 +234,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 scrollbar-hide">
+          <div className="space-y-4 pt-8 pb-8">
           <div className="space-y-2">
             <Label htmlFor="tipo">Tipo de feedback</Label>
             <Select value={tipo} onValueChange={setTipo} disabled={isSubmitting}>
@@ -374,6 +375,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                 Formatos: imágenes, PDF, Word, Excel. Máx 10MB por archivo.
               </p>
             </div>
+          </div>
           </div>
         </div>
 

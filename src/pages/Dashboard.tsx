@@ -5,6 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
 import { moduleRegistry } from '@/app/moduleRegistry';
+import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const stats = [
   { name: 'Usuarios Activos', value: '24', icon: Users, change: '+12%', color: 'text-primary' },
@@ -33,6 +37,41 @@ const getModuloLabel = (moduloId: string): string => {
 export default function Dashboard() {
   const { user, empresa } = useAuth();
   const { feedbacks } = useFeedbacks();
+  const [lastConnection, setLastConnection] = useState<string | null>(null);
+
+  // Obtener última conexión de la sesión de Supabase
+  useEffect(() => {
+    const getLastConnection = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.last_sign_in_at) {
+          const lastSignIn = new Date(session.user.last_sign_in_at);
+          const now = new Date();
+          const diffInHours = (now.getTime() - lastSignIn.getTime()) / (1000 * 60 * 60);
+          
+          if (diffInHours < 24) {
+            // Si fue hoy, mostrar hora
+            const isToday = lastSignIn.toDateString() === now.toDateString();
+            if (isToday) {
+              setLastConnection(`Hoy a las ${lastSignIn.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`);
+            } else {
+              setLastConnection(`Ayer a las ${lastSignIn.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`);
+            }
+          } else {
+            // Si fue hace más de 24 horas, mostrar fecha relativa
+            setLastConnection(formatDistanceToNow(lastSignIn, { addSuffix: true, locale: es }));
+          }
+        } else {
+          setLastConnection('No disponible');
+        }
+      } catch (error) {
+        console.error('Error obteniendo última conexión:', error);
+        setLastConnection('No disponible');
+      }
+    };
+
+    getLastConnection();
+  }, []);
 
   // Calcular estadísticas de feedbacks
   const feedbackStats = {
@@ -65,9 +104,27 @@ export default function Dashboard() {
             Panel de control de {empresa?.nombre}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>Última conexión: Hoy a las 10:30 AM</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            <span>Última conexión: {lastConnection || 'Cargando...'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground/70 border-l border-border pl-3">
+            <span className="font-medium">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
+            <span>•</span>
+            <span>
+              {typeof __BUILD_TIME__ !== 'undefined' 
+                ? new Date(__BUILD_TIME__).toLocaleString('es-ES', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    timeZoneName: 'short'
+                  })
+                : 'Fecha no disponible'}
+            </span>
+          </div>
         </div>
       </div>
 

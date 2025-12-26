@@ -162,9 +162,15 @@ export function AppSidebar() {
   // Expandir favoritos automáticamente cuando el sidebar se expande desde colapsado
   useEffect(() => {
     if (!isCollapsed && !favoritosExpanded && favoritos.length > 0) {
-      setFavoritosExpanded(true);
+      // Solo expandir automáticamente si el sidebar acaba de expandirse
+      // No interferir si el usuario ya lo colapsó manualmente
+      const wasCollapsed = localStorage.getItem('sidebar-was-collapsed') === 'true';
+      if (wasCollapsed) {
+        setFavoritosExpanded(true);
+        localStorage.removeItem('sidebar-was-collapsed');
+      }
     }
-  }, [isCollapsed, favoritosExpanded, favoritos.length]);
+  }, [isCollapsed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handlers para hover-expand temporal
   const handleMouseEnter = useCallback(() => {
