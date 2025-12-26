@@ -15,6 +15,7 @@ import {
   Edit,
   User,
   ArrowLeftRight,
+  DollarSign,
 } from 'lucide-react';
 import {
   CommandDialog,
@@ -95,6 +96,15 @@ const quickActions: QuickAction[] = [
     action: 'navigate',
     target: '/habilitaciones/certificaciones?action=new',
     keywords: ['crear', 'certificación', 'habilitación', 'licencia'],
+  },
+  {
+    id: 'new-presupuesto',
+    label: 'Nuevo Presupuesto',
+    description: 'Crear un nuevo presupuesto comercial',
+    icon: DollarSign,
+    action: 'navigate',
+    target: '/comercial/presupuestos?action=new',
+    keywords: ['crear', 'presupuesto', 'comercial', 'venta', 'cotización'],
   },
 ];
 
