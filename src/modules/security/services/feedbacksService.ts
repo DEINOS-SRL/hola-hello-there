@@ -91,20 +91,16 @@ export async function getFeedbacks(): Promise<Feedback[]> {
 }
 
 // Función para togglear destacado
-export async function toggleDestacado(id: string, destacado: boolean): Promise<Feedback> {
-  const { data, error } = await segClient
+export async function toggleDestacado(id: string, destacado: boolean): Promise<void> {
+  const { error } = await segClient
     .from('feedbacks')
     .update({ destacado })
-    .eq('id', id)
-    .select()
-    .single();
+    .eq('id', id);
 
   if (error) {
     console.error('Error toggling destacado:', error);
     throw error;
   }
-
-  return data;
 }
 
 export async function getFeedbackById(id: string): Promise<Feedback | null> {
