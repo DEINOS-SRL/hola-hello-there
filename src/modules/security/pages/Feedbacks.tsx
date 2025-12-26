@@ -526,18 +526,22 @@ export default function Feedbacks() {
       });
     }
     
+    // Siempre usar updateFeedback para respetar el estado seleccionado
+    const updateData: { estado: Feedback['estado']; respuesta?: string; respondido_por?: string; respondido_at?: string } = {
+      estado: nuevoEstado,
+    };
+    
     if (respuesta.trim()) {
-      respondToFeedback({
-        id: selectedFeedback.id,
-        respuesta: respuesta.trim(),
-        respondidoPor: user.id,
-      });
-    } else {
-      updateFeedback({
-        id: selectedFeedback.id,
-        input: { estado: nuevoEstado },
-      });
+      updateData.respuesta = respuesta.trim();
+      updateData.respondido_por = user.id;
+      updateData.respondido_at = new Date().toISOString();
     }
+    
+    updateFeedback({
+      id: selectedFeedback.id,
+      input: updateData,
+    });
+    
     setSelectedFeedback(null);
     setRespuesta('');
   };
