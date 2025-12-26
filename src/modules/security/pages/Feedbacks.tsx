@@ -78,6 +78,7 @@ import { useFeedbackComentarios } from '../hooks/useFeedbackComentarios';
 import { useFeedbackHistorial } from '../hooks/useFeedbackHistorial';
 import { useAuth } from '@/contexts/AuthContext';
 import { Feedback, UsuarioAsignable } from '../services/feedbacksService';
+import { crearNotificacion } from '../services/notificacionesService';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatDistanceToNow } from 'date-fns';
@@ -194,6 +195,7 @@ export default function Feedbacks() {
   const [filterModulo, setFilterModulo] = useState<string>('all');
   const [filterAsignado, setFilterAsignado] = useState<string>('all');
   const [filterSinRespuesta, setFilterSinRespuesta] = useState(false);
+  const [filterDestacados, setFilterDestacados] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [respuesta, setRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState<Feedback['estado']>('pendiente');
@@ -255,7 +257,8 @@ export default function Feedbacks() {
       (filterAsignado === 'mis-asignados' && fb.asignado_a === user?.id) ||
       fb.asignado_a === filterAsignado;
     const matchesSinRespuesta = !filterSinRespuesta || !fb.respuesta;
-    return matchesSearch && matchesTipo && matchesEstado && matchesModulo && matchesAsignado && matchesSinRespuesta;
+    const matchesDestacados = !filterDestacados || fb.destacado;
+    return matchesSearch && matchesTipo && matchesEstado && matchesModulo && matchesAsignado && matchesSinRespuesta && matchesDestacados;
   });
 
   const stats = useMemo(() => {
@@ -293,6 +296,7 @@ export default function Feedbacks() {
       enRevision: feedbacks.filter(f => f.estado === 'en_revision').length,
       resueltos: resueltos.length,
       sinRespuesta: feedbacks.filter(f => !f.respuesta).length,
+      destacados: feedbacks.filter(f => f.destacado).length,
       tiempoPromedioLabel,
       tiempoPromedioHoras,
     };
@@ -532,7 +536,7 @@ export default function Feedbacks() {
     setRespuesta('');
   };
 
-  const handleCambiarEstado = (id: string, estado: Feedback['estado']) => {
+  const handleCambiarEstado = async (id: string, estado: Feedback['estado']) => {
     const feedback = feedbacks.find(f => f.id === id);
     if (feedback && feedback.estado !== estado && user) {
       createHistorial({
@@ -548,6 +552,21 @@ export default function Feedbacks() {
         playDingSound();
       } else {
         playPopSound();
+      }
+      
+      // Notificar al usuario que creó el feedback
+      if (feedback.usuario_id && feedback.empresa_id && feedback.usuario_id !== user.id) {
+        try {
+          await crearNotificacion({
+            empresa_id: feedback.empresa_id,
+            usuario_id: feedback.usuario_id,
+            titulo: 'Tu feedback cambió de estado',
+            mensaje: `Tu feedback de tipo "${tipoLabels[feedback.tipo]}" pasó a estado "${estadoLabels[estado]}".`,
+            tipo: estado === 'resuelto' ? 'success' : 'info',
+          });
+        } catch (err) {
+          console.error('Error creating notification:', err);
+        }
       }
     }
     updateFeedback({ id, input: { estado } });
@@ -712,6 +731,17 @@ export default function Feedbacks() {
                 <p className="text-2xl font-bold text-green-500">{stats.resueltos}</p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-green-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Destacados</p>
+                <p className="text-2xl font-bold text-amber-500">{stats.destacados}</p>
+              </div>
+              <Star className="h-8 w-8 text-amber-500/50" />
             </div>
           </CardContent>
         </Card>
@@ -921,6 +951,25 @@ export default function Feedbacks() {
                 {stats.sinRespuesta > 0 && (
                   <Badge variant="secondary" className="ml-1">
                     {stats.sinRespuesta}
+                  </Badge>
+                )}
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="filterDestacados"
+                checked={filterDestacados}
+                onCheckedChange={(checked) => setFilterDestacados(checked as boolean)}
+              />
+              <label
+                htmlFor="filterDestacados"
+                className="text-sm font-medium cursor-pointer flex items-center gap-1.5"
+              >
+                <Star className="h-4 w-4 text-amber-500" />
+                Solo destacados
+                {stats.destacados > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {stats.destacados}
                   </Badge>
                 )}
               </label>
