@@ -32,6 +32,7 @@ import { FeedbackModal } from '@/components/modals/FeedbackModal';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferenciasGlobal } from '@/contexts/PreferenciasContext';
+import { useSidebarContext } from '@/contexts/SidebarContext';
 import { usePermissions } from '@/core/security/permissions';
 import { useModulosDB, type ModuloConHijos } from '@/modules/security/hooks/useModulos';
 import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
@@ -102,6 +103,9 @@ const SIDEBAR_SEARCH_KEY = 'dnscloud-sidebar-search';
 const SEARCH_DEBOUNCE_MS = 150;
 
 export function AppSidebar() {
+  // Context de sidebar mobile
+  const { isOpen, isMobile, closeSidebar } = useSidebarContext();
+  
   // Detectar si es Mac para mostrar el shortcut correcto
   const isMac = useMemo(() => 
     typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0, 
@@ -134,6 +138,7 @@ export function AppSidebar() {
   const { preservarScroll } = usePreferenciasGlobal();
   const { hasAnyPermission } = usePermissions();
   const location = useLocation();
+  const navigate = useNavigate();
   const { arbol: modulosArbol, isLoading } = useModulosDB();
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
@@ -144,6 +149,17 @@ export function AppSidebar() {
   const navScrollRef = useRef<HTMLElement>(null);
 
   useScrollRestoration(navScrollRef, SIDEBAR_NAV_SCROLL_KEY, [location.pathname], { enabled: preservarScroll });
+  
+  // Cerrar sidebar mobile al navegar
+  useEffect(() => {
+    if (isMobile && isOpen) {
+      closeSidebar();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  // Estado efectivo de colapsado (en mobile siempre expandido)
+  const isCollapsed = !isMobile && collapsed;
 
   // Búsqueda con debounce y persistencia en sessionStorage
   const [moduleSearchInput, setModuleSearchInput] = useState(() => {
@@ -465,11 +481,11 @@ export function AppSidebar() {
           <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
         )}
         <IconComponent className="h-4 w-4 shrink-0" />
-        {!collapsed && <span>{item.name}</span>}
+        {!isCollapsed && <span>{item.name}</span>}
       </RouterNavLink>
     );
 
-    if (collapsed) {
+    if (isCollapsed) {
       return (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
@@ -516,14 +532,14 @@ export function AppSidebar() {
                 <span className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary ring-2 ring-background transition-all duration-200 animate-pulse-soft" />
               )}
               <IconComponent className="h-4 w-4 shrink-0" />
-              {!collapsed && (
+              {!isCollapsed && (
                 <span className="truncate text-left">
                   <HighlightText text={modulo.nombre} search={moduleSearch} />
                 </span>
               )}
             </RouterNavLink>
           </TooltipTrigger>
-          {!collapsed && modulo.nombre.length > 18 && (
+          {!isCollapsed && modulo.nombre.length > 18 && (
             <TooltipContent side="top" sideOffset={4} className="text-xs z-[9999]">
               {modulo.nombre}
             </TooltipContent>
@@ -531,7 +547,7 @@ export function AppSidebar() {
         </Tooltip>
         
         {/* Botón de favorito visible en hover */}
-        {showFavoriteToggle && !collapsed && (
+        {showFavoriteToggle && !isCollapsed && (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <button
@@ -555,7 +571,7 @@ export function AppSidebar() {
       </div>
     );
 
-    if (collapsed) {
+    if (isCollapsed) {
       return (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
@@ -591,7 +607,7 @@ export function AppSidebar() {
       return <ModuloNavItem modulo={modulo} showFavoriteToggle />;
     }
 
-    if (collapsed) {
+    if (isCollapsed) {
       return (
         <div className="space-y-0.5">
           <Tooltip delayDuration={0}>
@@ -736,7 +752,7 @@ export function AppSidebar() {
           </Tooltip>
           
           {/* Botón de favorito para módulo padre */}
-          {!collapsed && (
+          {!isCollapsed && (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <button
@@ -779,46 +795,60 @@ export function AppSidebar() {
     ? dragWidth 
     : (collapsed ? SIDEBAR_MIN_WIDTH : savedWidth);
 
+  // En mobile, el sidebar siempre usa ancho fijo y es absoluto
+  const mobileWidth = 280;
+
+  // Si es mobile y no está abierto, no renderizar
+  if (isMobile && !isOpen) {
+    return null;
+  }
+
   return (
     <aside 
       className={cn(
-        "bg-sidebar flex flex-col sticky top-0 h-screen relative",
-        (!isDragging || isResetting) && "transition-[width] duration-300 ease-in-out"
+        "bg-sidebar flex flex-col h-screen",
+        // Mobile: posición fija con z-index alto
+        isMobile && "fixed left-0 top-0 z-50 animate-slide-in-right shadow-2xl",
+        // Desktop: sticky normal
+        !isMobile && "sticky top-0 relative",
+        (!isDragging || isResetting) && !isMobile && "transition-[width] duration-300 ease-in-out"
       )}
-      style={{ width: sidebarWidth }}
+      style={{ width: isMobile ? mobileWidth : sidebarWidth }}
     >
-      {/* Drag handle en el borde derecho */}
-      <div
-        onMouseDown={handleMouseDown}
-        className={cn(
-          "absolute right-0 top-0 bottom-0 w-1 cursor-col-resize z-50 group",
-          "hover:bg-primary/30 active:bg-primary/50 transition-colors duration-150",
-          isDragging && "bg-primary/50"
-        )}
-      >
-        {/* Línea visual del borde */}
-        <div className={cn(
-          "absolute right-0 top-0 bottom-0 w-px bg-sidebar-border transition-all duration-150",
-          "group-hover:w-0.5 group-hover:bg-primary/50",
-          isDragging && "w-0.5 bg-primary"
-        )} />
-      </div>
+      {/* Drag handle en el borde derecho - Solo desktop */}
+      {!isMobile && (
+        <div
+          onMouseDown={handleMouseDown}
+          className={cn(
+            "absolute right-0 top-0 bottom-0 w-1 cursor-col-resize z-50 group",
+            "hover:bg-primary/30 active:bg-primary/50 transition-colors duration-150",
+            isDragging && "bg-primary/50"
+          )}
+        >
+          {/* Línea visual del borde */}
+          <div className={cn(
+            "absolute right-0 top-0 bottom-0 w-px bg-sidebar-border transition-all duration-150",
+            "group-hover:w-0.5 group-hover:bg-primary/50",
+            isDragging && "w-0.5 bg-primary"
+          )} />
+        </div>
+      )}
       {/* Header con logo y empresa */}
       <div className="p-3 border-b border-sidebar-border overflow-hidden">
         <div className="flex items-center justify-between">
           <div className={cn(
             "flex items-center gap-2 overflow-hidden transition-all duration-300 ease-in-out",
-            collapsed && "justify-center w-full"
+            !isMobile && collapsed && "justify-center w-full"
           )}>
             <div className="relative">
               <div className={cn(
                 "rounded-lg bg-primary flex items-center justify-center shrink-0 transition-all duration-300 ease-in-out",
-                collapsed ? "h-10 w-10" : "h-9 w-9"
+                !isMobile && collapsed ? "h-10 w-10" : "h-9 w-9"
               )}>
                 <span className="text-primary-foreground font-bold text-sm">DC</span>
               </div>
-              {/* Indicador de fijado */}
-              {pinned && (
+              {/* Indicador de fijado - solo desktop */}
+              {!isMobile && pinned && (
                 <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary border-2 border-sidebar flex items-center justify-center animate-scale-in">
                   <Pin className="h-2 w-2 text-primary-foreground" />
                 </div>
@@ -826,7 +856,7 @@ export function AppSidebar() {
             </div>
             <div className={cn(
               "min-w-0 transition-all duration-300 ease-in-out overflow-hidden",
-              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              !isMobile && collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
             )}>
               <p className="font-semibold text-sidebar-foreground text-sm truncate whitespace-nowrap">
                 {empresa?.nombre || 'DNSCloud'}
@@ -836,106 +866,124 @@ export function AppSidebar() {
               </p>
             </div>
           </div>
-          <div className={cn(
-            "flex items-center gap-1 transition-all duration-300 ease-in-out overflow-hidden",
-            collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-          )}>
-            {/* Botón fijar sidebar */}
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={togglePinned}
-                  className={cn(
-                    "h-7 w-7 shrink-0 transition-colors",
-                    pinned 
-                      ? "text-primary hover:text-primary/80 hover:bg-sidebar-accent" 
-                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                  )}
-                >
-                  {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-                <span>{pinned ? 'Desfijar menú' : 'Fijar menú expandido'}</span>
-              </TooltipContent>
-            </Tooltip>
-            
-            {/* Botón colapsar */}
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleSetCollapsed(true)}
-                  disabled={pinned}
-                  className={cn(
-                    "h-7 w-7 shrink-0",
-                    pinned 
-                      ? "text-sidebar-foreground/30 cursor-not-allowed" 
-                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                  )}
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-                <span>{pinned ? 'Desfija para colapsar' : 'Colapsar menú'}</span>
-                {!pinned && (
-                  <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
-                    {shortcutKey}
-                  </kbd>
-                )}
-              </TooltipContent>
-            </Tooltip>
-            
-            {/* Botón restablecer ancho */}
-            {savedWidth !== SIDEBAR_DEFAULT_WIDTH && (
+          
+          {/* Botón cerrar para mobile */}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={closeSidebar}
+              className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+          
+          {/* Botones desktop */}
+          {!isMobile && (
+            <div className={cn(
+              "flex items-center gap-1 transition-all duration-300 ease-in-out overflow-hidden",
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+            )}>
+              {/* Botón fijar sidebar */}
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={resetSidebarWidth}
-                    className="h-7 w-7 shrink-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    onClick={togglePinned}
+                    className={cn(
+                      "h-7 w-7 shrink-0 transition-colors",
+                      pinned 
+                        ? "text-primary hover:text-primary/80 hover:bg-sidebar-accent" 
+                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    )}
                   >
-                    <RotateCcw className="h-3.5 w-3.5" />
+                    {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-                  <span>Restablecer ancho</span>
+                  <span>{pinned ? 'Desfijar menú' : 'Fijar menú expandido'}</span>
                 </TooltipContent>
               </Tooltip>
-            )}
-          </div>
+              
+              {/* Botón colapsar */}
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleSetCollapsed(true)}
+                    disabled={pinned}
+                    className={cn(
+                      "h-7 w-7 shrink-0",
+                      pinned 
+                        ? "text-sidebar-foreground/30 cursor-not-allowed" 
+                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    )}
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                  <span>{pinned ? 'Desfija para colapsar' : 'Colapsar menú'}</span>
+                  {!pinned && (
+                    <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                      {shortcutKey}
+                    </kbd>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+              
+              {/* Botón restablecer ancho */}
+              {savedWidth !== SIDEBAR_DEFAULT_WIDTH && (
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={resetSidebarWidth}
+                      className="h-7 w-7 shrink-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                    <span>Restablecer ancho</span>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Botón para expandir cuando está colapsado */}
-      <div className={cn(
-        "border-b border-sidebar-border overflow-hidden transition-all duration-300 ease-in-out",
-        collapsed ? "p-2 max-h-14 opacity-100" : "max-h-0 p-0 opacity-0"
-      )}>
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleSetCollapsed(false)}
-              className="w-full h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <PanelLeft className="h-4 w-4 transition-transform duration-300" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-            <span>Expandir menú</span>
-            <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
-              {shortcutKey}
-            </kbd>
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      {/* Botón para expandir cuando está colapsado - Solo desktop */}
+      {!isMobile && (
+        <div className={cn(
+          "border-b border-sidebar-border overflow-hidden transition-all duration-300 ease-in-out",
+          isCollapsed ? "p-2 max-h-14 opacity-100" : "max-h-0 p-0 opacity-0"
+        )}>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleSetCollapsed(false)}
+                className="w-full h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <PanelLeft className="h-4 w-4 transition-transform duration-300" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+              <span>Expandir menú</span>
+              <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                {shortcutKey}
+              </kbd>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav ref={navScrollRef} className="flex-1 py-3 px-2 space-y-1 overflow-y-auto overscroll-contain">
@@ -945,7 +993,7 @@ export function AppSidebar() {
         </div>
 
         {/* Favoritos - Con popover cuando está colapsado igual que los módulos */}
-        {collapsed ? (
+        {isCollapsed ? (
           // Modo colapsado: mostrar icono con Tooltip que muestra los favoritos
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -1171,7 +1219,7 @@ export function AppSidebar() {
           </div>
 
           {/* Filtro de búsqueda de módulos */}
-          {!collapsed && visibleModules.length > 3 && (
+          {!isCollapsed && visibleModules.length > 3 && (
             <div className="px-2 pb-1 space-y-1">
               <div className="relative">
                 {isSearching ? (
