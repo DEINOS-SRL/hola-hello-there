@@ -111,10 +111,15 @@ export default function Movimientos() {
           <h1 className="text-3xl font-bold tracking-tight">Movimientos</h1>
           <p className="text-muted-foreground">Gestiona operaciones y servicios</p>
         </div>
-        <Button onClick={handleNew} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nuevo Movimiento
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2">
+            vibe Coding
+          </Button>
+          <Button onClick={handleNew} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nuevo Movimiento
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

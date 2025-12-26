@@ -244,6 +244,10 @@ Este documento describe el estado de implementación del proyecto DNSCloud organ
 
 ### Checklist
 
+
+#### Grilla Principal de Movimientos
+- [x] Agregar un botón que diga "vibe Coding"
+
 #### Wizard de Movimientos (5 Pasos)
 - [x] Step 1: Datos Generales
 - [x] Step 1: Cambiar el título a "Datos Generales y Cliente"
