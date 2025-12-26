@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Loader2, UserCheck, Clock, UserX } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Loader2, UserCheck, Clock, UserX, Upload, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useEmpleados } from '../hooks/useEmpleados';
 import { EmpleadoModal } from '../components/EmpleadoModal';
+import { ImportarEmpleadosModal } from '../components/ImportarEmpleadosModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActionParam } from '@/hooks/useActionParam';
 import type { Empleado } from '../types';
@@ -48,9 +49,41 @@ const estadoLabels: Record<string, string> = {
   baja: 'Baja',
 };
 
+// Campos de la plantilla para descarga directa
+const TEMPLATE_HEADERS = [
+  'legajo',
+  'nombre',
+  'apellido',
+  'dni',
+  'fecha_nacimiento',
+  'fecha_ingreso',
+  'cargo',
+  'departamento',
+  'email',
+  'telefono',
+  'direccion',
+  'estado',
+];
+
+const TEMPLATE_EXAMPLE = [
+  '001',
+  'Juan',
+  'Pérez',
+  '12345678',
+  '1990-01-15',
+  '2020-03-01',
+  'Desarrollador',
+  'Tecnología',
+  'juan.perez@empresa.com',
+  '+54 11 1234-5678',
+  'Av. Corrientes 1234, CABA',
+  'activo',
+];
+
 export default function Empleados() {
   const [searchTerm, setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingEmpleado, setEditingEmpleado] = useState<Empleado | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [empleadoToDelete, setEmpleadoToDelete] = useState<Empleado | null>(null);
@@ -147,10 +180,41 @@ export default function Empleados() {
           <h1 className="text-2xl font-bold">Empleados</h1>
           <p className="text-muted-foreground">Gestiona los empleados de tu empresa</p>
         </div>
-        <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Empleado
-        </Button>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Importar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setImportModalOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Importar desde CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const csvContent = [
+                  TEMPLATE_HEADERS.join(','),
+                  TEMPLATE_EXAMPLE.join(','),
+                ].join('\n');
+                const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'plantilla_empleados.csv';
+                link.click();
+                URL.revokeObjectURL(link.href);
+              }}>
+                <Download className="mr-2 h-4 w-4" />
+                Descargar plantilla
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={handleOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo Empleado
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -307,6 +371,11 @@ export default function Empleados() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImportarEmpleadosModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+      />
     </div>
   );
 }
