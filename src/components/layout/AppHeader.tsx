@@ -91,7 +91,7 @@ export function AppHeader() {
           <Input
             type="search"
             placeholder="Buscar..."
-            className="pl-10 bg-muted/50 border-0 focus-visible:ring-1"
+            className="pl-10 md:pl-10 bg-muted/50 border-0 focus-visible:ring-1"
           />
         </div>
         

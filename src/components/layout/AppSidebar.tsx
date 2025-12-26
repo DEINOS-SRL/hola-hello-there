@@ -1190,8 +1190,8 @@ export function AppSidebar() {
                           }
                         }}
                         className={cn(
-                          "h-8 pl-8 pr-14 text-xs bg-transparent border-sidebar-border/50 placeholder:text-sidebar-foreground/30 text-sidebar-foreground transition-all duration-200 focus:bg-sidebar-accent/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_8px_hsl(var(--primary)/0.15)]",
-                          noResults && "border-destructive/50 focus:border-destructive focus:ring-destructive/20"
+                          "h-8 pl-8 pr-14 md:pl-8 md:pr-14 text-xs bg-transparent border-sidebar-border/50 placeholder:text-sidebar-foreground/30 text-sidebar-foreground transition-all duration-200 focus:bg-sidebar-accent/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_8px_hsl(var(--primary)/0.15)]",
+                          noResults && "border-destructive/50 focus:border-destructive focus:ring-destructive/20",
                         )}
                       />
                       {/* Badge de atajo de teclado */}
