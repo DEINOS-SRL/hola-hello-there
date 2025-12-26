@@ -156,27 +156,49 @@ export function CommandSearch() {
     typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0, 
   []);
 
-  // Keyboard shortcut: Cmd/Ctrl + K
+  // Keyboard shortcuts: Cmd/Ctrl + K para búsqueda, Ctrl+Shift+E para nuevo empleado, etc.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      // Cmd/Ctrl + K para búsqueda
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'k') {
         e.preventDefault();
         setOpen(prev => !prev);
+      }
+      // Ctrl/Cmd + Shift + E para nuevo empleado
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        navigate('/rrhh/empleados?action=new');
+      }
+      // Ctrl/Cmd + Shift + Q para nuevo equipo
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'q') {
+        e.preventDefault();
+        navigate('/equipos/listado?action=new');
+      }
+      // Ctrl/Cmd + Shift + P para nuevo presupuesto
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        navigate('/comercial/presupuestos?action=new');
+      }
+      // Ctrl/Cmd + Shift + M para nuevo movimiento
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        navigate('/operacion/movimientos?action=new');
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [navigate]);
 
-  // Registros recientes para editar (últimos 5 de cada tipo)
+  // Registros recientes para editar (limitado a 12 total)
+  const MAX_RECENT_RECORDS = 12;
   const recentRecords = useMemo((): EditableRecord[] => {
     const records: EditableRecord[] = [];
 
-    // Últimos 5 empleados
+    // Últimos 3 empleados (reducido para balancear)
     const recentEmpleados = [...empleados]
       .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-      .slice(0, 5);
+      .slice(0, 3);
 
     recentEmpleados.forEach(emp => {
       records.push({
@@ -189,10 +211,10 @@ export function CommandSearch() {
       });
     });
 
-    // Últimos 5 movimientos
+    // Últimos 3 movimientos
     const recentMovimientos = [...movimientos]
       .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-      .slice(0, 5);
+      .slice(0, 3);
 
     recentMovimientos.forEach(mov => {
       records.push({
@@ -214,10 +236,10 @@ export function CommandSearch() {
       vencido: { text: 'Vencido', variant: 'outline', className: 'bg-orange-100 text-orange-700 border-orange-300' },
     };
 
-    // Últimos 5 presupuestos
+    // Últimos 3 presupuestos
     const recentPresupuestos = [...(presupuestos || [])]
       .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-      .slice(0, 5);
+      .slice(0, 3);
 
     recentPresupuestos.forEach(pres => {
       const badgeConfig = presupuestoBadgeConfig[pres.estado];
@@ -244,10 +266,10 @@ export function CommandSearch() {
       baja: { text: 'Baja', variant: 'destructive', className: 'bg-red-100 text-red-700 border-red-300' },
     };
 
-    // Últimos 5 equipos
+    // Últimos 3 equipos
     const recentEquipos = [...(equipos || [])]
       .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-      .slice(0, 5);
+      .slice(0, 3);
 
     recentEquipos.forEach(eq => {
       const badgeConfig = equipoBadgeConfig[eq.estado];
@@ -266,7 +288,8 @@ export function CommandSearch() {
       });
     });
 
-    return records;
+    // Limitar a MAX_RECENT_RECORDS total
+    return records.slice(0, MAX_RECENT_RECORDS);
   }, [empleados, movimientos, presupuestos, equipos]);
 
   // Módulos favoritos
@@ -441,19 +464,27 @@ export function CommandSearch() {
         </CommandGroup>
       </CommandList>
 
-      <div className="border-t border-border p-2 text-xs text-muted-foreground flex items-center justify-center gap-4">
-        <span className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↑↓</kbd>
-          navegar
-        </span>
-        <span className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↵</kbd>
-          seleccionar
-        </span>
-        <span className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">esc</kbd>
-          cerrar
-        </span>
+      <div className="border-t border-border p-2 text-xs text-muted-foreground">
+        <div className="flex items-center justify-center gap-4 mb-1.5">
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↑↓</kbd>
+            navegar
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↵</kbd>
+            seleccionar
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">esc</kbd>
+            cerrar
+          </span>
+        </div>
+        <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/70">
+          <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+E</kbd> Empleado</span>
+          <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+Q</kbd> Equipo</span>
+          <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+P</kbd> Presupuesto</span>
+          <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+M</kbd> Movimiento</span>
+        </div>
       </div>
     </CommandDialog>
   );
