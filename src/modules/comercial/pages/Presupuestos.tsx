@@ -75,13 +75,19 @@ export default function Presupuestos() {
   const [sortField, setSortField] = useState<'fecha' | 'monto_total' | 'numero'>('fecha');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  // Detectar action=new en la URL para abrir modal desde acciones rápidas
-  const handleUrlAction = useCallback((action: string) => {
+  // Detectar action=new o action=edit&id=X en la URL para abrir modal desde acciones rápidas
+  const handleUrlAction = useCallback((action: string, id?: string) => {
     if (action === 'new') {
       setSelectedPresupuesto(null);
       setModalOpen(true);
+    } else if (action === 'edit' && id && presupuestos) {
+      const presupuesto = presupuestos.find(p => p.id === id);
+      if (presupuesto) {
+        setSelectedPresupuesto(presupuesto);
+        setModalOpen(true);
+      }
     }
-  }, []);
+  }, [presupuestos]);
 
   useActionParam({ onAction: handleUrlAction });
 

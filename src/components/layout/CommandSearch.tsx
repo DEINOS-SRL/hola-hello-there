@@ -30,6 +30,7 @@ import { useModulosDB } from '@/modules/security/hooks/useModulos';
 import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
 import { useEmpleados } from '@/modules/employees/hooks/useEmpleados';
 import { useMovimientos } from '@/modules/operacion/hooks/useMovimientos';
+import { usePresupuestos } from '@/modules/comercial/hooks/usePresupuestos';
 
 // Función para obtener icono dinámicamente por nombre
 const getIconByName = (iconName: string): LucideIcon => {
@@ -131,6 +132,7 @@ export function CommandSearch() {
   const { favoritos } = useFavoritos();
   const { empleados } = useEmpleados();
   const { movimientos } = useMovimientos();
+  const { data: presupuestos } = usePresupuestos();
 
   // Detectar si es Mac
   const isMac = useMemo(() => 
@@ -186,8 +188,24 @@ export function CommandSearch() {
       });
     });
 
+    // Últimos 5 presupuestos
+    const recentPresupuestos = [...(presupuestos || [])]
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 5);
+
+    recentPresupuestos.forEach(pres => {
+      records.push({
+        id: `pres-${pres.id}`,
+        label: `${pres.numero} - ${pres.cliente}`,
+        description: `Presupuesto · ${pres.estado}`,
+        icon: DollarSign,
+        route: `/comercial/presupuestos?action=edit&id=${pres.id}`,
+        keywords: ['editar', 'presupuesto', pres.numero, pres.cliente, pres.estado],
+      });
+    });
+
     return records;
-  }, [empleados, movimientos]);
+  }, [empleados, movimientos, presupuestos]);
 
   // Módulos favoritos
   const favoritosModulos = useMemo(() => 
