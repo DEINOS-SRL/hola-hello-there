@@ -82,7 +82,7 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Indicador de feedbacks destacados pendientes */}
+        {/* Indicador de feedbacks destacados pendientes con pulso */}
         {destacadosCount > 0 && (
           <TooltipProvider>
             <Tooltip>
@@ -90,7 +90,7 @@ export function AppHeader() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative"
+                  className="relative animate-pulse-glow"
                   onClick={() => navigate('/configuracion/administracion/feedbacks?filter=destacados')}
                 >
                   <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
