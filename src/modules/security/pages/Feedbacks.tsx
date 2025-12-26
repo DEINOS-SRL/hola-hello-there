@@ -1276,7 +1276,7 @@ export default function Feedbacks() {
                   Historial de estados
                 </Label>
                 
-                <ScrollArea className="h-40 rounded-md border bg-muted/20">
+                <ScrollArea className="h-48 rounded-md border bg-muted/20 p-3">
                   {isLoadingHistorial ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1286,27 +1286,69 @@ export default function Feedbacks() {
                       Sin cambios de estado registrados
                     </p>
                   ) : (
-                    <div className="space-y-2">
-                      {historial.map((item) => (
-                        <div key={item.id} className="rounded-md border bg-background/40 p-2">
-                          <div className="flex items-center justify-between gap-2 text-xs">
-                            <span className="font-medium">{item.usuario_nombre || 'Sistema'}</span>
-                            <span className="text-muted-foreground">
-                              {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                            <span className="text-muted-foreground">Estado:</span>
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                              {estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo'}
-                            </Badge>
-                            <span className="text-muted-foreground">→</span>
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                              {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="relative">
+                      {/* Línea vertical del timeline */}
+                      <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-border" />
+                      
+                      <div className="space-y-4">
+                        {historial.map((item, idx) => {
+                          // Iconos y colores por estado
+                          const getEstadoIcon = (estado: string) => {
+                            switch (estado) {
+                              case 'pendiente': return Clock;
+                              case 'en_revision': return AlertCircle;
+                              case 'resuelto': return CheckCircle2;
+                              case 'cerrado': return XCircle;
+                              default: return Clock;
+                            }
+                          };
+                          const getEstadoColor = (estado: string) => {
+                            switch (estado) {
+                              case 'pendiente': return 'bg-amber-500 text-white';
+                              case 'en_revision': return 'bg-blue-500 text-white';
+                              case 'resuelto': return 'bg-green-500 text-white';
+                              case 'cerrado': return 'bg-muted-foreground text-white';
+                              default: return 'bg-muted text-muted-foreground';
+                            }
+                          };
+                          
+                          const IconNuevo = getEstadoIcon(item.estado_nuevo);
+                          const colorNuevo = getEstadoColor(item.estado_nuevo);
+                          
+                          return (
+                            <div key={item.id} className="relative pl-8 animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
+                              {/* Ícono del estado nuevo */}
+                              <div className={`absolute left-0 top-0 w-6 h-6 rounded-full ${colorNuevo} flex items-center justify-center shadow-sm`}>
+                                <IconNuevo className="h-3 w-3" />
+                              </div>
+                              
+                              {/* Contenido del evento */}
+                              <div className="bg-background/60 rounded-md border p-2 space-y-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-xs font-medium">{item.usuario_nombre || 'Sistema'}</span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
+                                  </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1">
+                                    {(() => {
+                                      const IconAnterior = getEstadoIcon(item.estado_anterior || 'pendiente');
+                                      return <IconAnterior className="h-2.5 w-2.5" />;
+                                    })()}
+                                    {estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo'}
+                                  </Badge>
+                                  <span className="text-muted-foreground">→</span>
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-1">
+                                    <IconNuevo className="h-2.5 w-2.5" />
+                                    {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </ScrollArea>
