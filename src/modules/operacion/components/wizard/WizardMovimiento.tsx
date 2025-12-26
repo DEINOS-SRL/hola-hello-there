@@ -290,12 +290,15 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className={cn(
-          "overflow-hidden flex flex-col",
-          isMobile 
-            ? "w-full h-full max-w-full max-h-full rounded-none" 
-            : "w-[80vw] max-w-[80vw] h-[85vh] max-h-[85vh]"
-        )}>
+        <DialogContent 
+          className={cn(
+            "overflow-hidden flex flex-col p-6",
+            isMobile 
+              ? "w-full h-full max-w-full max-h-full rounded-none" 
+              : "!w-[80vw] !max-w-[80vw] h-[85vh] max-h-[85vh]"
+          )}
+          style={!isMobile ? { width: '80vw', maxWidth: '80vw' } : undefined}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {movimiento ? `Editar Movimiento #${movimiento.numero_movimiento}` : 'Nuevo Movimiento'}
