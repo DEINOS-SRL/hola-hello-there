@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, UserCog, Truck, Users, X, Search } from 'lucide-react';
+import { Clock, UserCog, Truck, Users, X, Calendar } from 'lucide-react';
 import { useWizardData } from '../../hooks/useMovimientos';
 import { movimientosService } from '../../services/movimientosService';
 import type { WizardMovimientoData } from '../../types';
@@ -50,6 +50,17 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
     queryFn: () => movimientoId ? movimientosService.getMovimientoEquiposEqu(movimientoId) : Promise.resolve([]),
     enabled: !!movimientoId,
   });
+
+  // Initialize datetime fields with fecha_movimiento and 06:00 time
+  useEffect(() => {
+    if (data.fecha_movimiento && !data.hora_inicio_programada) {
+      const defaultDateTime = `${data.fecha_movimiento}T06:00`;
+      updateData({ 
+        hora_inicio_programada: defaultDateTime,
+        hora_fin_programada: defaultDateTime 
+      });
+    }
+  }, [data.fecha_movimiento]);
 
   useEffect(() => {
     if (empleadosAsignados && empleadosAsignados.length > 0) {
@@ -111,24 +122,26 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" />
-            Hora de Inicio
+            <Calendar className="h-4 w-4 text-primary" />
+            Fecha y Hora de Inicio
           </Label>
           <Input
-            type="time"
+            type="datetime-local"
             value={data.hora_inicio_programada}
             onChange={(e) => updateData({ hora_inicio_programada: e.target.value })}
+            className="w-full"
           />
         </div>
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" />
-            Hora de Fin
+            <Calendar className="h-4 w-4 text-primary" />
+            Fecha y Hora de Fin
           </Label>
           <Input
-            type="time"
+            type="datetime-local"
             value={data.hora_fin_programada}
             onChange={(e) => updateData({ hora_fin_programada: e.target.value })}
+            className="w-full"
           />
         </div>
       </div>
