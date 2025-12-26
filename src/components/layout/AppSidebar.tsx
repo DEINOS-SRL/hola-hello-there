@@ -1151,34 +1151,59 @@ export function AppSidebar() {
           {/* Filtro de búsqueda de módulos - transparente */}
           {!isCollapsed && visibleModules.length > 3 && (
             <div className="px-2 pb-2 space-y-1">
-              <div className="relative">
-                {isSearching ? (
-                  <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary animate-spin" />
-                ) : (
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/40" />
-                )}
-                <Input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder={`Buscar... (${shortcutSearch})`}
-                  value={moduleSearchInput}
-                  onChange={(e) => setModuleSearchInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      clearSearch();
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                  className="h-8 pl-8 pr-8 text-xs bg-transparent border-transparent placeholder:text-sidebar-foreground/30 text-sidebar-foreground focus:bg-sidebar-accent/30 focus:border-sidebar-border/50 transition-colors"
-                />
-                {moduleSearchInput && (
-                  <button
-                    onClick={clearSearch}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
+              <div className="flex items-center gap-1">
+                <div className="relative flex-1">
+                  {isSearching ? (
+                    <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary animate-spin" />
+                  ) : (
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/40" />
+                  )}
+                  <Input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder={`Buscar... (${shortcutSearch})`}
+                    value={moduleSearchInput}
+                    onChange={(e) => setModuleSearchInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        clearSearch();
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    className="h-8 pl-8 pr-8 text-xs bg-transparent border-transparent placeholder:text-sidebar-foreground/30 text-sidebar-foreground focus:bg-sidebar-accent/30 focus:border-sidebar-border/50 transition-colors"
+                  />
+                  {moduleSearchInput && (
+                    <button
+                      onClick={clearSearch}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+                {/* Botón expandir/colapsar todos */}
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleAllModules}
+                      className="h-8 w-8 shrink-0 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    >
+                      {allExpanded ? (
+                        <ChevronsDownUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronsUpDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                    <span>{allExpanded ? 'Colapsar todos' : 'Expandir todos'}</span>
+                    <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                      {shortcutModules}
+                    </kbd>
+                  </TooltipContent>
+                </Tooltip>
               </div>
               {/* Contador de resultados y hint */}
               {moduleSearch.trim() && (
