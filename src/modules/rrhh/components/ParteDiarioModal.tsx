@@ -333,8 +333,15 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
 
   return (
     <>
-      <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleClose(true);
+        }
+      }}>
+        <DialogContent 
+          className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           {/* Alerta si no tiene empresa */}
           {!empresa && (
             <div className="px-6 pt-6">
