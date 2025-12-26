@@ -11,6 +11,7 @@ import { Step4Ejecucion } from './Step4Ejecucion';
 import { Step5Cierre } from './Step5Cierre';
 import type { Movimiento, WizardMovimientoData, EstadoMovimiento } from '../../types';
 import { movimientosService } from '../../services/movimientosService';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface WizardMovimientoProps {
@@ -66,6 +67,7 @@ const initialData: WizardMovimientoData = {
 };
 
 export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }: WizardMovimientoProps) {
+  const { empresa } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<WizardMovimientoData>(initialData);
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +132,7 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
           });
         } else {
           const newMov = await movimientosService.create({
+            empresa_id: empresa?.id || '',
             fecha_movimiento: data.fecha_movimiento,
             cliente_id: data.cliente_id || null,
             presupuesto_id: data.presupuesto_id || null,
