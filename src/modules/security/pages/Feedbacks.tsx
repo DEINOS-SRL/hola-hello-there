@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+// Feedbacks page - DNSCloud
+import { useState, useMemo, useRef } from 'react';
 import { 
   MessageSquare, 
   Search, 
@@ -21,8 +22,13 @@ import {
   Paperclip,
   ExternalLink,
   ZoomIn,
+  FileText,
+  Calendar,
 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
@@ -171,6 +177,141 @@ export default function Feedbacks() {
       .sort((a, b) => b.value - a.value);
   }, [feedbacks]);
 
+  // Datos para el gráfico de barras por mes (últimos 6 meses)
+  const chartDataPorMes = useMemo(() => {
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = subMonths(new Date(), i);
+      const start = startOfMonth(monthDate);
+      const end = endOfMonth(monthDate);
+      
+      const count = feedbacks.filter(fb => {
+        const fbDate = new Date(fb.created_at);
+        return isWithinInterval(fbDate, { start, end });
+      }).length;
+      
+      months.push({
+        name: format(monthDate, 'MMM yy', { locale: es }),
+        feedbacks: count,
+      });
+    }
+    return months;
+  }, [feedbacks]);
+
+  // Referencia para exportar a PDF
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+
+  // Función para exportar a PDF
+  const exportToPDF = async () => {
+    if (feedbacks.length === 0) {
+      toast.error('No hay feedbacks para exportar');
+      return;
+    }
+
+    setIsExportingPDF(true);
+    toast.info('Generando PDF...');
+
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 15;
+      let yPosition = margin;
+
+      // Título
+      pdf.setFontSize(20);
+      pdf.setTextColor(45, 139, 122); // Color primario
+      pdf.text('Reporte de Feedbacks', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 10;
+
+      // Fecha del reporte
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generado el ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
+
+      // Estadísticas
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Resumen', margin, yPosition);
+      yPosition += 8;
+
+      pdf.setFontSize(10);
+      const statsText = [
+        `Total de feedbacks: ${stats.total}`,
+        `Pendientes: ${stats.pendientes}`,
+        `En revisión: ${stats.enRevision}`,
+        `Resueltos: ${stats.resueltos}`,
+        `Sin respuesta: ${stats.sinRespuesta}`,
+      ];
+      statsText.forEach(text => {
+        pdf.text(text, margin, yPosition);
+        yPosition += 6;
+      });
+      yPosition += 10;
+
+      // Capturar gráficos como imágenes
+      const chartsContainer = document.getElementById('charts-container');
+      if (chartsContainer) {
+        const canvas = await html2canvas(chartsContainer, { 
+          backgroundColor: '#ffffff',
+          scale: 2,
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pageWidth - (margin * 2);
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        if (yPosition + imgHeight > 280) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        
+        pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10;
+      }
+
+      // Lista de feedbacks
+      pdf.addPage();
+      yPosition = margin;
+      pdf.setFontSize(14);
+      pdf.text('Detalle de Feedbacks', margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(8);
+      filteredFeedbacks.slice(0, 30).forEach((fb, idx) => {
+        if (yPosition > 270) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setTextColor(45, 139, 122);
+        pdf.text(`${idx + 1}. ${tipoLabels[fb.tipo]}`, margin, yPosition);
+        pdf.setTextColor(0, 0, 0);
+        yPosition += 5;
+
+        const mensaje = fb.mensaje.length > 100 ? fb.mensaje.substring(0, 100) + '...' : fb.mensaje;
+        pdf.text(mensaje, margin + 5, yPosition);
+        yPosition += 5;
+
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Estado: ${estadoLabels[fb.estado]} | ${format(new Date(fb.created_at), 'dd/MM/yyyy')}`, margin + 5, yPosition);
+        pdf.setTextColor(0, 0, 0);
+        yPosition += 8;
+      });
+
+      if (filteredFeedbacks.length > 30) {
+        pdf.text(`... y ${filteredFeedbacks.length - 30} feedbacks más`, margin, yPosition);
+      }
+
+      pdf.save(`feedbacks_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success('PDF exportado correctamente');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Error al exportar PDF');
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
   // Función para exportar a CSV
   const exportToCSV = () => {
     if (filteredFeedbacks.length === 0) {
@@ -271,6 +412,20 @@ export default function Feedbacks() {
             </div>
           )}
           
+          {/* Botón de exportar PDF */}
+          <Button 
+            variant="outline" 
+            onClick={exportToPDF} 
+            disabled={feedbacks.length === 0 || isExportingPDF}
+          >
+            {isExportingPDF ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4 mr-2" />
+            )}
+            Exportar PDF
+          </Button>
+
           {/* Botón de exportar CSV */}
           <Button variant="outline" onClick={exportToCSV} disabled={filteredFeedbacks.length === 0}>
             <Download className="h-4 w-4 mr-2" />
@@ -327,51 +482,103 @@ export default function Feedbacks() {
         </Card>
       </div>
 
-      {/* Gráfico de distribución por tipo */}
-      {feedbacks.length > 0 && chartDataPorTipo.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Distribución por Tipo</CardTitle>
-            <CardDescription>Cantidad de feedbacks según su categoría</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartDataPorTipo}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    labelLine={false}
-                  >
-                    {chartDataPorTipo.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => [`${value} feedbacks`, 'Cantidad']}
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
-                      borderColor: 'hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend 
-                    verticalAlign="middle" 
-                    align="right"
-                    layout="vertical"
-                    wrapperStyle={{ paddingLeft: '20px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Gráficos - Contenedor para PDF */}
+      {feedbacks.length > 0 && (
+        <div id="charts-container" className="grid gap-4 md:grid-cols-2">
+          {/* Gráfico de distribución por tipo */}
+          {chartDataPorTipo.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Distribución por Tipo
+                </CardTitle>
+                <CardDescription>Cantidad de feedbacks según su categoría</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartDataPorTipo}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={75}
+                        paddingAngle={2}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        labelLine={false}
+                      >
+                        {chartDataPorTipo.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number) => [`${value} feedbacks`, 'Cantidad']}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          borderColor: 'hsl(var(--border))',
+                          borderRadius: '8px',
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        align="center"
+                        layout="horizontal"
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Gráfico de tendencia mensual */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Tendencia Mensual
+              </CardTitle>
+              <CardDescription>Feedbacks recibidos en los últimos 6 meses</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartDataPorMes} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                      allowDecimals={false}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [`${value} feedbacks`, 'Cantidad']}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        borderColor: 'hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                    />
+                    <Bar 
+                      dataKey="feedbacks" 
+                      fill="hsl(var(--primary))" 
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Filters */}
