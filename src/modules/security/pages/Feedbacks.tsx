@@ -16,8 +16,10 @@ import {
   ShieldAlert,
   MessageCircle,
   Sparkles,
+  MessageSquareOff,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -95,10 +97,10 @@ export default function Feedbacks() {
   const [search, setSearch] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('all');
   const [filterEstado, setFilterEstado] = useState<string>('all');
+  const [filterSinRespuesta, setFilterSinRespuesta] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [respuesta, setRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState<Feedback['estado']>('pendiente');
-
   const filteredFeedbacks = feedbacks.filter((fb) => {
     const matchesSearch = 
       fb.mensaje.toLowerCase().includes(search.toLowerCase()) ||
@@ -106,7 +108,8 @@ export default function Feedbacks() {
       fb.usuario_nombre?.toLowerCase().includes(search.toLowerCase());
     const matchesTipo = filterTipo === 'all' || fb.tipo === filterTipo;
     const matchesEstado = filterEstado === 'all' || fb.estado === filterEstado;
-    return matchesSearch && matchesTipo && matchesEstado;
+    const matchesSinRespuesta = !filterSinRespuesta || !fb.respuesta;
+    return matchesSearch && matchesTipo && matchesEstado && matchesSinRespuesta;
   });
 
   const stats = {
@@ -114,6 +117,7 @@ export default function Feedbacks() {
     pendientes: feedbacks.filter(f => f.estado === 'pendiente').length,
     enRevision: feedbacks.filter(f => f.estado === 'en_revision').length,
     resueltos: feedbacks.filter(f => f.estado === 'resuelto').length,
+    sinRespuesta: feedbacks.filter(f => !f.respuesta).length,
   };
 
   const handleOpenDetail = (feedback: Feedback) => {
@@ -271,6 +275,27 @@ export default function Feedbacks() {
                 ))}
               </SelectContent>
             </Select>
+            
+            {/* Filtro rápido: Sin respuesta */}
+            <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-background">
+              <Switch
+                id="sin-respuesta"
+                checked={filterSinRespuesta}
+                onCheckedChange={setFilterSinRespuesta}
+              />
+              <label 
+                htmlFor="sin-respuesta" 
+                className="text-sm font-medium cursor-pointer flex items-center gap-1.5"
+              >
+                <MessageSquareOff className="h-4 w-4 text-muted-foreground" />
+                Sin respuesta
+                {stats.sinRespuesta > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {stats.sinRespuesta}
+                  </Badge>
+                )}
+              </label>
+            </div>
           </div>
         </CardContent>
       </Card>
