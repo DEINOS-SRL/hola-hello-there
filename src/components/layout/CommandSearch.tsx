@@ -227,19 +227,33 @@ export function CommandSearch() {
       });
     });
 
+    // Configuración de badges para estados de equipo
+    const equipoBadgeConfig: Record<string, { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string }> = {
+      activo: { text: 'Activo', variant: 'default', className: 'bg-green-100 text-green-700 border-green-300' },
+      inactivo: { text: 'Inactivo', variant: 'secondary', className: 'bg-gray-100 text-gray-700 border-gray-300' },
+      mantenimiento: { text: 'Mantenimiento', variant: 'outline', className: 'bg-amber-100 text-amber-700 border-amber-300' },
+      baja: { text: 'Baja', variant: 'destructive', className: 'bg-red-100 text-red-700 border-red-300' },
+    };
+
     // Últimos 5 equipos
     const recentEquipos = [...(equipos || [])]
       .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
       .slice(0, 5);
 
     recentEquipos.forEach(eq => {
+      const badgeConfig = equipoBadgeConfig[eq.estado];
       records.push({
         id: `eq-${eq.id}`,
         label: `${eq.codigo} - ${eq.nombre}`,
-        description: `Equipo · ${eq.tipo_equipo?.nombre || 'Sin tipo'} · ${eq.estado}`,
+        description: eq.tipo_equipo?.nombre || 'Equipo',
         icon: Truck,
         route: `/equipos/listado?action=edit&id=${eq.id}`,
         keywords: ['editar', 'equipo', eq.codigo, eq.nombre, eq.tipo_equipo?.nombre || '', eq.estado],
+        badge: badgeConfig ? {
+          text: badgeConfig.text,
+          variant: badgeConfig.variant,
+          className: badgeConfig.className,
+        } : undefined,
       });
     });
 
