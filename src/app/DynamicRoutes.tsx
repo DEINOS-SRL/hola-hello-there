@@ -15,6 +15,7 @@ import ModuloPlaceholder from '@/pages/ModuloPlaceholder';
 // Lazy loading para páginas menos frecuentes
 const Modulos = lazy(() => import('@/pages/Modulos'));
 const Perfil = lazy(() => import('@/pages/Perfil'));
+const Documentacion = lazy(() => import('@/pages/Documentacion'));
 const Configuracion = lazy(() => import('@/pages/Configuracion'));
 const ConfiguracionEmpresa = lazy(() => import('@/pages/ConfiguracionEmpresa'));
 const ConfiguracionNotificaciones = lazy(() => import('@/pages/ConfiguracionNotificaciones'));
@@ -179,6 +180,7 @@ export function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="modulos" element={<Modulos />} />
         <Route path="perfil" element={<Perfil />} />
+        <Route path="documentacion" element={<Suspense fallback={<LazyLoadFallback />}><Documentacion /></Suspense>} />
         
         {/* Rutas de configuración (estáticas) */}
         <Route path="configuracion" element={<Configuracion />} />

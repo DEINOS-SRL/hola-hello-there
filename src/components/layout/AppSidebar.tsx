@@ -1483,10 +1483,8 @@ export function AppSidebar() {
             </div>
             <div className="p-2 space-y-1">
               {/* Documentación */}
-              <a
-                href="https://docs.dnscloud.com"
-                target="_blank"
-                rel="noopener noreferrer"
+              <RouterNavLink
+                to="/documentacion"
                 className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 text-foreground/80 hover:bg-accent hover:text-foreground"
               >
                 <BookOpen className="h-5 w-5 text-primary" />
@@ -1494,8 +1492,8 @@ export function AppSidebar() {
                   <span className="block text-sm font-medium">Documentación</span>
                   <span className="block text-xs text-muted-foreground">Guías y tutoriales</span>
                 </div>
-                <ExternalLink className="h-4 w-4 text-muted-foreground" />
-              </a>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </RouterNavLink>
               
               {/* Feedback */}
               <button
