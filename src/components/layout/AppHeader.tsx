@@ -1,4 +1,5 @@
-import { Search, ChevronDown, LogOut, User, Settings, Moon, Sun } from 'lucide-react';
+import React from 'react';
+import { Search, ChevronDown, LogOut, User, Settings, Moon, Sun, MessageSquarePlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
 import { NotificationsDropdown } from './NotificationsDropdown';
+import { FeedbackModal } from '@/components/modals/FeedbackModal';
 
 function ThemeToggleIcon() {
   const { theme, setTheme } = useTheme();
@@ -51,6 +53,7 @@ function ThemeToggleIcon() {
 export function AppHeader() {
   const { user, empresa, logout } = useAuth();
   const navigate = useNavigate();
+  const [feedbackOpen, setFeedbackOpen] = React.useState(false);
 
   const initials = user 
     ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase()
@@ -77,7 +80,26 @@ export function AppHeader() {
       <div className="flex items-center gap-3">
         <NotificationsDropdown />
 
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setFeedbackOpen(true)}
+              >
+                <MessageSquarePlus className="h-5 w-5 text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Enviar feedback</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         <ThemeToggleIcon />
+        
+        <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
         <div className="h-6 w-px bg-border" />
 
