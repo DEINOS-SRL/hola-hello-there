@@ -969,6 +969,28 @@ export function AppSidebar() {
               )}
             </div>
           )}
+          
+          {/* Botón expandir cuando está colapsado - Desktop */}
+          {!isMobile && isCollapsed && (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleSetCollapsed(false)}
+                  className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                <span>Expandir menú</span>
+                <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                  {shortcutKey}
+                </kbd>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </div>
 
