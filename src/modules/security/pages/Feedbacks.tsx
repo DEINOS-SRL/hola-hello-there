@@ -1,4 +1,4 @@
-// Feedbacks page - DNSCloud
+// Feedbacks page - DNSCloud - Administración de feedbacks
 import { useState, useMemo, useRef } from 'react';
 import { 
   MessageSquare, 
