@@ -24,7 +24,11 @@ import {
   Pin,
   PinOff,
   RotateCcw,
+  BookOpen,
+  MessageSquare,
+  ExternalLink,
 } from 'lucide-react';
+import { FeedbackModal } from '@/components/modals/FeedbackModal';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferenciasGlobal } from '@/contexts/PreferenciasContext';
@@ -133,6 +137,7 @@ export function AppSidebar() {
   const { arbol: modulosArbol, isLoading } = useModulosDB();
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   
   // Ref para el input de búsqueda
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1300,29 +1305,78 @@ export function AppSidebar() {
           </PopoverContent>
         </Popover>
         
-        {/* Ayuda y Soporte */}
-        {collapsed ? (
+        {/* Ayuda y Soporte con Popover */}
+        <Popover>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <button
-                className="flex items-center justify-center w-full p-2 rounded-md text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              >
-                <HelpCircle className="h-4 w-4" />
-              </button>
+              <PopoverTrigger asChild>
+                {collapsed ? (
+                  <button
+                    className="flex items-center justify-center w-full p-2 rounded-md text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  >
+                    <HelpCircle className="h-5 w-5" />
+                  </button>
+                ) : (
+                  <button
+                    className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    <span>Ayuda y Soporte</span>
+                    <ChevronRight className="h-4 w-4 ml-auto" />
+                  </button>
+                )}
+              </PopoverTrigger>
             </TooltipTrigger>
-            <TooltipContent side="right">
-              Ayuda y Soporte
-            </TooltipContent>
+            {collapsed && (
+              <TooltipContent side="right">
+                Ayuda y Soporte
+              </TooltipContent>
+            )}
           </Tooltip>
-        ) : (
-          <button
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          <PopoverContent 
+            side="right" 
+            align="end"
+            sideOffset={8}
+            className="w-56 p-0 bg-popover border shadow-xl rounded-lg"
           >
-            <HelpCircle className="h-4 w-4" />
-            <span>Ayuda y Soporte</span>
-          </button>
-        )}
+            <div className="p-3 border-b">
+              <h3 className="font-semibold text-sm">Ayuda y Soporte</h3>
+            </div>
+            <div className="p-2 space-y-1">
+              {/* Documentación */}
+              <a
+                href="https://docs.dnscloud.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 text-foreground/80 hover:bg-accent hover:text-foreground"
+              >
+                <BookOpen className="h-5 w-5 text-primary" />
+                <div className="flex-1 min-w-0">
+                  <span className="block text-sm font-medium">Documentación</span>
+                  <span className="block text-xs text-muted-foreground">Guías y tutoriales</span>
+                </div>
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+              </a>
+              
+              {/* Feedback */}
+              <button
+                onClick={() => setFeedbackModalOpen(true)}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md transition-all duration-200 text-foreground/80 hover:bg-accent hover:text-foreground text-left"
+              >
+                <MessageSquare className="h-5 w-5 text-primary" />
+                <div className="flex-1 min-w-0">
+                  <span className="block text-sm font-medium">Feedback</span>
+                  <span className="block text-xs text-muted-foreground">Sugerencias y reportes</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
+
+      {/* Modal de Feedback */}
+      <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
     </aside>
   );
 }
