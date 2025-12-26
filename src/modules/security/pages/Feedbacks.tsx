@@ -1,5 +1,5 @@
 // Feedbacks page - DNSCloud - Administración de feedbacks
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { 
   MessageSquare, 
   Search, 
@@ -24,6 +24,8 @@ import {
   ZoomIn,
   FileText,
   Calendar,
+  AlertTriangle,
+  Info,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -60,6 +62,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ImageLightbox, useImageLightbox } from '@/components/ui/image-lightbox';
 import { useFeedbacks } from '../hooks/useFeedbacks';
 import { useAuth } from '@/contexts/AuthContext';
@@ -826,7 +829,20 @@ export default function Feedbacks() {
                             onClick={() => lightbox.openLightbox(imageUrls, imageIndex)}
                             className="group relative h-16 w-16 rounded overflow-hidden border hover:ring-2 ring-primary transition-all"
                           >
-                            <img src={url} alt={fileName} className="h-full w-full object-cover" />
+                            <img 
+                              src={url} 
+                              alt={fileName} 
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.parentElement?.classList.add('bg-destructive/10');
+                                const icon = document.createElement('div');
+                                icon.innerHTML = '⚠️';
+                                icon.className = 'flex items-center justify-center h-full w-full text-xl';
+                                target.parentElement?.appendChild(icon);
+                              }}
+                            />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
                               <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
@@ -841,6 +857,15 @@ export default function Feedbacks() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80 transition-colors"
+                          onClick={(e) => {
+                            // Mostrar toast de ayuda al hacer clic
+                            setTimeout(() => {
+                              toast.info(
+                                '¿No se abre el archivo? Puede ser bloqueado por una extensión del navegador (ad blocker, antivirus). Intenta desactivarlas o usa modo incógnito.',
+                                { duration: 8000 }
+                              );
+                            }, 2000);
+                          }}
                         >
                           <ExternalLink className="h-3 w-3" />
                           <span className="truncate max-w-[100px]">{fileName}</span>
@@ -848,6 +873,13 @@ export default function Feedbacks() {
                       );
                     })}
                   </div>
+                  {/* Mensaje de ayuda para archivos */}
+                  <Alert variant="default" className="mt-2 py-2">
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      Si no puedes abrir los archivos, puede ser que una extensión del navegador (ad blocker, antivirus) esté bloqueando la descarga. Intenta desactivarlas o usa el modo incógnito.
+                    </AlertDescription>
+                  </Alert>
                 </div>
               )}
 
