@@ -118,17 +118,26 @@ function SortableFavoriteItem({
         </button>
       )}
       
-      <RouterNavLink
-        to={fav.modulo.ruta}
-        className={cn(
-          "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm flex-1",
-          "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-          isActive && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild>
+          <RouterNavLink
+            to={fav.modulo.ruta}
+            className={cn(
+              "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm flex-1 min-w-0",
+              "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              isActive && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground font-medium"
+            )}
+          >
+            <IconComponent className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="truncate text-left">{fav.modulo.nombre}</span>}
+          </RouterNavLink>
+        </TooltipTrigger>
+        {!collapsed && fav.modulo.nombre.length > 18 && (
+          <TooltipContent side="top" sideOffset={4} className="text-xs z-[9999]">
+            {fav.modulo.nombre}
+          </TooltipContent>
         )}
-      >
-        <IconComponent className="h-4 w-4 shrink-0" />
-        {!collapsed && <span>{fav.modulo.nombre}</span>}
-      </RouterNavLink>
+      </Tooltip>
       
       {/* Botón para quitar de favoritos */}
       {!collapsed && (
@@ -185,9 +194,9 @@ function DragOverlayItem({ fav, isActive }: DragOverlayItemProps) {
         boxShadow: '0 10px 25px -5px hsl(var(--primary) / 0.25), 0 8px 10px -6px hsl(var(--primary) / 0.15)',
       }}
     >
-      <GripVertical className="h-3 w-3 text-current/50" />
+      <GripVertical className="h-3 w-3 text-current/50 shrink-0" />
       <IconComponent className="h-4 w-4 shrink-0" />
-      <span>{fav.modulo.nombre}</span>
+      <span className="truncate">{fav.modulo.nombre}</span>
     </div>
   );
 }
