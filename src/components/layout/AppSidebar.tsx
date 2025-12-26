@@ -1148,14 +1148,14 @@ export function AppSidebar() {
         {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
 
-          {/* Filtro de búsqueda de módulos */}
+          {/* Filtro de búsqueda de módulos - transparente */}
           {!isCollapsed && visibleModules.length > 3 && (
-            <div className="px-2 pb-1 space-y-1">
+            <div className="px-2 pb-2 space-y-1">
               <div className="relative">
                 {isSearching ? (
-                  <Loader2 className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-primary animate-spin" />
+                  <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary animate-spin" />
                 ) : (
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/40" />
                 )}
                 <Input
                   ref={searchInputRef}
@@ -1169,25 +1169,25 @@ export function AppSidebar() {
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
-                  className="h-7 pl-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border focus:border-primary/50"
+                  className="h-8 pl-8 pr-8 text-xs bg-transparent border-transparent placeholder:text-sidebar-foreground/30 text-sidebar-foreground focus:bg-sidebar-accent/30 focus:border-sidebar-border/50 transition-colors"
                 />
                 {moduleSearchInput && (
                   <button
                     onClick={clearSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
               {/* Contador de resultados y hint */}
               {moduleSearch.trim() && (
                 <div className="flex items-center justify-between px-1">
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-[10px] text-sidebar-foreground/50">
                     {filteredModules.length} de {visibleModules.length} módulos
                   </p>
-                  <p className="text-[10px] text-muted-foreground/60">
-                    <kbd className="px-1 py-0.5 text-[9px] font-mono bg-muted/30 rounded">Esc</kbd> limpiar
+                  <p className="text-[10px] text-sidebar-foreground/30">
+                    <kbd className="px-1 py-0.5 text-[9px] font-mono bg-sidebar-accent/30 rounded">Esc</kbd> limpiar
                   </p>
                 </div>
               )}
