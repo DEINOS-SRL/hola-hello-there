@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { useActionParam } from '@/hooks/useActionParam';
 import {
   Search,
   Plus,
@@ -77,6 +78,22 @@ export default function EquiposListado() {
   const [selectedEquipo, setSelectedEquipo] = useState<Equipo | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [equipoToDelete, setEquipoToDelete] = useState<Equipo | null>(null);
+
+  // Detectar action=new o action=edit&id=X en la URL para abrir modal desde acciones rápidas
+  const handleUrlAction = useCallback((action: string, id?: string) => {
+    if (action === 'new') {
+      setSelectedEquipo(null);
+      setModalOpen(true);
+    } else if (action === 'edit' && id && equipos) {
+      const equipo = equipos.find(e => e.id === id);
+      if (equipo) {
+        setSelectedEquipo(equipo);
+        setModalOpen(true);
+      }
+    }
+  }, [equipos]);
+
+  useActionParam({ onAction: handleUrlAction });
 
   const filteredEquipos = useMemo(() => {
     return equipos.filter((equipo) => {
