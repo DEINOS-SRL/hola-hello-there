@@ -23,6 +23,7 @@ import {
   X,
   Pin,
   PinOff,
+  RotateCcw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -195,7 +196,12 @@ export function AppSidebar() {
     }
   }, [pinned, collapsed]);
 
-  // Handle drag resize
+  // Restablecer ancho del sidebar al valor por defecto
+  const resetSidebarWidth = useCallback(() => {
+    setSavedWidth(SIDEBAR_DEFAULT_WIDTH);
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, String(SIDEBAR_DEFAULT_WIDTH));
+  }, []);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -240,30 +246,33 @@ export function AppSidebar() {
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
-  // Expandir automáticamente el módulo activo solo al montar o cambiar de módulo padre
+  // Expandir automáticamente el módulo activo solo cuando se navega a un nuevo módulo
+  // useRef para evitar re-ejecuciones innecesarias
+  const lastExpandedModuleRef = useRef<string | null>(null);
+  
   useEffect(() => {
-    if (modulosArbol.length > 0) {
-      const activeModule = modulosArbol.find(m => 
-        isActive(m.ruta) || m.hijos.some(h => isActive(h.ruta))
-      );
-      
-      // Solo expandir si cambiamos a un módulo diferente (no al navegar dentro del mismo)
-      if (activeModule && !expandedModules.includes(activeModule.id)) {
-        // Verificar si la ruta anterior era del mismo módulo
-        const wasInSameModule = modulosArbol.some(m => 
-          m.id === activeModule.id && (
-            m.ruta === location.pathname || 
-            m.hijos.some(h => h.ruta === location.pathname)
-          )
-        );
-        
-        if (!wasInSameModule) {
-          setExpandedModules(prev => [...prev, activeModule.id]);
-        }
-      }
+    if (modulosArbol.length === 0) return;
+    
+    const activeModule = modulosArbol.find(m => 
+      isActive(m.ruta) || m.hijos.some(h => isActive(h.ruta))
+    );
+    
+    // Solo expandir si:
+    // 1. Hay un módulo activo
+    // 2. No está ya expandido
+    // 3. Es diferente al último que expandimos automáticamente
+    if (activeModule && 
+        !expandedModules.includes(activeModule.id) && 
+        lastExpandedModuleRef.current !== activeModule.id) {
+      lastExpandedModuleRef.current = activeModule.id;
+      setExpandedModules(prev => {
+        const newExpanded = [...prev, activeModule.id];
+        localStorage.setItem(SIDEBAR_EXPANDED_MODULES_KEY, JSON.stringify(newExpanded));
+        return newExpanded;
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modulosArbol]); // Solo ejecutar cuando cambian los módulos, no en cada navegación
+  }, [location.pathname]); // Solo ejecutar cuando cambia la ruta
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules(prev => {
@@ -869,6 +878,25 @@ export function AppSidebar() {
                 )}
               </TooltipContent>
             </Tooltip>
+            
+            {/* Botón restablecer ancho */}
+            {savedWidth !== SIDEBAR_DEFAULT_WIDTH && (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={resetSidebarWidth}
+                    className="h-7 w-7 shrink-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                  <span>Restablecer ancho</span>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
       </div>
