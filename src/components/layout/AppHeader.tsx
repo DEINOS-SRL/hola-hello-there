@@ -1,7 +1,8 @@
 import React from 'react';
-import { Search, ChevronDown, LogOut, User, Settings, Moon, Sun, MessageSquarePlus, Star } from 'lucide-react';
+import { Search, ChevronDown, LogOut, User, Settings, Moon, Sun, MessageSquarePlus, Star, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/ThemeProvider';
+import { useSidebarContext } from '@/contexts/SidebarContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -56,6 +57,7 @@ export function AppHeader() {
   const navigate = useNavigate();
   const [feedbackOpen, setFeedbackOpen] = React.useState(false);
   const { feedbacks } = useFeedbacks();
+  const { isMobile, toggleSidebar } = useSidebarContext();
   
   const destacadosCount = feedbacks.filter(f => f.destacado && f.estado === 'pendiente').length;
 
@@ -69,9 +71,22 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-[60px] border-b border-border bg-card flex items-center justify-between px-6 sticky top-0 z-40">
-      <div className="flex items-center gap-4 flex-1">
-        <div className="relative max-w-md w-full">
+    <header className="h-[56px] md:h-[60px] border-b border-border bg-card flex items-center justify-between px-3 md:px-6 sticky top-0 z-40">
+      <div className="flex items-center gap-2 md:gap-4 flex-1">
+        {/* Botón hamburguesa para mobile */}
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="shrink-0"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
+        
+        {/* Barra de búsqueda - oculta en mobile muy pequeño */}
+        <div className="relative max-w-md w-full hidden sm:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
@@ -79,9 +94,14 @@ export function AppHeader() {
             className="pl-10 bg-muted/50 border-0 focus-visible:ring-1"
           />
         </div>
+        
+        {/* Icono de búsqueda para mobile */}
+        <Button variant="ghost" size="icon" className="sm:hidden">
+          <Search className="h-5 w-5 text-muted-foreground" />
+        </Button>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1 md:gap-3">
         {/* Indicador de feedbacks destacados pendientes con pulso */}
         {destacadosCount > 0 && (
           <TooltipProvider>

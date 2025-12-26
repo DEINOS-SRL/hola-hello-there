@@ -17,14 +17,22 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "flex w-full items-center justify-between rounded-md border border-input bg-background ring-offset-background",
+      "placeholder:text-muted-foreground",
+      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      "disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "transition-colors duration-200",
+      // Mobile: más grande
+      "h-12 px-4 py-3 text-base",
+      // Desktop: tamaño normal
+      "md:h-10 md:px-3 md:py-2 md:text-sm",
       className,
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 opacity-50" />
+      <ChevronDown className="h-5 w-5 opacity-50 md:h-4 md:w-4" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -105,14 +113,20 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-accent focus:text-accent-foreground",
+      "relative flex w-full cursor-default select-none items-center rounded-sm outline-none",
+      "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "focus:bg-accent focus:text-accent-foreground",
+      // Mobile: items más grandes para touch
+      "py-3 pl-10 pr-3 text-base",
+      // Desktop: tamaño normal
+      "md:py-1.5 md:pl-8 md:pr-2 md:text-sm",
       className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+    <span className="absolute left-3 md:left-2 flex h-4 w-4 md:h-3.5 md:w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
+        <Check className="h-5 w-5 md:h-4 md:w-4" />
       </SelectPrimitive.ItemIndicator>
     </span>
 
