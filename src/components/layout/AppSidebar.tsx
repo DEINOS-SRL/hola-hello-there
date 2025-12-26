@@ -1231,10 +1231,10 @@ export function AppSidebar() {
       <div className="p-2 border-t border-sidebar-border space-y-1">
         {/* Configuración con Popover */}
         <Popover>
-          <PopoverTrigger asChild>
-            {collapsed ? (
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                {collapsed ? (
                   <button
                     className={cn(
                       "flex items-center justify-center w-full p-2 rounded-md transition-all duration-200",
@@ -1244,25 +1244,27 @@ export function AppSidebar() {
                   >
                     <Settings className="h-5 w-5" />
                   </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  Configuración
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <button
-                className={cn(
-                  "flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-all duration-200",
-                  "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                  location.pathname.startsWith('/configuracion') && "bg-primary/10 text-primary font-medium"
+                ) : (
+                  <button
+                    className={cn(
+                      "flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-all duration-200",
+                      "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                      location.pathname.startsWith('/configuracion') && "bg-primary/10 text-primary font-medium"
+                    )}
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Configuración</span>
+                    <ChevronRight className="h-4 w-4 ml-auto" />
+                  </button>
                 )}
-              >
-                <Settings className="h-4 w-4" />
-                <span>Configuración</span>
-                <ChevronRight className="h-4 w-4 ml-auto" />
-              </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent side="right">
+                Configuración
+              </TooltipContent>
             )}
-          </PopoverTrigger>
+          </Tooltip>
           <PopoverContent 
             side="right" 
             align="end"
