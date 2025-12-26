@@ -104,3 +104,14 @@ export async function respondToFeedback(
     estado: 'resuelto',
   });
 }
+
+export async function getMyFeedbacks(): Promise<Feedback[]> {
+  const { data, error } = await segClient.rpc('get_my_feedbacks');
+
+  if (error) {
+    console.error('Error fetching my feedbacks:', error);
+    throw error;
+  }
+
+  return (data as Feedback[]) || [];
+}

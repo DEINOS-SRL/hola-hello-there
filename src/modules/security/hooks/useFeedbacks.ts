@@ -4,6 +4,7 @@ import {
   createFeedback, 
   updateFeedback, 
   respondToFeedback,
+  getMyFeedbacks,
   CreateFeedbackInput,
   UpdateFeedbackInput,
   Feedback 
@@ -95,5 +96,69 @@ export function useFeedbacks() {
     isResponding: respondMutation.isPending,
     getStatusBadgeVariant,
     getTipoBadgeVariant,
+  };
+}
+
+export function useMyFeedbacks() {
+  const { data: feedbacks, isLoading, error, refetch } = useQuery({
+    queryKey: ['my-feedbacks'],
+    queryFn: getMyFeedbacks,
+  });
+
+  const getStatusBadgeVariant = (estado: Feedback['estado']) => {
+    switch (estado) {
+      case 'pendiente': return 'secondary';
+      case 'en_revision': return 'default';
+      case 'resuelto': return 'success';
+      case 'cerrado': return 'outline';
+      default: return 'secondary';
+    }
+  };
+
+  const getTipoBadgeVariant = (tipo: Feedback['tipo']) => {
+    switch (tipo) {
+      case 'bug': return 'destructive';
+      case 'queja': return 'destructive';
+      case 'mejora': return 'default';
+      case 'sugerencia': return 'secondary';
+      case 'consulta': return 'outline';
+      case 'ayuda': return 'outline';
+      case 'acceso-permiso': return 'secondary';
+      default: return 'secondary';
+    }
+  };
+
+  const getStatusLabel = (estado: Feedback['estado']) => {
+    switch (estado) {
+      case 'pendiente': return 'Pendiente';
+      case 'en_revision': return 'En revisión';
+      case 'resuelto': return 'Resuelto';
+      case 'cerrado': return 'Cerrado';
+      default: return estado;
+    }
+  };
+
+  const getTipoLabel = (tipo: Feedback['tipo']) => {
+    switch (tipo) {
+      case 'sugerencia': return 'Sugerencia';
+      case 'mejora': return 'Mejora';
+      case 'queja': return 'Queja';
+      case 'bug': return 'Bug';
+      case 'consulta': return 'Consulta';
+      case 'ayuda': return 'Ayuda';
+      case 'acceso-permiso': return 'Acceso/Permiso';
+      default: return tipo;
+    }
+  };
+
+  return {
+    feedbacks: feedbacks || [],
+    isLoading,
+    error,
+    refetch,
+    getStatusBadgeVariant,
+    getTipoBadgeVariant,
+    getStatusLabel,
+    getTipoLabel,
   };
 }
