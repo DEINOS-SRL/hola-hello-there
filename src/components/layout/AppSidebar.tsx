@@ -196,10 +196,16 @@ export function AppSidebar() {
     }
   }, [pinned, collapsed]);
 
-  // Restablecer ancho del sidebar al valor por defecto
+  // Estado para animar el reset del ancho
+  const [isResetting, setIsResetting] = useState(false);
+
+  // Restablecer ancho del sidebar al valor por defecto con animación
   const resetSidebarWidth = useCallback(() => {
+    setIsResetting(true);
     setSavedWidth(SIDEBAR_DEFAULT_WIDTH);
     localStorage.setItem(SIDEBAR_WIDTH_KEY, String(SIDEBAR_DEFAULT_WIDTH));
+    // Quitar la clase de transición después de la animación
+    setTimeout(() => setIsResetting(false), 300);
   }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -772,7 +778,7 @@ export function AppSidebar() {
     <aside 
       className={cn(
         "bg-sidebar flex flex-col sticky top-0 h-screen relative",
-        !isDragging && "transition-[width] duration-300 ease-in-out"
+        (!isDragging || isResetting) && "transition-[width] duration-300 ease-in-out"
       )}
       style={{ width: sidebarWidth }}
     >
