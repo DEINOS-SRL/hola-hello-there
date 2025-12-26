@@ -52,6 +52,7 @@ interface QuickAction {
   action: 'navigate' | 'event';
   target: string; // ruta o nombre de evento
   keywords: string[];
+  shortcut?: string; // Atajo de teclado (ej: "⌘⇧E" o "Ctrl+Shift+E")
 }
 
 const quickActions: QuickAction[] = [
@@ -63,6 +64,7 @@ const quickActions: QuickAction[] = [
     action: 'navigate',
     target: '/rrhh/empleados?action=new',
     keywords: ['crear', 'agregar', 'empleado', 'persona', 'rrhh'],
+    shortcut: '⇧E',
   },
   {
     id: 'new-equipo',
@@ -72,6 +74,7 @@ const quickActions: QuickAction[] = [
     action: 'navigate',
     target: '/equipos/listado?action=new',
     keywords: ['crear', 'agregar', 'equipo', 'maquinaria', 'vehículo'],
+    shortcut: '⇧Q',
   },
   {
     id: 'new-movement',
@@ -81,6 +84,7 @@ const quickActions: QuickAction[] = [
     action: 'navigate',
     target: '/operacion/movimientos?action=new',
     keywords: ['crear', 'movimiento', 'traslado'],
+    shortcut: '⇧M',
   },
   {
     id: 'new-part',
@@ -117,6 +121,7 @@ const quickActions: QuickAction[] = [
     action: 'navigate',
     target: '/comercial/presupuestos?action=new',
     keywords: ['crear', 'presupuesto', 'comercial', 'venta', 'cotización'],
+    shortcut: '⇧P',
   },
 ];
 
@@ -353,11 +358,17 @@ export function CommandSearch() {
               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 mr-3">
                 <action.icon className="h-4 w-4 text-primary" />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col flex-1">
                 <span className="font-medium">{action.label}</span>
                 <span className="text-xs text-muted-foreground">{action.description}</span>
               </div>
-              <Plus className="ml-auto h-3 w-3 text-muted-foreground" />
+              {action.shortcut ? (
+                <kbd className="ml-auto px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono text-muted-foreground">
+                  {isMac ? '⌘' : 'Ctrl+'}{action.shortcut}
+                </kbd>
+              ) : (
+                <Plus className="ml-auto h-3 w-3 text-muted-foreground" />
+              )}
             </CommandItem>
           ))}
         </CommandGroup>
