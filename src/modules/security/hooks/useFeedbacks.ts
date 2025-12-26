@@ -6,9 +6,12 @@ import {
   updateFeedback, 
   respondToFeedback,
   getMyFeedbacks,
+  getUsuariosAsignables,
+  asignarFeedback,
   CreateFeedbackInput,
   UpdateFeedbackInput,
-  Feedback 
+  Feedback,
+  UsuarioAsignable
 } from '../services/feedbacksService';
 import { toast } from 'sonner';
 import { segClient } from '../services/segClient';
@@ -20,6 +23,12 @@ export function useFeedbacks() {
   const { data: feedbacks, isLoading, error, refetch } = useQuery({
     queryKey: ['feedbacks'],
     queryFn: getFeedbacks,
+  });
+
+  // Query para usuarios asignables
+  const { data: usuariosAsignables } = useQuery({
+    queryKey: ['usuarios-asignables'],
+    queryFn: getUsuariosAsignables,
   });
 
   // Realtime subscription para nuevos feedbacks
@@ -103,6 +112,23 @@ export function useFeedbacks() {
     },
   });
 
+  // Mutation para asignar feedback
+  const asignarMutation = useMutation({
+    mutationFn: ({ feedbackId, asignadoA, asignadoPor }: { 
+      feedbackId: string; 
+      asignadoA: string | null; 
+      asignadoPor: string 
+    }) => asignarFeedback(feedbackId, asignadoA, asignadoPor),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+      toast.success('Feedback asignado correctamente');
+    },
+    onError: (error) => {
+      console.error('Error asignando feedback:', error);
+      toast.error('Error al asignar el feedback');
+    },
+  });
+
   const getStatusBadgeVariant = (estado: Feedback['estado']) => {
     switch (estado) {
       case 'pendiente': return 'secondary';
@@ -128,15 +154,18 @@ export function useFeedbacks() {
 
   return {
     feedbacks: feedbacks || [],
+    usuariosAsignables: usuariosAsignables || [],
     isLoading,
     error,
     refetch,
     createFeedback: createMutation.mutate,
     updateFeedback: updateMutation.mutate,
     respondToFeedback: respondMutation.mutate,
+    asignarFeedback: asignarMutation.mutate,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isResponding: respondMutation.isPending,
+    isAsignando: asignarMutation.isPending,
     getStatusBadgeVariant,
     getTipoBadgeVariant,
   };
