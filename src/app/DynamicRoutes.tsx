@@ -156,6 +156,17 @@ export function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="modulos" element={<Modulos />} />
         <Route path="perfil" element={<Perfil />} />
+        
+        {/* Rutas de configuración (estáticas) */}
+        <Route path="configuracion" element={<Configuracion />} />
+        <Route path="configuracion/empresa" element={<ConfiguracionEmpresa />} />
+        <Route path="configuracion/notificaciones" element={<ConfiguracionNotificaciones />} />
+        <Route path="configuracion/preferencias" element={<ConfiguracionPreferencias />} />
+        <Route path="configuracion/administracion" element={<SeguridadIndex />} />
+        <Route path="configuracion/administracion/usuarios" element={<Usuarios />} />
+        <Route path="configuracion/administracion/empresas" element={<Empresas />} />
+        <Route path="configuracion/administracion/roles" element={<Roles />} />
+        <Route path="configuracion/administracion/modulos" element={<ModulosAdmin />} />
 
         {/* Rutas dinámicas de módulos desde BD */}
         {dynamicRoutes.map(({ path, component: Component }) => (
