@@ -30,7 +30,7 @@ export function useCreateParteDiario() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: CreateParteDiarioInput) => service.createParteDiario(input),
+    mutationFn: (input: CreateParteDiarioInput & { empresa_id?: string }) => service.createParteDiario(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['partes-diarios'] });
       toast.success('Parte diario enviado correctamente');
@@ -38,8 +38,12 @@ export function useCreateParteDiario() {
     onError: (error: Error) => {
       if (error.message.includes('unique constraint')) {
         toast.error('Ya existe un parte diario para hoy');
+      } else if (error.message.includes('empresa')) {
+        toast.error('Error: No tienes una empresa asignada. Contacta al administrador.');
       } else {
-        toast.error('Error al enviar el parte diario');
+        toast.error('Error al enviar el parte diario', {
+          description: error.message,
+        });
       }
     },
   });
