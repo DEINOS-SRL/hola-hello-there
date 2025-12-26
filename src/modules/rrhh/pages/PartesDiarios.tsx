@@ -287,94 +287,128 @@ export default function PartesDiarios() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="border-collapse">
                 <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[140px]">Fecha</TableHead>
-                    <TableHead className="w-[100px] text-center">Ánimo</TableHead>
-                    <TableHead className="text-center">Actividades</TableHead>
-                    <TableHead>Novedades</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="w-[140px] border-r font-semibold text-foreground py-3">
+                      Fecha
+                    </TableHead>
+                    <TableHead className="w-[80px] border-r text-center font-semibold text-foreground py-3">
+                      Ánimo
+                    </TableHead>
+                    <TableHead className="w-[100px] border-r text-center font-semibold text-foreground py-3">
+                      Actividades
+                    </TableHead>
+                    <TableHead className="border-r font-semibold text-foreground py-3">
+                      Novedades
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground py-3">
+                      Observaciones
+                    </TableHead>
+                    <TableHead className="w-[50px] border-l"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPartes.map((parte) => {
+                  {filteredPartes.map((parte, idx) => {
                     const novedadesCounts = getNovedadesByType(parte.novedades || []);
                     const actividadesCount = parte.actividades?.length || 0;
                     const animoData = ESTADO_ANIMO_LABELS[parte.estado_animo];
+                    const isEven = idx % 2 === 0;
                     
                     return (
                       <TableRow 
                         key={parte.id} 
-                        className="group cursor-pointer hover:bg-muted/50"
+                        className={`group cursor-pointer transition-colors ${
+                          isEven ? 'bg-background' : 'bg-muted/20'
+                        } hover:bg-primary/5`}
                         onClick={() => handleViewDetail(parte.id)}
                       >
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{getDateLabel(parte.fecha)}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(parte.fecha), "d 'de' MMMM, yyyy", { locale: es })}
+                        {/* Fecha */}
+                        <TableCell className="border-r py-2.5 font-mono">
+                          <div className="flex flex-col leading-tight">
+                            <span className="font-semibold text-sm">{getDateLabel(parte.fecha)}</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {format(new Date(parte.fecha), "dd/MM/yyyy", { locale: es })}
                             </span>
                           </div>
                         </TableCell>
                         
-                        <TableCell className="text-center">
+                        {/* Ánimo */}
+                        <TableCell className="border-r text-center py-2.5">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-muted/50 text-2xl hover:scale-110 transition-transform">
-                                {animoData?.emoji}
-                              </div>
+                              <span className="text-xl cursor-default">{animoData?.emoji}</span>
                             </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{animoData?.label}</p>
+                            <TooltipContent side="top">
+                              <p className="text-xs">{animoData?.label}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TableCell>
                         
-                        <TableCell className="text-center">
+                        {/* Actividades */}
+                        <TableCell className="border-r text-center py-2.5 font-mono">
                           {actividadesCount > 0 ? (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary">
-                              <Clock className="h-3.5 w-3.5" />
-                              <span className="font-medium text-sm">{actividadesCount}</span>
-                            </div>
+                            <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded bg-primary/10 text-primary font-semibold text-sm">
+                              {actividadesCount}
+                            </span>
                           ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
                         
-                        <TableCell>
+                        {/* Novedades */}
+                        <TableCell className="border-r py-2.5">
                           {Object.keys(novedadesCounts).length > 0 ? (
-                            <div className="flex flex-wrap gap-1.5">
+                            <div className="flex flex-wrap gap-1">
                               {Object.entries(novedadesCounts).map(([tipo, count]) => {
                                 const Icon = novedadIconMap[tipo as TipoNovedad];
                                 const config = TIPO_NOVEDAD_LABELS[tipo as TipoNovedad];
                                 return (
                                   <Tooltip key={tipo}>
                                     <TooltipTrigger asChild>
-                                      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${config.color}`}>
+                                      <div className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-medium ${config.color}`}>
                                         <Icon className="h-3 w-3" />
                                         <span>{count}</span>
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{count} {config.label}{count !== 1 ? 's' : ''}</p>
+                                    <TooltipContent side="top">
+                                      <p className="text-xs">{count} {config.label}{count !== 1 ? 's' : ''}</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 );
                               })}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground text-sm">Sin novedades</span>
+                            <span className="text-muted-foreground text-xs">—</span>
                           )}
                         </TableCell>
                         
-                        <TableCell>
+                        {/* Observaciones */}
+                        <TableCell className="py-2.5 max-w-[200px]">
+                          {parte.observaciones_adicionales ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <p className="text-xs text-muted-foreground truncate cursor-default">
+                                  {parte.observaciones_adicionales}
+                                </p>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-[300px]">
+                                <p className="text-xs whitespace-pre-wrap">{parte.observaciones_adicionales}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
+                        
+                        {/* Acciones */}
+                        <TableCell className="border-l py-2.5">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
