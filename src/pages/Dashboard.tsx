@@ -38,6 +38,8 @@ export default function Dashboard() {
   const { user, empresa } = useAuth();
   const { feedbacks } = useFeedbacks();
   const [lastConnection, setLastConnection] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string>('0.0.0');
+  const [buildTime, setBuildTime] = useState<string | null>(null);
 
   // Obtener última conexión de la sesión de Supabase
   useEffect(() => {
@@ -71,6 +73,37 @@ export default function Dashboard() {
     };
 
     getLastConnection();
+  }, []);
+
+  // Obtener versión desde .version.json en tiempo de ejecución
+  useEffect(() => {
+    const loadVersion = async () => {
+      try {
+        const response = await fetch('/.version.json?t=' + Date.now());
+        if (response.ok) {
+          const data = await response.json();
+          setAppVersion(data.version || '0.0.0');
+          setBuildTime(data.buildTime || null);
+        }
+      } catch (error) {
+        // Si no se puede cargar, usar versión de compilación como fallback
+        if (typeof __APP_VERSION__ !== 'undefined') {
+          setAppVersion(__APP_VERSION__);
+        }
+        if (typeof __BUILD_TIME__ !== 'undefined') {
+          setBuildTime(__BUILD_TIME__);
+        }
+      }
+    };
+
+    loadVersion();
+    
+    // Observar cambios en el archivo cada 2 segundos en desarrollo
+    const interval = setInterval(() => {
+      loadVersion();
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Calcular estadísticas de feedbacks
@@ -110,11 +143,11 @@ export default function Dashboard() {
             <span>Última conexión: {lastConnection || 'Cargando...'}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground/70 border-l border-border pl-3">
-            <span className="font-medium">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
+            <span className="font-medium">v{appVersion}</span>
             <span>•</span>
             <span>
-              {typeof __BUILD_TIME__ !== 'undefined' 
-                ? new Date(__BUILD_TIME__).toLocaleString('es-ES', { 
+              {buildTime 
+                ? new Date(buildTime).toLocaleString('es-ES', { 
                     year: 'numeric', 
                     month: 'short', 
                     day: 'numeric', 
