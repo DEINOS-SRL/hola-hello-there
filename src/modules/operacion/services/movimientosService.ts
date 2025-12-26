@@ -197,62 +197,19 @@ export const movimientosService = {
     return { ...data, campos_adicionales: data.campos_adicionales || [] };
   },
 
-  // ============ RECURSOS EQUIPOS ============
+  // ============ RECURSOS LEGACY (tablas eliminadas) ============
+  // Estas funciones retornan arrays vacíos ya que las tablas fueron eliminadas
+  // Se mantienen por compatibilidad con código existente
   async getRecursosEquipos(): Promise<RecursoEquipo[]> {
-    const { data, error } = await movClient
-      .from('recursos_equipos')
-      .select('*')
-      .eq('activo', true)
-      .order('codigo');
-    
-    if (error) throw error;
-    return data || [];
+    return [];
   },
 
-  async createRecursoEquipo(equipo: Partial<RecursoEquipo>): Promise<RecursoEquipo> {
-    const { data, error } = await movClient
-      .from('recursos_equipos')
-      .insert(equipo)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  // ============ RECURSOS OPERARIOS ============
   async getRecursosOperarios(): Promise<RecursoOperario[]> {
-    const { data, error } = await movClient
-      .from('recursos_operarios')
-      .select('*')
-      .eq('activo', true)
-      .order('apellido');
-    
-    if (error) throw error;
-    return data || [];
+    return [];
   },
 
   async getSupervisores(): Promise<RecursoOperario[]> {
-    const { data, error } = await movClient
-      .from('recursos_operarios')
-      .select('*')
-      .eq('activo', true)
-      .eq('rol', 'supervisor')
-      .order('apellido');
-    
-    if (error) throw error;
-    return data || [];
-  },
-
-  async createRecursoOperario(operario: Partial<RecursoOperario>): Promise<RecursoOperario> {
-    const { data, error } = await movClient
-      .from('recursos_operarios')
-      .insert(operario)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return [];
   },
 
   // ============ MOVIMIENTO EQUIPOS ============

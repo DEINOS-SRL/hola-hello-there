@@ -86,40 +86,27 @@ export function useWizardData() {
     queryFn: movimientosService.getUnidadesNegocio,
   });
 
-  // Equipos del módulo equ (nuevas tablas)
+  // Equipos del módulo equ
   const equiposEquQuery = useQuery({
     queryKey: ['equipos_equ_activos'],
     queryFn: movimientosService.getEquiposActivos,
   });
 
-  // Empleados del módulo emp (nuevas tablas)
+  // Empleados del módulo emp
   const empleadosQuery = useQuery({
     queryKey: ['empleados_activos'],
     queryFn: movimientosService.getEmpleadosActivos,
   });
 
-  // Legacy: recursos internos
-  const equiposQuery = useQuery({
-    queryKey: ['recursos_equipos'],
-    queryFn: movimientosService.getRecursosEquipos,
-  });
-
-  const operariosQuery = useQuery({
-    queryKey: ['recursos_operarios'],
-    queryFn: movimientosService.getRecursosOperarios,
-  });
-
   return {
     clientes: clientesQuery.data || [],
     unidades: unidadesQuery.data || [],
-    // Nuevos
     equiposEqu: equiposEquQuery.data || [],
     empleados: empleadosQuery.data || [],
-    // Legacy
-    equipos: equiposQuery.data || [],
-    operarios: operariosQuery.data || [],
+    // Legacy (vacíos, tablas eliminadas)
+    equipos: [],
+    operarios: [],
     isLoading: clientesQuery.isLoading || unidadesQuery.isLoading || 
-      equiposQuery.isLoading || operariosQuery.isLoading ||
       equiposEquQuery.isLoading || empleadosQuery.isLoading,
   };
 }
