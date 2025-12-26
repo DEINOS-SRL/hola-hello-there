@@ -33,6 +33,7 @@ import {
   History,
   Timer,
   UserPlus,
+  Star,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -175,9 +176,11 @@ export default function Feedbacks() {
     updateFeedback, 
     respondToFeedback,
     asignarFeedback,
+    toggleDestacado,
     isUpdating,
     isResponding,
     isAsignando,
+    isTogglingDestacado,
     getStatusBadgeVariant,
     getTipoBadgeVariant,
   } = useFeedbacks();
@@ -932,6 +935,7 @@ export default function Feedbacks() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10"></TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Usuario</TableHead>
                 <TableHead className="max-w-[300px]">Mensaje</TableHead>
@@ -944,7 +948,7 @@ export default function Feedbacks() {
             <TableBody>
               {filteredFeedbacks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     No se encontraron feedbacks
                   </TableCell>
                 </TableRow>
@@ -952,7 +956,24 @@ export default function Feedbacks() {
                 filteredFeedbacks.map((feedback) => {
                   const TipoIcon = tipoIcons[feedback.tipo];
                   return (
-                    <TableRow key={feedback.id}>
+                    <TableRow key={feedback.id} className={feedback.destacado ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''}>
+                      <TableCell className="w-10 pr-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => toggleDestacado({ id: feedback.id, destacado: !feedback.destacado })}
+                          disabled={isTogglingDestacado}
+                        >
+                          <Star 
+                            className={`h-4 w-4 transition-colors ${
+                              feedback.destacado 
+                                ? 'fill-amber-400 text-amber-400' 
+                                : 'text-muted-foreground hover:text-amber-400'
+                            }`} 
+                          />
+                        </Button>
+                      </TableCell>
                       <TableCell>
                         <Badge variant={getTipoBadgeVariant(feedback.tipo) as any} className="gap-1">
                           <TipoIcon className="h-3 w-3" />

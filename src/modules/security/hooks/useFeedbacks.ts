@@ -8,6 +8,7 @@ import {
   getMyFeedbacks,
   getUsuariosAsignables,
   asignarFeedback,
+  toggleDestacado,
   CreateFeedbackInput,
   UpdateFeedbackInput,
   Feedback,
@@ -152,6 +153,20 @@ export function useFeedbacks() {
     },
   });
 
+  // Mutation para togglear destacado
+  const toggleDestacadoMutation = useMutation({
+    mutationFn: ({ id, destacado }: { id: string; destacado: boolean }) => 
+      toggleDestacado(id, destacado),
+    onSuccess: (_, { destacado }) => {
+      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+      toast.success(destacado ? 'Feedback destacado' : 'Destacado removido');
+    },
+    onError: (error) => {
+      console.error('Error toggling destacado:', error);
+      toast.error('Error al cambiar destacado');
+    },
+  });
+
   const getStatusBadgeVariant = (estado: Feedback['estado']) => {
     switch (estado) {
       case 'pendiente': return 'secondary';
@@ -185,10 +200,12 @@ export function useFeedbacks() {
     updateFeedback: updateMutation.mutate,
     respondToFeedback: respondMutation.mutate,
     asignarFeedback: asignarMutation.mutate,
+    toggleDestacado: toggleDestacadoMutation.mutate,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isResponding: respondMutation.isPending,
     isAsignando: asignarMutation.isPending,
+    isTogglingDestacado: toggleDestacadoMutation.isPending,
     getStatusBadgeVariant,
     getTipoBadgeVariant,
   };
