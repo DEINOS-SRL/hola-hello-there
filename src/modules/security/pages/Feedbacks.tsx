@@ -142,6 +142,7 @@ export default function Feedbacks() {
   const [filterTipo, setFilterTipo] = useState<string>('all');
   const [filterEstado, setFilterEstado] = useState<string>('all');
   const [filterModulo, setFilterModulo] = useState<string>('all');
+  const [filterAsignado, setFilterAsignado] = useState<string>('all');
   const [filterSinRespuesta, setFilterSinRespuesta] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [respuesta, setRespuesta] = useState('');
@@ -199,8 +200,12 @@ export default function Feedbacks() {
     const matchesEstado = filterEstado === 'all' || fb.estado === filterEstado;
     const matchesModulo = filterModulo === 'all' || fb.modulo_referencia === filterModulo || 
       (filterModulo === 'sin-modulo' && !fb.modulo_referencia);
+    const matchesAsignado = filterAsignado === 'all' || 
+      (filterAsignado === 'sin-asignar' && !fb.asignado_a) ||
+      (filterAsignado === 'mis-asignados' && fb.asignado_a === user?.id) ||
+      fb.asignado_a === filterAsignado;
     const matchesSinRespuesta = !filterSinRespuesta || !fb.respuesta;
-    return matchesSearch && matchesTipo && matchesEstado && matchesModulo && matchesSinRespuesta;
+    return matchesSearch && matchesTipo && matchesEstado && matchesModulo && matchesAsignado && matchesSinRespuesta;
   });
 
   const stats = useMemo(() => {
@@ -767,6 +772,23 @@ export default function Feedbacks() {
                 <SelectItem value="otro">Otro / Nueva funcionalidad</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Filtro por asignado */}
+            <Select value={filterAsignado} onValueChange={setFilterAsignado}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Asignado a" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="sin-asignar">Sin asignar</SelectItem>
+                <SelectItem value="mis-asignados">Mis asignados</SelectItem>
+                {usuariosAsignables.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nombre} {u.apellido}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
             {/* Filtro rápido: Sin respuesta */}
             <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-background">
@@ -1191,6 +1213,8 @@ export default function Feedbacks() {
                       feedbackId: selectedFeedback.id,
                       asignadoA: v === 'sin-asignar' ? null : v,
                       asignadoPor: user.id,
+                      empresaId: selectedFeedback.empresa_id || undefined,
+                      feedbackTipo: tipoLabels[selectedFeedback.tipo],
                     });
                   }}
                   disabled={isAsignando}
