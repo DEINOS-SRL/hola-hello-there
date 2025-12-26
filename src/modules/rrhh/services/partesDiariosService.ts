@@ -10,14 +10,53 @@ import type {
   EstadoNovedad
 } from '../types/partesDiarios';
 
-export async function getPartesDiarios(): Promise<ParteDiario[]> {
-  const { data, error } = await rrhhClient
+export async function getPartesDiarios(): Promise<ParteDiarioConNovedades[]> {
+  const { data: partes, error: partesError } = await rrhhClient
     .from('partes_diarios')
     .select('*')
     .order('fecha', { ascending: false });
   
-  if (error) throw error;
-  return data || [];
+  if (partesError) throw partesError;
+  if (!partes || partes.length === 0) return [];
+
+  // Get all actividades for these partes
+  const parteIds = partes.map(p => p.id);
+  
+  const { data: actividades, error: actividadesError } = await rrhhClient
+    .from('partes_actividades')
+    .select('*')
+    .in('parte_id', parteIds)
+    .order('orden', { ascending: true });
+  
+  if (actividadesError) throw actividadesError;
+
+  // Get all novedades for these partes
+  const { data: novedades, error: novedadesError } = await rrhhClient
+    .from('partes_novedades')
+    .select('*')
+    .in('parte_id', parteIds)
+    .order('created_at', { ascending: true });
+  
+  if (novedadesError) throw novedadesError;
+
+  // Group by parte_id
+  const actividadesByParte = (actividades || []).reduce((acc, a) => {
+    if (!acc[a.parte_id]) acc[a.parte_id] = [];
+    acc[a.parte_id].push(a);
+    return acc;
+  }, {} as Record<string, ParteActividad[]>);
+
+  const novedadesByParte = (novedades || []).reduce((acc, n) => {
+    if (!acc[n.parte_id]) acc[n.parte_id] = [];
+    acc[n.parte_id].push(n);
+    return acc;
+  }, {} as Record<string, ParteNovedad[]>);
+
+  return partes.map(parte => ({
+    ...parte,
+    actividades: actividadesByParte[parte.id] || [],
+    novedades: novedadesByParte[parte.id] || [],
+  }));
 }
 
 export async function getParteDiarioById(id: string): Promise<ParteDiarioConNovedades | null> {
