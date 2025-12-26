@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, ChevronDown, LogOut, User, Settings, Moon, Sun, MessageSquarePlus } from 'lucide-react';
+import { Search, ChevronDown, LogOut, User, Settings, Moon, Sun, MessageSquarePlus, Star } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { NotificationsDropdown } from './NotificationsDropdown';
 import { FeedbackModal } from '@/components/modals/FeedbackModal';
+import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
 
 function ThemeToggleIcon() {
   const { theme, setTheme } = useTheme();
@@ -54,6 +55,9 @@ export function AppHeader() {
   const { user, empresa, logout } = useAuth();
   const navigate = useNavigate();
   const [feedbackOpen, setFeedbackOpen] = React.useState(false);
+  const { feedbacks } = useFeedbacks();
+  
+  const destacadosCount = feedbacks.filter(f => f.destacado && f.estado === 'pendiente').length;
 
   const initials = user 
     ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase()
@@ -78,6 +82,30 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Indicador de feedbacks destacados pendientes */}
+        {destacadosCount > 0 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  onClick={() => navigate('/configuracion/administracion/feedbacks?filter=destacados')}
+                >
+                  <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium flex items-center justify-center">
+                    {destacadosCount > 9 ? '9+' : destacadosCount}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{destacadosCount} feedback{destacadosCount > 1 ? 's' : ''} destacado{destacadosCount > 1 ? 's' : ''} pendiente{destacadosCount > 1 ? 's' : ''}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        
         <NotificationsDropdown />
 
         <TooltipProvider>

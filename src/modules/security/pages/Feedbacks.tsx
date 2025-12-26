@@ -178,13 +178,18 @@ export default function Feedbacks() {
     respondToFeedback,
     asignarFeedback,
     toggleDestacado,
+    bulkToggleDestacado,
     isUpdating,
     isResponding,
     isAsignando,
     isTogglingDestacado,
+    isBulkToggling,
     getStatusBadgeVariant,
     getTipoBadgeVariant,
   } = useFeedbacks();
+
+  // Estado para selección múltiple
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Lightbox state
   const lightbox = useImageLightbox();
@@ -978,12 +983,68 @@ export default function Feedbacks() {
         </CardContent>
       </Card>
 
+      {/* Bulk Actions */}
+      {selectedIds.size > 0 && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardContent className="py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">
+              {selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  bulkToggleDestacado({ ids: Array.from(selectedIds), destacado: true });
+                  setSelectedIds(new Set());
+                }}
+                disabled={isBulkToggling}
+              >
+                <Star className="h-4 w-4 mr-1 fill-amber-400 text-amber-400" />
+                Destacar
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  bulkToggleDestacado({ ids: Array.from(selectedIds), destacado: false });
+                  setSelectedIds(new Set());
+                }}
+                disabled={isBulkToggling}
+              >
+                <Star className="h-4 w-4 mr-1" />
+                Quitar destacado
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={filteredFeedbacks.length > 0 && selectedIds.size === filteredFeedbacks.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedIds(new Set(filteredFeedbacks.map(f => f.id)));
+                      } else {
+                        setSelectedIds(new Set());
+                      }
+                    }}
+                  />
+                </TableHead>
                 <TableHead className="w-10"></TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Usuario</TableHead>
@@ -997,15 +1058,30 @@ export default function Feedbacks() {
             <TableBody>
               {filteredFeedbacks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No se encontraron feedbacks
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredFeedbacks.map((feedback) => {
                   const TipoIcon = tipoIcons[feedback.tipo];
+                  const isSelected = selectedIds.has(feedback.id);
                   return (
-                    <TableRow key={feedback.id} className={feedback.destacado ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''}>
+                    <TableRow key={feedback.id} className={`${feedback.destacado ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''} ${isSelected ? 'bg-primary/5' : ''}`}>
+                      <TableCell className="w-10 pr-0">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => {
+                            const newSet = new Set(selectedIds);
+                            if (checked) {
+                              newSet.add(feedback.id);
+                            } else {
+                              newSet.delete(feedback.id);
+                            }
+                            setSelectedIds(newSet);
+                          }}
+                        />
+                      </TableCell>
                       <TableCell className="w-10 pr-0">
                         <Button
                           variant="ghost"

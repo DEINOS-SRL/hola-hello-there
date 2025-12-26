@@ -153,17 +153,69 @@ export function useFeedbacks() {
     },
   });
 
-  // Mutation para togglear destacado
+  // Mutation para togglear destacado con optimistic update
   const toggleDestacadoMutation = useMutation({
     mutationFn: ({ id, destacado }: { id: string; destacado: boolean }) => 
       toggleDestacado(id, destacado),
+    onMutate: async ({ id, destacado }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['feedbacks'] });
+      
+      // Snapshot previous value
+      const previousFeedbacks = queryClient.getQueryData<Feedback[]>(['feedbacks']);
+      
+      // Optimistically update
+      queryClient.setQueryData<Feedback[]>(['feedbacks'], (old) => 
+        old?.map(f => f.id === id ? { ...f, destacado } : f) || []
+      );
+      
+      return { previousFeedbacks };
+    },
     onSuccess: (_, { destacado }) => {
-      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
       toast.success(destacado ? 'Feedback destacado' : 'Destacado removido');
     },
-    onError: (error) => {
+    onError: (error, _, context) => {
+      // Rollback on error
+      if (context?.previousFeedbacks) {
+        queryClient.setQueryData(['feedbacks'], context.previousFeedbacks);
+      }
       console.error('Error toggling destacado:', error);
       toast.error('Error al cambiar destacado');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+    },
+  });
+
+  // Mutation para bulk toggle destacados
+  const bulkToggleDestacadoMutation = useMutation({
+    mutationFn: async ({ ids, destacado }: { ids: string[]; destacado: boolean }) => {
+      for (const id of ids) {
+        await toggleDestacado(id, destacado);
+      }
+    },
+    onMutate: async ({ ids, destacado }) => {
+      await queryClient.cancelQueries({ queryKey: ['feedbacks'] });
+      const previousFeedbacks = queryClient.getQueryData<Feedback[]>(['feedbacks']);
+      
+      queryClient.setQueryData<Feedback[]>(['feedbacks'], (old) => 
+        old?.map(f => ids.includes(f.id) ? { ...f, destacado } : f) || []
+      );
+      
+      return { previousFeedbacks };
+    },
+    onSuccess: (_, { ids, destacado }) => {
+      toast.success(destacado ? `${ids.length} feedbacks destacados` : `${ids.length} destacados removidos`);
+    },
+    onError: (error, _, context) => {
+      if (context?.previousFeedbacks) {
+        queryClient.setQueryData(['feedbacks'], context.previousFeedbacks);
+      }
+      console.error('Error bulk toggling destacado:', error);
+      toast.error('Error al cambiar destacados');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
     },
   });
 
@@ -201,11 +253,13 @@ export function useFeedbacks() {
     respondToFeedback: respondMutation.mutate,
     asignarFeedback: asignarMutation.mutate,
     toggleDestacado: toggleDestacadoMutation.mutate,
+    bulkToggleDestacado: bulkToggleDestacadoMutation.mutate,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isResponding: respondMutation.isPending,
     isAsignando: asignarMutation.isPending,
     isTogglingDestacado: toggleDestacadoMutation.isPending,
+    isBulkToggling: bulkToggleDestacadoMutation.isPending,
     getStatusBadgeVariant,
     getTipoBadgeVariant,
   };
