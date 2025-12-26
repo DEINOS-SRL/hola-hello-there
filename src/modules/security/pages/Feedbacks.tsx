@@ -69,6 +69,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -685,6 +686,63 @@ export default function Feedbacks() {
             Exportar PDF
           </Button>
 
+          {/* Botón de exportar destacados PDF */}
+          {stats.destacados > 0 && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                const destacados = feedbacks.filter(f => f.destacado);
+                if (destacados.length === 0) {
+                  toast.error('No hay feedbacks destacados para exportar');
+                  return;
+                }
+                
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const margin = 15;
+                let yPosition = margin;
+
+                pdf.setFontSize(18);
+                pdf.setTextColor(45, 139, 122);
+                pdf.text('Feedbacks Destacados', margin, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(10);
+                pdf.setTextColor(100, 100, 100);
+                pdf.text(`Exportado: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, margin, yPosition);
+                pdf.text(`Total: ${destacados.length} feedbacks`, margin + 80, yPosition);
+                yPosition += 15;
+
+                pdf.setFontSize(9);
+                destacados.forEach((fb, idx) => {
+                  if (yPosition > 270) {
+                    pdf.addPage();
+                    yPosition = margin;
+                  }
+
+                  pdf.setTextColor(45, 139, 122);
+                  pdf.text(`${idx + 1}. ${tipoLabels[fb.tipo]}`, margin, yPosition);
+                  pdf.setTextColor(0, 0, 0);
+                  yPosition += 5;
+
+                  const mensaje = fb.mensaje.length > 120 ? fb.mensaje.substring(0, 120) + '...' : fb.mensaje;
+                  pdf.text(mensaje, margin + 5, yPosition);
+                  yPosition += 5;
+
+                  pdf.setTextColor(100, 100, 100);
+                  pdf.text(`Usuario: ${fb.usuario_nombre || fb.usuario_email || 'N/A'} | Estado: ${estadoLabels[fb.estado]} | ${format(new Date(fb.created_at), 'dd/MM/yyyy')}`, margin + 5, yPosition);
+                  pdf.setTextColor(0, 0, 0);
+                  yPosition += 10;
+                });
+
+                pdf.save(`feedbacks_destacados_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+                toast.success('PDF de destacados exportado');
+              }}
+            >
+              <Star className="h-4 w-4 mr-2 fill-amber-400 text-amber-400" />
+              Exportar Destacados
+            </Button>
+          )}
+
           {/* Botón de exportar CSV */}
           <Button variant="outline" onClick={exportToCSV} disabled={filteredFeedbacks.length === 0}>
             <Download className="h-4 w-4 mr-2" />
@@ -1229,10 +1287,10 @@ export default function Feedbacks() {
         </CardContent>
       </Card>
 
-      {/* Detail Modal */}
+      {/* Detail Modal with Tabs */}
       <Dialog open={!!selectedFeedback} onOpenChange={() => setSelectedFeedback(null)}>
-        <DialogContent className="sm:max-w-2xl h-[95vh] max-h-[95vh] flex flex-col overflow-hidden">
-          <DialogHeader className="flex-shrink-0">
+        <DialogContent className="sm:max-w-2xl h-[85vh] max-h-[85vh] flex flex-col overflow-hidden">
+          <DialogHeader className="flex-shrink-0 pb-2">
             <DialogTitle className="flex items-center gap-2">
               {selectedFeedback && (
                 <>
@@ -1241,384 +1299,336 @@ export default function Feedbacks() {
                     return <TipoIcon className="h-5 w-5 text-primary" />;
                   })()}
                   {tipoLabels[selectedFeedback?.tipo || 'consulta']}
+                  {selectedFeedback.destacado && (
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  )}
                 </>
               )}
             </DialogTitle>
-            <DialogDescription>
-              De: {selectedFeedback?.usuario_nombre || selectedFeedback?.usuario_email || 'Usuario'}
+            <DialogDescription className="flex items-center gap-2">
+              <span>De: {selectedFeedback?.usuario_nombre || selectedFeedback?.usuario_email || 'Usuario'}</span>
+              {selectedFeedback?.modulo_referencia && (
+                <Badge variant="outline" className="text-xs">
+                  {getModuloLabel(selectedFeedback.modulo_referencia)}
+                </Badge>
+              )}
             </DialogDescription>
           </DialogHeader>
 
           {selectedFeedback && (
-            <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
-              <div className="space-y-4 pr-2 pb-4">
-              {/* Módulo de referencia */}
-              {selectedFeedback.modulo_referencia && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">
-                    {getModuloLabel(selectedFeedback.modulo_referencia)}
-                  </Badge>
-                </div>
-              )}
+            <Tabs defaultValue="mensaje" className="flex-1 flex flex-col min-h-0">
+              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+                <TabsTrigger value="mensaje" className="text-xs gap-1">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Mensaje
+                </TabsTrigger>
+                <TabsTrigger value="comentarios" className="text-xs gap-1">
+                  <Users className="h-3.5 w-3.5" />
+                  Comentarios
+                  {comentarios.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
+                      {comentarios.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="gestion" className="text-xs gap-1">
+                  <Send className="h-3.5 w-3.5" />
+                  Gestión
+                </TabsTrigger>
+              </TabsList>
 
-              {/* Mensaje original */}
-              <div className="space-y-2">
-                <Label>Mensaje</Label>
-                <div className="p-3 bg-muted rounded-lg text-sm">
-                  {selectedFeedback.mensaje}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Enviado {formatDistanceToNow(new Date(selectedFeedback.created_at), { 
-                    addSuffix: true, 
-                    locale: es 
-                  })}
-                </p>
-              </div>
-
-              {/* Archivos adjuntos */}
-              {selectedFeedback.archivos_adjuntos && selectedFeedback.archivos_adjuntos.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-1">
-                    <Paperclip className="h-4 w-4" />
-                    Archivos adjuntos ({selectedFeedback.archivos_adjuntos.length})
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedFeedback.archivos_adjuntos.map((url, idx) => {
-                      const fileName = url.split('/').pop() || `archivo-${idx + 1}`;
-                      const isImageFile = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
-                      const imageUrls = selectedFeedback.archivos_adjuntos?.filter(u => 
-                        /\.(jpg|jpeg|png|gif|webp)$/i.test(u)
-                      ) || [];
-                      const imageIndex = imageUrls.indexOf(url);
-                      
-                      if (isImageFile) {
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => lightbox.openLightbox(imageUrls, imageIndex)}
-                            className="group relative h-16 w-16 rounded overflow-hidden border hover:ring-2 ring-primary transition-all"
-                          >
-                            <img 
-                              src={url} 
-                              alt={fileName} 
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                target.parentElement?.classList.add('bg-destructive/10');
-                                const icon = document.createElement('div');
-                                icon.innerHTML = '⚠️';
-                                icon.className = 'flex items-center justify-center h-full w-full text-xl';
-                                target.parentElement?.appendChild(icon);
-                              }}
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
-                              <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                          </button>
-                        );
-                      }
-                      
-                      return (
-                        <div key={idx} className="flex items-center gap-1">
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80 transition-colors"
-                            onClick={(e) => {
-                              // Mostrar toast de ayuda al hacer clic
-                              setTimeout(() => {
-                                toast.info(
-                                  '¿No se abre el archivo? Puede ser bloqueado por una extensión del navegador (ad blocker, antivirus). Intenta desactivarlas o usa modo incógnito.',
-                                  { duration: 8000 }
-                                );
-                              }, 2000);
-                            }}
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            <span className="truncate max-w-[100px]">{fileName}</span>
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(url)}
-                            className="p-1 text-xs bg-muted rounded hover:bg-muted/80 transition-colors"
-                            title="Copiar enlace"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* Mensaje de ayuda para archivos */}
-                  <Alert variant="default" className="mt-2 py-2">
-                    <Info className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Si no puedes abrir los archivos, puede ser que una extensión del navegador (ad blocker, antivirus) esté bloqueando la descarga. Intenta desactivarlas o usa el modo incógnito.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              )}
-
-              {/* Respuesta existente */}
-              {selectedFeedback.respuesta && (
-                <div className="space-y-2">
-                  <Label>Respuesta anterior</Label>
-                  <div className="p-3 bg-primary/10 rounded-lg text-sm border-l-4 border-primary">
-                    {selectedFeedback.respuesta}
-                  </div>
-                </div>
-              )}
-
-              {/* Sección de Comentarios/Seguimiento - Colapsable */}
-              <Collapsible defaultOpen className="border rounded-lg">
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors rounded-t-lg">
-                  <Label className="flex items-center gap-2 cursor-pointer">
-                    <Users className="h-4 w-4" />
-                    Comentarios de seguimiento ({comentarios.length})
-                  </Label>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="animate-collapsible-down">
-                  <div className="p-3 pt-0 space-y-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <Checkbox
-                        id="filtro-internos"
-                        checked={mostrarSoloInternos}
-                        onCheckedChange={(checked) => setMostrarSoloInternos(checked === true)}
-                      />
-                      <label 
-                        htmlFor="filtro-internos" 
-                        className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer"
-                      >
-                        <EyeOff className="h-3 w-3" />
-                        Solo internos
-                      </label>
-                    </div>
-                    
-                    {/* Lista de comentarios */}
-                    <ScrollArea className="h-40 rounded-md border bg-muted/20 p-2">
-                      {isLoadingComentarios ? (
-                        <div className="flex items-center justify-center py-4">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        </div>
-                      ) : comentarios.filter(c => !mostrarSoloInternos || c.es_interno).length === 0 ? (
-                        <p className="text-xs text-muted-foreground text-center py-2">
-                          {mostrarSoloInternos ? 'No hay comentarios internos' : 'No hay comentarios aún'}
-                        </p>
-                      ) : (
-                        <div className="space-y-2">
-                          {comentarios
-                            .filter(c => !mostrarSoloInternos || c.es_interno)
-                            .map((comentario) => (
-                            <div 
-                              key={comentario.id} 
-                              className={`p-2 rounded text-sm ${comentario.es_interno ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-muted/50'}`}
-                            >
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-xs">
-                                    {comentario.usuario_nombre || comentario.usuario_email || 'Usuario'}
-                                  </span>
-                                  {comentario.es_interno && (
-                                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 gap-1 text-amber-600 border-amber-500/30">
-                                      <EyeOff className="h-2.5 w-2.5" />
-                                      Interno
-                                    </Badge>
-                                  )}
-                                </div>
-                                <span className="text-xs text-muted-foreground">
-                                  {formatDistanceToNow(new Date(comentario.created_at), { 
-                                    addSuffix: true, 
-                                    locale: es 
-                                  })}
-                                </span>
-                              </div>
-                              <p className="text-xs">{comentario.mensaje}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </ScrollArea>
-
-                    {/* Agregar nuevo comentario */}
+              {/* Tab: Mensaje Original */}
+              <TabsContent value="mensaje" className="flex-1 min-h-0 mt-4">
+                <ScrollArea className="h-full pr-4 -mr-4">
+                  <div className="space-y-4 pr-2 pb-4">
+                    {/* Mensaje original */}
                     <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Agregar comentario..."
-                          value={nuevoComentario}
-                          onChange={(e) => setNuevoComentario(e.target.value)}
-                          className="text-sm"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleAgregarComentario();
-                            }
-                          }}
-                        />
-                        <Button 
-                          size="sm" 
-                          onClick={handleAgregarComentario}
-                          disabled={!nuevoComentario.trim() || isCreatingComentario}
-                        >
-                          {isCreatingComentario ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Send className="h-4 w-4" />
-                          )}
-                        </Button>
+                      <Label className="text-sm font-medium">Mensaje del usuario</Label>
+                      <div className="p-4 bg-muted rounded-lg text-sm leading-relaxed">
+                        {selectedFeedback.mensaje}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="comentario-interno"
-                          checked={esComentarioInterno}
-                          onCheckedChange={(checked) => setEsComentarioInterno(checked === true)}
-                        />
-                        <label 
-                          htmlFor="comentario-interno" 
-                          className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer"
-                        >
-                          <EyeOff className="h-3 w-3" />
-                          Marcar como interno
-                        </label>
-                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Enviado {formatDistanceToNow(new Date(selectedFeedback.created_at), { 
+                          addSuffix: true, 
+                          locale: es 
+                        })} ({format(new Date(selectedFeedback.created_at), 'dd/MM/yyyy HH:mm')})
+                      </p>
                     </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
 
-              {/* Historial de cambios de estado - Colapsable */}
-              <Collapsible className="border rounded-lg">
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors rounded-t-lg">
-                  <Label className="flex items-center gap-2 cursor-pointer">
-                    <History className="h-4 w-4" />
-                    Historial de estados ({historial.length})
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    {historial.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          exportarHistorialPDF();
-                        }}
-                      >
-                        <FileText className="h-3 w-3 mr-1" />
-                        PDF
-                      </Button>
-                    )}
-                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="animate-collapsible-down">
-                  <div className="p-3 pt-0">
-                    <ScrollArea className="h-40 rounded-md border bg-muted/20 p-2">
-                      {isLoadingHistorial ? (
-                        <div className="flex items-center justify-center py-4">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        </div>
-                      ) : historial.length === 0 ? (
-                        <p className="text-xs text-muted-foreground text-center py-2">
-                          Sin cambios de estado registrados
-                        </p>
-                      ) : (
-                        <div className="relative">
-                          {/* Línea vertical del timeline */}
-                          <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-border" />
-                          
-                          <div className="space-y-3">
-                            {historial.map((item, idx) => {
-                              // Iconos y colores por estado
-                              const getEstadoIcon = (estado: string) => {
-                                switch (estado) {
-                                  case 'pendiente': return Clock;
-                                  case 'en_revision': return AlertCircle;
-                                  case 'resuelto': return CheckCircle2;
-                                  case 'cerrado': return XCircle;
-                                  default: return Clock;
-                                }
-                              };
-                              const getEstadoColor = (estado: string) => {
-                                switch (estado) {
-                                  case 'pendiente': return 'bg-amber-500 text-white';
-                                  case 'en_revision': return 'bg-blue-500 text-white';
-                                  case 'resuelto': return 'bg-green-500 text-white';
-                                  case 'cerrado': return 'bg-muted-foreground text-white';
-                                  default: return 'bg-muted text-muted-foreground';
-                                }
-                              };
-                              
-                              const IconNuevo = getEstadoIcon(item.estado_nuevo);
-                              const colorNuevo = getEstadoColor(item.estado_nuevo);
-                              
+                    {/* Archivos adjuntos */}
+                    {selectedFeedback.archivos_adjuntos && selectedFeedback.archivos_adjuntos.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1 text-sm font-medium">
+                          <Paperclip className="h-4 w-4" />
+                          Archivos adjuntos ({selectedFeedback.archivos_adjuntos.length})
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedFeedback.archivos_adjuntos.map((url, idx) => {
+                            const fileName = url.split('/').pop() || `archivo-${idx + 1}`;
+                            const isImageFile = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                            const imageUrls = selectedFeedback.archivos_adjuntos?.filter(u => 
+                              /\.(jpg|jpeg|png|gif|webp)$/i.test(u)
+                            ) || [];
+                            const imageIndex = imageUrls.indexOf(url);
+                            
+                            if (isImageFile) {
                               return (
-                                <div 
-                                  key={item.id} 
-                                  className="relative pl-8 opacity-0 animate-timeline-enter" 
-                                  style={{ 
-                                    animationDelay: `${idx * 100}ms`,
-                                    animationFillMode: 'forwards'
-                                  }}
+                                <button
+                                  key={idx}
+                                  onClick={() => lightbox.openLightbox(imageUrls, imageIndex)}
+                                  className="group relative h-20 w-20 rounded-lg overflow-hidden border hover:ring-2 ring-primary transition-all"
                                 >
-                                  {/* Ícono del estado nuevo con animación de escala */}
-                                  <div 
-                                    className={`absolute left-0 top-0 w-5 h-5 rounded-full ${colorNuevo} flex items-center justify-center shadow-sm transition-transform hover:scale-110`}
-                                  >
-                                    <IconNuevo className="h-2.5 w-2.5" />
+                                  <img 
+                                    src={url} 
+                                    alt={fileName} 
+                                    className="h-full w-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
+                                    <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </div>
-                                  
-                                  {/* Contenido del evento */}
-                                  <div className="bg-background/60 rounded-md border p-1.5 space-y-0.5">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <span className="text-[10px] font-medium">{item.usuario_nombre || 'Sistema'}</span>
-                                      <span className="text-[10px] text-muted-foreground">
+                                </button>
+                              );
+                            }
+                            
+                            return (
+                              <div key={idx} className="flex items-center gap-1">
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 px-3 py-2 text-xs bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  <span className="truncate max-w-[100px]">{fileName}</span>
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(url)}
+                                  className="p-2 text-xs bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                                  title="Copiar enlace"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Respuesta existente */}
+                    {selectedFeedback.respuesta && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Respuesta enviada</Label>
+                        <div className="p-4 bg-primary/10 rounded-lg text-sm border-l-4 border-primary">
+                          {selectedFeedback.respuesta}
+                        </div>
+                        {selectedFeedback.respondido_at && (
+                          <p className="text-xs text-muted-foreground">
+                            Respondido {formatDistanceToNow(new Date(selectedFeedback.respondido_at), { addSuffix: true, locale: es })}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Historial de estados */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="flex items-center gap-2 text-sm font-medium">
+                          <History className="h-4 w-4" />
+                          Historial de estados ({historial.length})
+                        </Label>
+                        {historial.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={exportarHistorialPDF}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            PDF
+                          </Button>
+                        )}
+                      </div>
+                      <div className="rounded-lg border bg-muted/20 p-3">
+                        {isLoadingHistorial ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          </div>
+                        ) : historial.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-2">
+                            Sin cambios de estado registrados
+                          </p>
+                        ) : (
+                          <div className="relative max-h-40 overflow-y-auto">
+                            <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-border" />
+                            <div className="space-y-3">
+                              {historial.slice(0, 5).map((item, idx) => {
+                                const getEstadoIcon = (estado: string) => {
+                                  switch (estado) {
+                                    case 'pendiente': return Clock;
+                                    case 'en_revision': return AlertCircle;
+                                    case 'resuelto': return CheckCircle2;
+                                    case 'cerrado': return XCircle;
+                                    default: return Clock;
+                                  }
+                                };
+                                const getEstadoColor = (estado: string) => {
+                                  switch (estado) {
+                                    case 'pendiente': return 'bg-amber-500 text-white';
+                                    case 'en_revision': return 'bg-blue-500 text-white';
+                                    case 'resuelto': return 'bg-green-500 text-white';
+                                    case 'cerrado': return 'bg-muted-foreground text-white';
+                                    default: return 'bg-muted text-muted-foreground';
+                                  }
+                                };
+                                
+                                const IconNuevo = getEstadoIcon(item.estado_nuevo);
+                                const colorNuevo = getEstadoColor(item.estado_nuevo);
+                                
+                                return (
+                                  <div 
+                                    key={item.id} 
+                                    className="relative pl-8 opacity-0 animate-timeline-enter" 
+                                    style={{ animationDelay: `${idx * 100}ms`, animationFillMode: 'forwards' }}
+                                  >
+                                    <div className={`absolute left-0 top-0 w-5 h-5 rounded-full ${colorNuevo} flex items-center justify-center shadow-sm`}>
+                                      <IconNuevo className="h-2.5 w-2.5" />
+                                    </div>
+                                    <div className="text-xs">
+                                      <span className="font-medium">{item.usuario_nombre || 'Sistema'}</span>
+                                      <span className="text-muted-foreground mx-1">→</span>
+                                      <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                                        {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
+                                      </Badge>
+                                      <span className="text-muted-foreground ml-2 text-[10px]">
                                         {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
                                       </span>
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-1 text-[10px]">
-                                      <Badge variant="outline" className="text-[9px] px-1 py-0 gap-0.5">
-                                        {(() => {
-                                          const IconAnterior = getEstadoIcon(item.estado_anterior || 'pendiente');
-                                          return <IconAnterior className="h-2 w-2" />;
-                                        })()}
-                                        {estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo'}
-                                      </Badge>
-                                      <span className="text-muted-foreground">→</span>
-                                      <Badge variant="secondary" className="text-[9px] px-1 py-0 gap-0.5">
-                                        <IconNuevo className="h-2 w-2" />
-                                        {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
-                                      </Badge>
-                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                              {historial.length > 5 && (
+                                <p className="text-xs text-muted-foreground text-center">
+                                  +{historial.length - 5} más
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </ScrollArea>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
+                </ScrollArea>
+              </TabsContent>
 
-              {/* Acciones - Colapsable */}
-              <Collapsible defaultOpen className="border rounded-lg">
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors rounded-t-lg">
-                  <Label className="flex items-center gap-2 cursor-pointer">
-                    <Send className="h-4 w-4" />
-                    Gestión y respuesta
-                  </Label>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="animate-collapsible-down">
-                  <div className="p-3 pt-0 space-y-3">
+              {/* Tab: Comentarios */}
+              <TabsContent value="comentarios" className="flex-1 min-h-0 mt-4">
+                <div className="h-full flex flex-col gap-3">
+                  {/* Filtro */}
+                  <div className="flex items-center justify-end gap-2 flex-shrink-0">
+                    <Checkbox
+                      id="filtro-internos"
+                      checked={mostrarSoloInternos}
+                      onCheckedChange={(checked) => setMostrarSoloInternos(checked === true)}
+                    />
+                    <label htmlFor="filtro-internos" className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer">
+                      <EyeOff className="h-3 w-3" />
+                      Solo internos
+                    </label>
+                  </div>
+                  
+                  {/* Lista de comentarios */}
+                  <ScrollArea className="flex-1 rounded-lg border bg-muted/20 p-3">
+                    {isLoadingComentarios ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      </div>
+                    ) : comentarios.filter(c => !mostrarSoloInternos || c.es_interno).length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                        <MessageCircle className="h-8 w-8 mb-2 opacity-50" />
+                        <p className="text-sm">{mostrarSoloInternos ? 'No hay comentarios internos' : 'No hay comentarios aún'}</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {comentarios.filter(c => !mostrarSoloInternos || c.es_interno).map((comentario) => (
+                          <div 
+                            key={comentario.id} 
+                            className={`p-3 rounded-lg text-sm ${comentario.es_interno ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-background border'}`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm">
+                                  {comentario.usuario_nombre || comentario.usuario_email || 'Usuario'}
+                                </span>
+                                {comentario.es_interno && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 gap-1 text-amber-600 border-amber-500/30">
+                                    <EyeOff className="h-2.5 w-2.5" />
+                                    Interno
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(comentario.created_at), { addSuffix: true, locale: es })}
+                              </span>
+                            </div>
+                            <p className="text-sm">{comentario.mensaje}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+
+                  {/* Agregar nuevo comentario */}
+                  <div className="flex-shrink-0 space-y-2 border-t pt-3">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Agregar comentario..."
+                        value={nuevoComentario}
+                        onChange={(e) => setNuevoComentario(e.target.value)}
+                        className="text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAgregarComentario();
+                          }
+                        }}
+                      />
+                      <Button 
+                        size="sm" 
+                        onClick={handleAgregarComentario}
+                        disabled={!nuevoComentario.trim() || isCreatingComentario}
+                      >
+                        {isCreatingComentario ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="comentario-interno"
+                        checked={esComentarioInterno}
+                        onCheckedChange={(checked) => setEsComentarioInterno(checked === true)}
+                      />
+                      <label htmlFor="comentario-interno" className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer">
+                        <EyeOff className="h-3 w-3" />
+                        Marcar como interno (solo visible para el equipo)
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Tab: Gestión */}
+              <TabsContent value="gestion" className="flex-1 min-h-0 mt-4">
+                <ScrollArea className="h-full pr-4 -mr-4">
+                  <div className="space-y-4 pr-2 pb-4">
                     {/* Asignar a usuario */}
-                    <div className="space-y-1.5">
-                      <Label className="flex items-center gap-2 text-xs">
-                        <UserPlus className="h-3.5 w-3.5" />
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm font-medium">
+                        <UserPlus className="h-4 w-4" />
                         Asignar a
                       </Label>
                       <Select 
@@ -1635,30 +1645,35 @@ export default function Feedbacks() {
                         }}
                         disabled={isAsignando}
                       >
-                        <SelectTrigger className="h-8 text-sm">
+                        <SelectTrigger>
                           <SelectValue placeholder="Seleccionar usuario..." />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="sin-asignar">Sin asignar</SelectItem>
                           {usuariosAsignables.map((u) => (
                             <SelectItem key={u.id} value={u.id}>
-                              {u.nombre} {u.apellido}
+                              <div className="flex items-center gap-2">
+                                <div className={`w-5 h-5 rounded-full ${getRolColor(u.rol)} flex items-center justify-center text-[10px] font-semibold`}>
+                                  {`${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase()}
+                                </div>
+                                <span>{u.nombre} {u.apellido}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       {selectedFeedback.asignado_a && (
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           Asignado {selectedFeedback.asignado_at && formatDistanceToNow(new Date(selectedFeedback.asignado_at), { addSuffix: true, locale: es })}
                         </p>
                       )}
                     </div>
 
                     {/* Estado */}
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Estado</Label>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Estado</Label>
                       <Select value={nuevoEstado} onValueChange={(v) => setNuevoEstado(v as Feedback['estado'])}>
-                        <SelectTrigger className="h-8 text-sm">
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1670,24 +1685,43 @@ export default function Feedbacks() {
                     </div>
 
                     {/* Nueva respuesta */}
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Respuesta (opcional)</Label>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Respuesta al usuario</Label>
                       <Textarea
                         placeholder="Escribe una respuesta para el usuario..."
                         value={respuesta}
                         onChange={(e) => setRespuesta(e.target.value)}
-                        rows={2}
-                        className="text-sm resize-none"
+                        rows={4}
+                        className="resize-none"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Esta respuesta será visible para el usuario que envió el feedback.
+                      </p>
+                    </div>
+
+                    {/* Destacar feedback */}
+                    <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
+                      <div className="flex items-center gap-2">
+                        <Star className={`h-4 w-4 ${selectedFeedback.destacado ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`} />
+                        <div>
+                          <p className="text-sm font-medium">Feedback destacado</p>
+                          <p className="text-xs text-muted-foreground">Los destacados aparecen primero en la lista</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={selectedFeedback.destacado}
+                        onCheckedChange={(checked) => {
+                          toggleDestacado({ id: selectedFeedback.id, destacado: checked });
+                        }}
                       />
                     </div>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-          </ScrollArea>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           )}
 
-          <DialogFooter className="flex-shrink-0 pt-4">
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button variant="outline" onClick={() => setSelectedFeedback(null)}>
               Cancelar
             </Button>
@@ -1697,7 +1731,7 @@ export default function Feedbacks() {
               ) : (
                 <Send className="h-4 w-4 mr-2" />
               )}
-              Guardar
+              Guardar cambios
             </Button>
           </DialogFooter>
         </DialogContent>
