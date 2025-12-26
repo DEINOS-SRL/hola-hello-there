@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { MessageSquare, Send, Loader2, Paperclip, X, FileIcon, ImageIcon } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
+import { MessageSquare, Send, Loader2, Paperclip, X, FileIcon, ImageIcon, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
 import { uploadFeedbackAttachment } from '@/modules/security/services/feedbacksService';
+import { cn } from '@/lib/utils';
 
 const feedbackTypes = [
   { value: 'sugerencia', label: 'Sugerencia' },
@@ -57,11 +58,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const [mensaje, setMensaje] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    
+  const validateAndAddFiles = useCallback((selectedFiles: File[]) => {
     // Validar cantidad
     if (files.length + selectedFiles.length > MAX_FILES) {
       toast.error(`Máximo ${MAX_FILES} archivos permitidos`);
@@ -83,11 +83,42 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     }
 
     setFiles(prev => [...prev, ...validFiles]);
+  }, [files.length]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    validateAndAddFiles(selectedFiles);
     
     // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  // Drag & Drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isSubmitting && files.length < MAX_FILES) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    if (isSubmitting || files.length >= MAX_FILES) return;
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    validateAndAddFiles(droppedFiles);
   };
 
   const removeFile = (index: number) => {
@@ -208,7 +239,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
             </p>
           </div>
 
-          {/* Archivos adjuntos */}
+          {/* Archivos adjuntos con Drag & Drop */}
           <div className="space-y-2">
             <Label>Archivos adjuntos (opcional)</Label>
             <div className="flex flex-col gap-2">
@@ -221,17 +252,38 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                 className="hidden"
                 disabled={isSubmitting || files.length >= MAX_FILES}
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isSubmitting || files.length >= MAX_FILES}
-                className="w-full"
+              
+              {/* Drop Zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => !isSubmitting && files.length < MAX_FILES && fileInputRef.current?.click()}
+                className={cn(
+                  "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all",
+                  isDragOver 
+                    ? "border-primary bg-primary/10" 
+                    : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50",
+                  (isSubmitting || files.length >= MAX_FILES) && "opacity-50 cursor-not-allowed"
+                )}
               >
-                <Paperclip className="h-4 w-4 mr-2" />
-                Adjuntar archivos ({files.length}/{MAX_FILES})
-              </Button>
+                <Upload className={cn(
+                  "h-8 w-8 mx-auto mb-2 transition-colors",
+                  isDragOver ? "text-primary" : "text-muted-foreground"
+                )} />
+                <p className="text-sm text-muted-foreground">
+                  {isDragOver ? (
+                    <span className="text-primary font-medium">Suelta los archivos aquí</span>
+                  ) : (
+                    <>
+                      <span className="font-medium">Arrastra archivos aquí</span> o haz clic para seleccionar
+                    </>
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {files.length}/{MAX_FILES} archivos
+                </p>
+              </div>
               
               {/* Lista de archivos */}
               {files.length > 0 && (
@@ -239,11 +291,17 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                   {files.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-2 bg-muted rounded-md"
+                      className="flex items-center justify-between p-2 bg-muted rounded-md animate-fade-in"
                     >
                       <div className="flex items-center gap-2 overflow-hidden">
                         {isImage(file) ? (
-                          <ImageIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="h-8 w-8 rounded overflow-hidden flex-shrink-0">
+                            <img 
+                              src={URL.createObjectURL(file)} 
+                              alt={file.name}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
                         ) : (
                           <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         )}

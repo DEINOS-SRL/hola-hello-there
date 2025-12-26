@@ -20,6 +20,7 @@ import {
   Download,
   Paperclip,
   ExternalLink,
+  ZoomIn,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -52,6 +53,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { ImageLightbox, useImageLightbox } from '@/components/ui/image-lightbox';
 import { useFeedbacks } from '../hooks/useFeedbacks';
 import { useAuth } from '@/contexts/AuthContext';
 import { Feedback } from '../services/feedbacksService';
@@ -98,6 +100,9 @@ export default function Feedbacks() {
     getTipoBadgeVariant,
   } = useFeedbacks();
 
+  // Lightbox state
+  const lightbox = useImageLightbox();
+
   const [search, setSearch] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('all');
   const [filterEstado, setFilterEstado] = useState<string>('all');
@@ -105,6 +110,7 @@ export default function Feedbacks() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [respuesta, setRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState<Feedback['estado']>('pendiente');
+
   const filteredFeedbacks = feedbacks.filter((fb) => {
     const matchesSearch = 
       fb.mensaje.toLowerCase().includes(search.toLowerCase()) ||
@@ -478,7 +484,27 @@ export default function Feedbacks() {
                   <div className="flex flex-wrap gap-2">
                     {selectedFeedback.archivos_adjuntos.map((url, idx) => {
                       const fileName = url.split('/').pop() || `archivo-${idx + 1}`;
-                      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                      const isImageFile = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                      const imageUrls = selectedFeedback.archivos_adjuntos?.filter(u => 
+                        /\.(jpg|jpeg|png|gif|webp)$/i.test(u)
+                      ) || [];
+                      const imageIndex = imageUrls.indexOf(url);
+                      
+                      if (isImageFile) {
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => lightbox.openLightbox(imageUrls, imageIndex)}
+                            className="group relative h-16 w-16 rounded overflow-hidden border hover:ring-2 ring-primary transition-all"
+                          >
+                            <img src={url} alt={fileName} className="h-full w-full object-cover" />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
+                              <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </button>
+                        );
+                      }
+                      
                       return (
                         <a
                           key={idx}
@@ -487,11 +513,7 @@ export default function Feedbacks() {
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80 transition-colors"
                         >
-                          {isImage ? (
-                            <img src={url} alt={fileName} className="h-8 w-8 object-cover rounded" />
-                          ) : (
-                            <ExternalLink className="h-3 w-3" />
-                          )}
+                          <ExternalLink className="h-3 w-3" />
                           <span className="truncate max-w-[100px]">{fileName}</span>
                         </a>
                       );
@@ -553,6 +575,14 @@ export default function Feedbacks() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        images={lightbox.images}
+        initialIndex={lightbox.index}
+        open={lightbox.open}
+        onClose={lightbox.closeLightbox}
+      />
     </div>
   );
 }
