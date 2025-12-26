@@ -24,7 +24,7 @@ interface WizardMovimientoProps {
 }
 
 const STEPS = [
-  { id: 1, title: 'Datos Generales', estado: 'generado' as EstadoMovimiento },
+  { id: 1, title: 'Datos Generales y Cliente', estado: 'generado' as EstadoMovimiento },
   { id: 2, title: 'Línea de Servicio', estado: 'asignacion_recursos' as EstadoMovimiento },
   { id: 3, title: 'Planificación', estado: 'planificado' as EstadoMovimiento },
   { id: 4, title: 'Ejecución', estado: 'en_ejecucion' as EstadoMovimiento },

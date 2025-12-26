@@ -246,7 +246,7 @@ Este documento describe el estado de implementación del proyecto DNSCloud organ
 
 #### Wizard de Movimientos (5 Pasos)
 - [x] Step 1: Datos Generales
-- [ ] Step 1: Cambiar el título a "Datos Generales y Cliente" (pendiente)
+- [x] Step 1: Cambiar el título a "Datos Generales y Cliente"
 - [x] Step 2: Línea de Servicio
 - [x] Step 3: Planificación
   - [x] Tabs responsive (Hora Servicio / Recursos Asignados)
