@@ -3,51 +3,65 @@ import { useModulosDB } from '@/modules/security/hooks/useModulos';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Loader2 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, lazy, Suspense } from 'react';
 
-// Páginas estáticas
+// Páginas estáticas (core - siempre cargadas)
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
-import Modulos from '@/pages/Modulos';
-import Perfil from '@/pages/Perfil';
-import Configuracion from '@/pages/Configuracion';
-import ConfiguracionEmpresa from '@/pages/ConfiguracionEmpresa';
-import ConfiguracionNotificaciones from '@/pages/ConfiguracionNotificaciones';
-import ConfiguracionPreferencias from '@/pages/ConfiguracionPreferencias';
-import ResetPassword from '@/pages/ResetPassword';
 import NotFound from '@/pages/NotFound';
 import Landing from '@/pages/Landing';
 import ModuloPlaceholder from '@/pages/ModuloPlaceholder';
 
-// Páginas implementadas de módulos (mapeo ruta -> componente)
-import SeguridadIndex from '@/modules/security/pages/Index';
-import Usuarios from '@/modules/security/pages/Usuarios';
-import Empresas from '@/modules/security/pages/Empresas';
-import Roles from '@/modules/security/pages/Roles';
-import ModulosAdmin from '@/modules/security/pages/Modulos';
-import Feedbacks from '@/modules/security/pages/Feedbacks';
-import RRHHIndex from '@/modules/rrhh/pages/Index';
-import RRHHEmpleados from '@/modules/rrhh/pages/Empleados';
-import RRHHAsistencia from '@/modules/rrhh/pages/Asistencia';
-import ConocimientoIndex from '@/modules/conocimiento/pages/Index';
-import ConocimientoSGI from '@/modules/conocimiento/pages/SGI';
-import OperacionIndex from '@/modules/operacion/pages/Index';
-import OperacionMovimientos from '@/modules/operacion/pages/Movimientos';
-import OperacionPartesEquipos from '@/modules/operacion/pages/PartesEquipos';
-// Equipos
-import EquiposIndex from '@/modules/equipos/pages/Index';
-import EquiposListado from '@/modules/equipos/pages/Listado';
-import EquiposMantenimientos from '@/modules/equipos/pages/Mantenimientos';
-import EquiposPartes from '@/modules/equipos/pages/Partes';
-// Habilitaciones
-import HabilitacionesIndex from '@/modules/habilitaciones/pages/Index';
-import HabilitacionesCertificaciones from '@/modules/habilitaciones/pages/Certificaciones';
-import HabilitacionesVencimientos from '@/modules/habilitaciones/pages/Vencimientos';
-// Comercial
-import ComercialIndex from '@/modules/comercial/pages/Index';
-import ComercialPresupuestos from '@/modules/comercial/pages/Presupuestos';
-import ComercialCertificaciones from '@/modules/comercial/pages/Certificaciones';
-import ComercialSeguimientos from '@/modules/comercial/pages/Seguimientos';
+// Lazy loading para páginas menos frecuentes
+const Modulos = lazy(() => import('@/pages/Modulos'));
+const Perfil = lazy(() => import('@/pages/Perfil'));
+const Configuracion = lazy(() => import('@/pages/Configuracion'));
+const ConfiguracionEmpresa = lazy(() => import('@/pages/ConfiguracionEmpresa'));
+const ConfiguracionNotificaciones = lazy(() => import('@/pages/ConfiguracionNotificaciones'));
+const ConfiguracionPreferencias = lazy(() => import('@/pages/ConfiguracionPreferencias'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+
+// Lazy loading para módulos (code-splitting por módulo)
+const SeguridadIndex = lazy(() => import('@/modules/security/pages/Index'));
+const Usuarios = lazy(() => import('@/modules/security/pages/Usuarios'));
+const Empresas = lazy(() => import('@/modules/security/pages/Empresas'));
+const Roles = lazy(() => import('@/modules/security/pages/Roles'));
+const ModulosAdmin = lazy(() => import('@/modules/security/pages/Modulos'));
+const Feedbacks = lazy(() => import('@/modules/security/pages/Feedbacks'));
+
+const RRHHIndex = lazy(() => import('@/modules/rrhh/pages/Index'));
+const RRHHEmpleados = lazy(() => import('@/modules/rrhh/pages/Empleados'));
+const RRHHAsistencia = lazy(() => import('@/modules/rrhh/pages/Asistencia'));
+
+const ConocimientoIndex = lazy(() => import('@/modules/conocimiento/pages/Index'));
+const ConocimientoSGI = lazy(() => import('@/modules/conocimiento/pages/SGI'));
+
+const OperacionIndex = lazy(() => import('@/modules/operacion/pages/Index'));
+const OperacionMovimientos = lazy(() => import('@/modules/operacion/pages/Movimientos'));
+const OperacionPartesEquipos = lazy(() => import('@/modules/operacion/pages/PartesEquipos'));
+
+const EquiposIndex = lazy(() => import('@/modules/equipos/pages/Index'));
+const EquiposListado = lazy(() => import('@/modules/equipos/pages/Listado'));
+const EquiposMantenimientos = lazy(() => import('@/modules/equipos/pages/Mantenimientos'));
+const EquiposPartes = lazy(() => import('@/modules/equipos/pages/Partes'));
+
+const HabilitacionesIndex = lazy(() => import('@/modules/habilitaciones/pages/Index'));
+const HabilitacionesCertificaciones = lazy(() => import('@/modules/habilitaciones/pages/Certificaciones'));
+const HabilitacionesVencimientos = lazy(() => import('@/modules/habilitaciones/pages/Vencimientos'));
+
+const ComercialIndex = lazy(() => import('@/modules/comercial/pages/Index'));
+const ComercialPresupuestos = lazy(() => import('@/modules/comercial/pages/Presupuestos'));
+const ComercialCertificaciones = lazy(() => import('@/modules/comercial/pages/Certificaciones'));
+const ComercialSeguimientos = lazy(() => import('@/modules/comercial/pages/Seguimientos'));
+
+// Componente de loading para Suspense
+function LazyLoadFallback() {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    </div>
+  );
+}
 
 // Mapeo de rutas a componentes implementados
 const implementedRoutes: Record<string, React.ComponentType> = {
@@ -112,7 +126,9 @@ function ProtectedLayout() {
 
   return (
     <AppLayout>
-      <Outlet />
+      <Suspense fallback={<LazyLoadFallback />}>
+        <Outlet />
+      </Suspense>
     </AppLayout>
   );
 }
@@ -149,7 +165,7 @@ export function AppRoutes() {
       {/* Rutas públicas */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/reset-password" element={<Suspense fallback={<LazyLoadFallback />}><ResetPassword /></Suspense>} />
 
       {/* Rutas protegidas (layout persistente) */}
       <Route element={<ProtectedLayout />}>
