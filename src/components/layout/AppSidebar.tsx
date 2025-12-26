@@ -88,8 +88,10 @@ const SIDEBAR_COLLAPSED_KEY = 'dnscloud-sidebar-collapsed';
 const SIDEBAR_EXPANDED_MODULES_KEY = 'dnscloud-sidebar-expanded-modules';
 const SIDEBAR_PINNED_KEY = 'dnscloud-sidebar-pinned';
 const SIDEBAR_NAV_SCROLL_KEY = 'dnscloud-sidebar-nav-scroll';
+const SIDEBAR_WIDTH_KEY = 'dnscloud-sidebar-width';
 const SIDEBAR_MIN_WIDTH = 68;
 const SIDEBAR_MAX_WIDTH = 300;
+const SIDEBAR_DEFAULT_WIDTH = 260;
 const SIDEBAR_COLLAPSE_THRESHOLD = 120;
 const SIDEBAR_SEARCH_KEY = 'dnscloud-sidebar-search';
 const SEARCH_DEBOUNCE_MS = 150;
@@ -116,6 +118,10 @@ export function AppSidebar() {
     } catch {
       return [];
     }
+  });
+  const [savedWidth, setSavedWidth] = useState<number>(() => {
+    const stored = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    return stored ? Math.min(Math.max(parseInt(stored, 10), SIDEBAR_MIN_WIDTH), SIDEBAR_MAX_WIDTH) : SIDEBAR_DEFAULT_WIDTH;
   });
   const [isDragging, setIsDragging] = useState(false);
   const [dragWidth, setDragWidth] = useState<number | null>(null);
@@ -193,8 +199,8 @@ export function AppSidebar() {
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
-    setDragWidth(collapsed ? SIDEBAR_MIN_WIDTH : SIDEBAR_MAX_WIDTH);
-  }, [collapsed]);
+    setDragWidth(collapsed ? SIDEBAR_MIN_WIDTH : savedWidth);
+  }, [collapsed, savedWidth]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -206,12 +212,15 @@ export function AppSidebar() {
 
     const handleMouseUp = (e: MouseEvent) => {
       setIsDragging(false);
-      const finalWidth = e.clientX;
+      const finalWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, e.clientX));
       
       if (finalWidth < SIDEBAR_COLLAPSE_THRESHOLD) {
         handleSetCollapsed(true);
       } else {
         handleSetCollapsed(false);
+        // Guardar el ancho preferido en localStorage
+        setSavedWidth(finalWidth);
+        localStorage.setItem(SIDEBAR_WIDTH_KEY, String(finalWidth));
       }
       setDragWidth(null);
     };
@@ -748,7 +757,7 @@ export function AppSidebar() {
   // Calculate actual width during drag
   const sidebarWidth = isDragging && dragWidth !== null 
     ? dragWidth 
-    : (collapsed ? SIDEBAR_MIN_WIDTH : SIDEBAR_MAX_WIDTH);
+    : (collapsed ? SIDEBAR_MIN_WIDTH : savedWidth);
 
   return (
     <aside 
