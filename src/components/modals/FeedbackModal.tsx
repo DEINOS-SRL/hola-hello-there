@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { MessageSquare, Send, Loader2, Paperclip, X, FileIcon, ImageIcon, Upload } from 'lucide-react';
+import { MessageSquare, Send, Loader2, X, FileIcon, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
 import { uploadFeedbackAttachment } from '@/modules/security/services/feedbacksService';
+import { compressImage } from '@/lib/imageCompression';
+import { moduleRegistry } from '@/app/moduleRegistry';
 import { cn } from '@/lib/utils';
 
 const feedbackTypes = [
@@ -32,6 +34,17 @@ const feedbackTypes = [
   { value: 'consulta', label: 'Consulta' },
   { value: 'ayuda', label: 'Ayuda' },
   { value: 'acceso-permiso', label: 'Acceso/Permiso' },
+];
+
+// Secciones/módulos disponibles para el feedback
+const seccionesModulos = [
+  { value: 'general', label: 'General / Plataforma' },
+  { value: 'dashboard', label: 'Dashboard' },
+  ...moduleRegistry.map(m => ({
+    value: m.moduleId,
+    label: m.name,
+  })),
+  { value: 'otro', label: 'Otro / Nueva funcionalidad' },
 ];
 
 const MAX_FILES = 5;
@@ -55,20 +68,21 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const { user, empresa } = useAuth();
   const { createFeedback, isCreating } = useFeedbacks();
   const [tipo, setTipo] = useState<string>('');
+  const [moduloReferencia, setModuloReferencia] = useState<string>('');
   const [mensaje, setMensaje] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const validateAndAddFiles = useCallback((selectedFiles: File[]) => {
+  const validateAndAddFiles = useCallback(async (selectedFiles: File[]) => {
     // Validar cantidad
     if (files.length + selectedFiles.length > MAX_FILES) {
       toast.error(`Máximo ${MAX_FILES} archivos permitidos`);
       return;
     }
 
-    // Validar cada archivo
+    // Validar y comprimir cada archivo
     const validFiles: File[] = [];
     for (const file of selectedFiles) {
       if (file.size > MAX_FILE_SIZE) {
@@ -79,15 +93,27 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         toast.error(`${file.name} no es un tipo de archivo permitido`);
         continue;
       }
-      validFiles.push(file);
+      
+      // Comprimir imágenes automáticamente
+      if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+        try {
+          const compressedFile = await compressImage(file);
+          validFiles.push(compressedFile);
+        } catch (error) {
+          console.error('Error comprimiendo:', error);
+          validFiles.push(file);
+        }
+      } else {
+        validFiles.push(file);
+      }
     }
 
     setFiles(prev => [...prev, ...validFiles]);
   }, [files.length]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-    validateAndAddFiles(selectedFiles);
+    await validateAndAddFiles(selectedFiles);
     
     // Reset input
     if (fileInputRef.current) {
@@ -110,7 +136,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     setIsDragOver(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
@@ -118,7 +144,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     if (isSubmitting || files.length >= MAX_FILES) return;
 
     const droppedFiles = Array.from(e.dataTransfer.files);
-    validateAndAddFiles(droppedFiles);
+    await validateAndAddFiles(droppedFiles);
   };
 
   const removeFile = (index: number) => {
@@ -165,9 +191,11 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         mensaje: mensaje.trim(),
         empresa_id: empresa?.id || undefined,
         archivos_adjuntos: archivosUrls.length > 0 ? archivosUrls : undefined,
+        modulo_referencia: moduloReferencia || undefined,
       }, {
         onSuccess: () => {
           setTipo('');
+          setModuloReferencia('');
           setMensaje('');
           setFiles([]);
           onOpenChange(false);
@@ -184,6 +212,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const handleClose = () => {
     if (!isCreating && !isUploading) {
       setTipo('');
+      setModuloReferencia('');
       setMensaje('');
       setFiles([]);
       onOpenChange(false);
@@ -194,7 +223,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
@@ -223,6 +252,22 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="modulo">Sección / Módulo (opcional)</Label>
+            <Select value={moduloReferencia} onValueChange={setModuloReferencia} disabled={isSubmitting}>
+              <SelectTrigger id="modulo">
+                <SelectValue placeholder="¿A qué sección se refiere?" />
+              </SelectTrigger>
+              <SelectContent>
+                {seccionesModulos.map((seccion) => (
+                  <SelectItem key={seccion.value} value={seccion.value}>
+                    {seccion.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="mensaje">Mensaje</Label>
             <Textarea
               id="mensaje"
@@ -230,7 +275,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               value={mensaje}
               onChange={(e) => setMensaje(e.target.value)}
               disabled={isSubmitting}
-              rows={5}
+              rows={4}
               maxLength={1000}
               className="resize-none"
             />
@@ -260,7 +305,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                 onDrop={handleDrop}
                 onClick={() => !isSubmitting && files.length < MAX_FILES && fileInputRef.current?.click()}
                 className={cn(
-                  "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all",
+                  "border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-all",
                   isDragOver 
                     ? "border-primary bg-primary/10" 
                     : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50",
@@ -268,26 +313,26 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                 )}
               >
                 <Upload className={cn(
-                  "h-8 w-8 mx-auto mb-2 transition-colors",
+                  "h-6 w-6 mx-auto mb-1 transition-colors",
                   isDragOver ? "text-primary" : "text-muted-foreground"
                 )} />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {isDragOver ? (
-                    <span className="text-primary font-medium">Suelta los archivos aquí</span>
+                    <span className="text-primary font-medium">Suelta aquí</span>
                   ) : (
                     <>
-                      <span className="font-medium">Arrastra archivos aquí</span> o haz clic para seleccionar
+                      <span className="font-medium">Arrastra archivos</span> o clic para seleccionar
                     </>
                   )}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {files.length}/{MAX_FILES} archivos
+                <p className="text-xs text-muted-foreground">
+                  ({files.length}/{MAX_FILES}) • Imágenes se comprimen automáticamente
                 </p>
               </div>
               
               {/* Lista de archivos */}
               {files.length > 0 && (
-                <div className="space-y-2 mt-2">
+                <div className="space-y-1.5">
                   {files.map((file, index) => (
                     <div
                       key={index}
@@ -305,7 +350,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                         ) : (
                           <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         )}
-                        <span className="text-sm truncate">{file.name}</span>
+                        <span className="text-sm truncate max-w-[150px]">{file.name}</span>
                         <span className="text-xs text-muted-foreground flex-shrink-0">
                           ({(file.size / 1024).toFixed(0)} KB)
                         </span>

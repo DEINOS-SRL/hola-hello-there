@@ -59,6 +59,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Feedback } from '../services/feedbacksService';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { moduleRegistry } from '@/app/moduleRegistry';
+
+// Labels para módulos
+const getModuloLabel = (moduloId: string | null): string => {
+  if (!moduloId) return '';
+  if (moduloId === 'general') return 'General / Plataforma';
+  if (moduloId === 'dashboard') return 'Dashboard';
+  if (moduloId === 'otro') return 'Otro / Nueva funcionalidad';
+  const modulo = moduleRegistry.find(m => m.moduleId === moduloId);
+  return modulo?.name || moduloId;
+};
 
 const tipoLabels: Record<Feedback['tipo'], string> = {
   sugerencia: 'Sugerencia',
@@ -393,7 +404,15 @@ export default function Feedbacks() {
                         </div>
                       </TableCell>
                       <TableCell className="max-w-[300px]">
-                        <p className="truncate text-sm">{feedback.mensaje}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm flex-1">{feedback.mensaje}</p>
+                          {feedback.archivos_adjuntos && feedback.archivos_adjuntos.length > 0 && (
+                            <Badge variant="outline" className="gap-1 flex-shrink-0">
+                              <Paperclip className="h-3 w-3" />
+                              {feedback.archivos_adjuntos.length}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Select
@@ -460,6 +479,15 @@ export default function Feedbacks() {
 
           {selectedFeedback && (
             <div className="space-y-4">
+              {/* Módulo de referencia */}
+              {selectedFeedback.modulo_referencia && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {getModuloLabel(selectedFeedback.modulo_referencia)}
+                  </Badge>
+                </div>
+              )}
+
               {/* Mensaje original */}
               <div className="space-y-2">
                 <Label>Mensaje</Label>
