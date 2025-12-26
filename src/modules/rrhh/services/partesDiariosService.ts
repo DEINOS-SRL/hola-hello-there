@@ -128,13 +128,19 @@ export async function getParteDiarioByFecha(empleadoId: string, fecha: string): 
   };
 }
 
-export async function createParteDiario(input: CreateParteDiarioInput): Promise<ParteDiario> {
-  // Get empresa_id from current user
-  const { data: empresaId, error: empresaError } = await supabase
-    .rpc('get_current_user_empresa_id');
+export async function createParteDiario(input: CreateParteDiarioInput & { empresa_id?: string }): Promise<ParteDiario> {
+  let empresaId = input.empresa_id;
   
-  if (empresaError) throw empresaError;
-  if (!empresaId) throw new Error('No se pudo obtener la empresa del usuario');
+  // If not provided, try to get from RPC
+  if (!empresaId) {
+    const { data, error: empresaError } = await supabase
+      .rpc('get_current_user_empresa_id');
+    
+    if (empresaError) throw empresaError;
+    empresaId = data;
+  }
+  
+  if (!empresaId) throw new Error('No se pudo obtener la empresa del usuario. Contacte al administrador.');
 
   // Generate actividades_realizadas from list
   const actividadesTexto = input.actividades?.map(a => 

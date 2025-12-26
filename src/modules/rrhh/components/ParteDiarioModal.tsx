@@ -99,7 +99,7 @@ interface DraftData {
 }
 
 export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiarioModalProps) {
-  const { user } = useAuth();
+  const { user, empresa } = useAuth();
   const createMutation = useCreateParteDiario();
   const uploadMutation = useUploadNovedadFoto();
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
@@ -314,6 +314,7 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
     
     await createMutation.mutateAsync({
       empleado_id: empleadoId,
+      empresa_id: empresa?.id,
       estado_animo: values.estado_animo,
       observaciones_adicionales: values.observaciones_adicionales,
       actividades: values.actividades.map(a => ({
