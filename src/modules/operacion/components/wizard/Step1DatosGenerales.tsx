@@ -12,27 +12,34 @@ import { cn } from '@/lib/utils';
 import { useWizardData } from '../../hooks/useMovimientos';
 import type { WizardMovimientoData } from '../../types';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { comClient } from '@/modules/comercial/services/comClient';
 
 interface Step1Props {
   data: WizardMovimientoData;
   updateData: (updates: Partial<WizardMovimientoData>) => void;
 }
 
+interface PresupuestoOption {
+  id: string;
+  numero: number;
+  cliente_nombre: string;
+  asunto: string;
+}
+
 export function Step1DatosGenerales({ data, updateData }: Step1Props) {
-  const { clientes, isLoading } = useWizardData();
+  const { clientes } = useWizardData();
   
-  // Fetch presupuestos from comercial module
-  const { data: presupuestos = [] } = useQuery({
+  // Fetch presupuestos from comercial module using comClient
+  const { data: presupuestos = [] } = useQuery<PresupuestoOption[]>({
     queryKey: ['presupuestos-select'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await comClient
         .from('presupuestos')
         .select('id, numero, cliente_nombre, asunto')
         .eq('estado', 'aprobado')
         .order('numero', { ascending: false });
       if (error) throw error;
-      return data || [];
+      return (data || []) as PresupuestoOption[];
     },
   });
 
