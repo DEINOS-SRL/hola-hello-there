@@ -14,6 +14,7 @@ export interface Feedback {
   respondido_at: string | null;
   empresa_id: string | null;
   archivos_adjuntos: string[] | null;
+  modulo_referencia: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +27,7 @@ export interface CreateFeedbackInput {
   mensaje: string;
   empresa_id?: string;
   archivos_adjuntos?: string[];
+  modulo_referencia?: string;
 }
 
 export interface UpdateFeedbackInput {
