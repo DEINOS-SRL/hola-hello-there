@@ -981,7 +981,7 @@ export function AppSidebar() {
                       {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                  <TooltipContent side="bottom" sideOffset={8} className="z-[9999]">
                     <span>{pinned ? 'Desfijar menú' : 'Fijar menú expandido'}</span>
                   </TooltipContent>
                 </Tooltip>
@@ -1004,7 +1004,7 @@ export function AppSidebar() {
                       <PanelLeftClose className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                  <TooltipContent side="bottom" sideOffset={8} className="z-[9999]">
                     <span>{pinned ? 'Desfija para colapsar' : 'Colapsar menú'}</span>
                     {!pinned && (
                       <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
@@ -1027,7 +1027,7 @@ export function AppSidebar() {
                         <RotateCcw className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                    <TooltipContent side="bottom" sideOffset={8} className="z-[9999]">
                       <span>Restablecer ancho</span>
                     </TooltipContent>
                   </Tooltip>
