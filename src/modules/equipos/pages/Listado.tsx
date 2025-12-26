@@ -146,8 +146,8 @@ export default function EquiposListado() {
             <Truck className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Listado de Equipos</h1>
-            <p className="text-muted-foreground">Gestión del maestro de equipos</p>
+            <h1 className="text-2xl font-semibold text-foreground">Maestro de Equipos</h1>
+            <p className="text-muted-foreground">Gestión y administración de equipos</p>
           </div>
         </div>
         <Button onClick={handleNew}>
