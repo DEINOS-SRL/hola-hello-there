@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   MessageSquare, 
   Search, 
@@ -22,6 +22,7 @@ import {
   ExternalLink,
   ZoomIn,
 } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
@@ -143,6 +144,32 @@ export default function Feedbacks() {
     resueltos: feedbacks.filter(f => f.estado === 'resuelto').length,
     sinRespuesta: feedbacks.filter(f => !f.respuesta).length,
   };
+
+  // Datos para el gráfico de torta por tipo
+  const TIPO_COLORS: Record<string, string> = {
+    sugerencia: '#22c55e',
+    mejora: '#3b82f6', 
+    queja: '#ef4444',
+    bug: '#dc2626',
+    consulta: '#8b5cf6',
+    ayuda: '#06b6d4',
+    'acceso-permiso': '#f59e0b',
+  };
+
+  const chartDataPorTipo = useMemo(() => {
+    const countByTipo = feedbacks.reduce((acc, fb) => {
+      acc[fb.tipo] = (acc[fb.tipo] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(countByTipo)
+      .map(([tipo, count]) => ({
+        name: tipoLabels[tipo as keyof typeof tipoLabels] || tipo,
+        value: count,
+        color: TIPO_COLORS[tipo] || '#6b7280',
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [feedbacks]);
 
   // Función para exportar a CSV
   const exportToCSV = () => {
@@ -299,6 +326,53 @@ export default function Feedbacks() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Gráfico de distribución por tipo */}
+      {feedbacks.length > 0 && chartDataPorTipo.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Distribución por Tipo</CardTitle>
+            <CardDescription>Cantidad de feedbacks según su categoría</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartDataPorTipo}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    labelLine={false}
+                  >
+                    {chartDataPorTipo.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [`${value} feedbacks`, 'Cantidad']}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      borderColor: 'hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend 
+                    verticalAlign="middle" 
+                    align="right"
+                    layout="vertical"
+                    wrapperStyle={{ paddingLeft: '20px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
