@@ -169,6 +169,7 @@ export function AppSidebar() {
     return sessionStorage.getItem(SIDEBAR_SEARCH_KEY) || '';
   });
   const [isSearching, setIsSearching] = useState(false);
+  const [noResults, setNoResults] = useState(false);
 
   // Debounce del término de búsqueda con indicador de carga
   useEffect(() => {
@@ -435,7 +436,20 @@ export function AppSidebar() {
 
   // Auto-expandir módulos cuando hay coincidencia en submódulos
   useEffect(() => {
-    if (!moduleSearch.trim()) return;
+    if (!moduleSearch.trim()) {
+      setNoResults(false);
+      return;
+    }
+    
+    // Detectar si no hay resultados
+    if (filteredModules.length === 0) {
+      setNoResults(true);
+      // Reset después de la animación
+      const timer = setTimeout(() => setNoResults(false), 400);
+      return () => clearTimeout(timer);
+    } else {
+      setNoResults(false);
+    }
     
     const searchLower = moduleSearch.toLowerCase().trim();
     const modulesToExpand = filteredModules
@@ -1154,11 +1168,14 @@ export function AppSidebar() {
               <div className="flex items-center gap-1">
                 <Tooltip delayDuration={300}>
                   <TooltipTrigger asChild>
-                    <div className="relative flex-1 group">
+                    <div className={cn("relative flex-1 group", noResults && "animate-shake")}>
                       {isSearching ? (
                         <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary animate-spin pointer-events-none z-10" />
                       ) : (
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/40 pointer-events-none z-10 transition-colors group-focus-within:text-primary" />
+                        <Search className={cn(
+                          "absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none z-10 transition-colors",
+                          noResults ? "text-destructive" : "text-sidebar-foreground/40 group-focus-within:text-primary"
+                        )} />
                       )}
                       <Input
                         ref={searchInputRef}
@@ -1172,7 +1189,10 @@ export function AppSidebar() {
                             (e.target as HTMLInputElement).blur();
                           }
                         }}
-                        className="h-8 pl-8 pr-14 text-xs bg-transparent border-sidebar-border/50 placeholder:text-sidebar-foreground/30 text-sidebar-foreground transition-all duration-200 focus:bg-sidebar-accent/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_8px_hsl(var(--primary)/0.15)]"
+                        className={cn(
+                          "h-8 pl-8 pr-14 text-xs bg-transparent border-sidebar-border/50 placeholder:text-sidebar-foreground/30 text-sidebar-foreground transition-all duration-200 focus:bg-sidebar-accent/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_8px_hsl(var(--primary)/0.15)]",
+                          noResults && "border-destructive/50 focus:border-destructive focus:ring-destructive/20"
+                        )}
                       />
                       {/* Badge de atajo de teclado */}
                       {!moduleSearchInput && (

@@ -339,7 +339,7 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
         }
       }}>
         <DialogContent 
-          className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden"
+          className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:duration-300"
           onInteractOutside={(e) => e.preventDefault()}
         >
           {/* Alerta si no tiene empresa */}
@@ -356,7 +356,7 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
           )}
           
           {/* Header fijo con progreso */}
-          <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0 space-y-4">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0 space-y-4 animate-fade-in">
             <div className="flex items-center justify-between">
               <DialogTitle>Parte Diario de Tareas</DialogTitle>
               {lastSaved && (
@@ -417,7 +417,7 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
           </DialogHeader>
 
           {/* Contenido scrolleable */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <div className="flex-1 overflow-y-auto scrollbar-hide animate-slide-up" style={{ animationDelay: '100ms' }}>
             <Form {...form}>
               <form id="parte-diario-form" onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-4 space-y-6">
                 {/* Estado de ánimo */}
