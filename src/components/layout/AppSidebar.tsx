@@ -1142,8 +1142,8 @@ export function AppSidebar() {
       {/* Separador antes del área scrolleable */}
       <div className="border-t border-sidebar-border mx-2" />
 
-      {/* Navigation - Área scrolleable con módulos */}
-      <nav ref={navScrollRef} className="flex-1 py-2 px-2 space-y-1 overflow-y-auto overscroll-contain">
+      {/* Navigation - Área scrolleable con módulos - scrollbar invisible */}
+      <nav ref={navScrollRef} className="flex-1 py-2 px-2 space-y-1 overflow-y-auto overscroll-contain scrollbar-hide">
 
         {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
