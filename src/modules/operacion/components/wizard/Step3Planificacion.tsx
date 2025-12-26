@@ -18,65 +18,68 @@ interface Step3Props {
 }
 
 export function Step3Planificacion({ data, updateData, movimientoId }: Step3Props) {
-  const { equipos, operarios } = useWizardData();
+  const { equiposEqu, empleados, operarios } = useWizardData();
   
-  // Get supervisors
-  const supervisores = operarios.filter(o => o.rol === 'supervisor');
-  const operariosDisponibles = operarios.filter(o => o.rol !== 'supervisor');
+  // Supervisores del sistema (empleados con cargo supervisor o similar)
+  const supervisores = empleados.filter((e: any) => 
+    e.cargo?.toLowerCase().includes('supervisor') || 
+    e.cargo?.toLowerCase().includes('jefe') ||
+    e.cargo?.toLowerCase().includes('encargado')
+  );
 
   // Load existing assignments if editing
-  const { data: equiposAsignados } = useQuery({
-    queryKey: ['movimiento-equipos', movimientoId],
-    queryFn: () => movimientoId ? movimientosService.getMovimientoEquipos(movimientoId) : Promise.resolve([]),
+  const { data: empleadosAsignados } = useQuery({
+    queryKey: ['movimiento-empleados', movimientoId],
+    queryFn: () => movimientoId ? movimientosService.getMovimientoEmpleados(movimientoId) : Promise.resolve([]),
     enabled: !!movimientoId,
   });
 
-  const { data: operariosAsignados } = useQuery({
-    queryKey: ['movimiento-operarios', movimientoId],
-    queryFn: () => movimientoId ? movimientosService.getMovimientoOperarios(movimientoId) : Promise.resolve([]),
+  const { data: equiposAsignados } = useQuery({
+    queryKey: ['movimiento-equipos-equ', movimientoId],
+    queryFn: () => movimientoId ? movimientosService.getMovimientoEquiposEqu(movimientoId) : Promise.resolve([]),
     enabled: !!movimientoId,
   });
 
   useEffect(() => {
-    if (equiposAsignados && equiposAsignados.length > 0) {
-      updateData({ equipos_asignados: equiposAsignados.map(e => e.equipo_id) });
-    }
-    if (operariosAsignados && operariosAsignados.length > 0) {
+    if (empleadosAsignados && empleadosAsignados.length > 0) {
       updateData({ 
-        operarios_asignados: operariosAsignados.map(o => ({
-          operario_id: o.operario_id,
-          rol_asignado: o.rol_asignado
+        empleados_asignados: empleadosAsignados.map(e => ({
+          empleado_id: e.empleado_id,
+          rol_asignado: e.rol_asignado
         }))
       });
     }
-  }, [equiposAsignados, operariosAsignados]);
+    if (equiposAsignados && equiposAsignados.length > 0) {
+      updateData({ equipos_asignados_equ: equiposAsignados.map(e => e.equipo_id) });
+    }
+  }, [empleadosAsignados, equiposAsignados]);
 
   const toggleEquipo = (equipoId: string) => {
-    const current = data.equipos_asignados || [];
+    const current = data.equipos_asignados_equ || [];
     if (current.includes(equipoId)) {
-      updateData({ equipos_asignados: current.filter(id => id !== equipoId) });
+      updateData({ equipos_asignados_equ: current.filter(id => id !== equipoId) });
     } else {
-      updateData({ equipos_asignados: [...current, equipoId] });
+      updateData({ equipos_asignados_equ: [...current, equipoId] });
     }
   };
 
-  const toggleOperario = (operarioId: string) => {
-    const current = data.operarios_asignados || [];
-    const exists = current.find(o => o.operario_id === operarioId);
+  const toggleEmpleado = (empleadoId: string) => {
+    const current = data.empleados_asignados || [];
+    const exists = current.find(e => e.empleado_id === empleadoId);
     if (exists) {
-      updateData({ operarios_asignados: current.filter(o => o.operario_id !== operarioId) });
+      updateData({ empleados_asignados: current.filter(e => e.empleado_id !== empleadoId) });
     } else {
       updateData({ 
-        operarios_asignados: [...current, { operario_id: operarioId, rol_asignado: 'operario' }]
+        empleados_asignados: [...current, { empleado_id: empleadoId, rol_asignado: 'operario' }]
       });
     }
   };
 
-  const updateOperarioRol = (operarioId: string, rol: string) => {
-    const current = data.operarios_asignados || [];
+  const updateEmpleadoRol = (empleadoId: string, rol: string) => {
+    const current = data.empleados_asignados || [];
     updateData({
-      operarios_asignados: current.map(o => 
-        o.operario_id === operarioId ? { ...o, rol_asignado: rol } : o
+      empleados_asignados: current.map(e => 
+        e.empleado_id === empleadoId ? { ...e, rol_asignado: rol } : e
       )
     });
   };
@@ -119,11 +122,20 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
                   <SelectValue placeholder="Seleccionar supervisor" />
                 </SelectTrigger>
                 <SelectContent>
-                  {supervisores.map((sup) => (
-                    <SelectItem key={sup.id} value={sup.id}>
-                      {sup.apellido}, {sup.nombre}
-                    </SelectItem>
-                  ))}
+                  {supervisores.length > 0 ? (
+                    supervisores.map((sup: any) => (
+                      <SelectItem key={sup.id} value={sup.id}>
+                        {sup.apellido}, {sup.nombre}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    // Fallback: mostrar todos los empleados si no hay supervisores definidos
+                    empleados.map((emp: any) => (
+                      <SelectItem key={emp.id} value={emp.id}>
+                        {emp.apellido}, {emp.nombre}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -137,65 +149,65 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
           <CardTitle className="flex items-center gap-2 text-base">
             <Truck className="h-4 w-4 text-primary" />
             Equipos Asignados
-            {data.equipos_asignados.length > 0 && (
-              <Badge variant="secondary">{data.equipos_asignados.length}</Badge>
+            {data.equipos_asignados_equ.length > 0 && (
+              <Badge variant="secondary">{data.equipos_asignados_equ.length}</Badge>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {equipos.map((equipo) => (
+            {equiposEqu.map((equipo: any) => (
               <div
                 key={equipo.id}
                 className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  data.equipos_asignados.includes(equipo.id)
+                  data.equipos_asignados_equ.includes(equipo.id)
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
                 }`}
                 onClick={() => toggleEquipo(equipo.id)}
               >
                 <Checkbox
-                  checked={data.equipos_asignados.includes(equipo.id)}
+                  checked={data.equipos_asignados_equ.includes(equipo.id)}
                   onCheckedChange={() => toggleEquipo(equipo.id)}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{equipo.codigo}</p>
-                  <p className="text-sm text-muted-foreground truncate">{equipo.descripcion}</p>
-                  {equipo.patente && (
-                    <p className="text-xs text-muted-foreground">{equipo.patente}</p>
+                  <p className="text-sm text-muted-foreground truncate">{equipo.nombre}</p>
+                  {equipo.numero_interno && (
+                    <p className="text-xs text-muted-foreground">Int: {equipo.numero_interno}</p>
                   )}
                 </div>
               </div>
             ))}
-            {equipos.length === 0 && (
+            {equiposEqu.length === 0 && (
               <p className="text-muted-foreground col-span-full text-center py-4">
-                No hay equipos disponibles
+                No hay equipos disponibles. Cargue equipos en el módulo de Equipos.
               </p>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Operarios */}
+      {/* Empleados */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4 text-primary" />
-            Operarios Asignados
-            {data.operarios_asignados.length > 0 && (
-              <Badge variant="secondary">{data.operarios_asignados.length}</Badge>
+            Personal Asignado
+            {data.empleados_asignados.length > 0 && (
+              <Badge variant="secondary">{data.empleados_asignados.length}</Badge>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {operariosDisponibles.map((operario) => {
-              const isSelected = data.operarios_asignados.some(o => o.operario_id === operario.id);
-              const asignado = data.operarios_asignados.find(o => o.operario_id === operario.id);
+            {empleados.map((empleado: any) => {
+              const isSelected = data.empleados_asignados.some(e => e.empleado_id === empleado.id);
+              const asignado = data.empleados_asignados.find(e => e.empleado_id === empleado.id);
               
               return (
                 <div
-                  key={operario.id}
+                  key={empleado.id}
                   className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
                     isSelected
                       ? 'border-primary bg-primary/5'
@@ -204,18 +216,19 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
                 >
                   <Checkbox
                     checked={isSelected}
-                    onCheckedChange={() => toggleOperario(operario.id)}
+                    onCheckedChange={() => toggleEmpleado(empleado.id)}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium">{operario.apellido}, {operario.nombre}</p>
-                    {operario.legajo && (
-                      <p className="text-sm text-muted-foreground">Legajo: {operario.legajo}</p>
-                    )}
+                    <p className="font-medium">{empleado.apellido}, {empleado.nombre}</p>
+                    <div className="flex gap-2 text-sm text-muted-foreground">
+                      {empleado.legajo && <span>Legajo: {empleado.legajo}</span>}
+                      {empleado.cargo && <span>• {empleado.cargo}</span>}
+                    </div>
                   </div>
                   {isSelected && (
                     <Select
                       value={asignado?.rol_asignado || 'operario'}
-                      onValueChange={(v) => updateOperarioRol(operario.id, v)}
+                      onValueChange={(v) => updateEmpleadoRol(empleado.id, v)}
                     >
                       <SelectTrigger className="w-28">
                         <SelectValue />
@@ -223,6 +236,8 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
                       <SelectContent>
                         <SelectItem value="operario">Operario</SelectItem>
                         <SelectItem value="lider">Líder</SelectItem>
+                        <SelectItem value="conductor">Conductor</SelectItem>
+                        <SelectItem value="ayudante">Ayudante</SelectItem>
                         <SelectItem value="apoyo">Apoyo</SelectItem>
                       </SelectContent>
                     </Select>
@@ -230,9 +245,9 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
                 </div>
               );
             })}
-            {operariosDisponibles.length === 0 && (
+            {empleados.length === 0 && (
               <p className="text-muted-foreground col-span-full text-center py-4">
-                No hay operarios disponibles
+                No hay empleados disponibles. Cargue empleados en el módulo de RRHH.
               </p>
             )}
           </div>

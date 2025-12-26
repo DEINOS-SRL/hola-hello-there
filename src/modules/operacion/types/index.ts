@@ -184,7 +184,46 @@ export interface MovimientoUpdate {
   estado?: EstadoMovimiento;
 }
 
-// Relaciones
+// Relaciones con módulos externos (emp.empleados, equ.equipos)
+export interface MovimientoEmpleado {
+  id: string;
+  movimiento_id: string;
+  empleado_id: string;
+  rol_asignado: string;
+  hora_inicio: string | null;
+  hora_fin: string | null;
+  observaciones: string | null;
+  created_at: string;
+  updated_at: string;
+  empleado?: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    legajo: string | null;
+    cargo: string | null;
+  };
+}
+
+export interface MovimientoEquipoEqu {
+  id: string;
+  movimiento_id: string;
+  equipo_id: string;
+  kilometraje_inicio: number | null;
+  kilometraje_fin: number | null;
+  horas_inicio: number | null;
+  horas_fin: number | null;
+  observaciones: string | null;
+  created_at: string;
+  updated_at: string;
+  equipo?: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    numero_interno: string | null;
+  };
+}
+
+// Relaciones legacy (mov.recursos_*)
 export interface MovimientoEquipo {
   id: string;
   movimiento_id: string;
@@ -251,6 +290,10 @@ export interface WizardMovimientoData {
   hora_inicio_programada: string;
   hora_fin_programada: string;
   supervisor_id: string;
+  // Nuevas asignaciones usando módulos externos
+  empleados_asignados: { empleado_id: string; rol_asignado: string }[];
+  equipos_asignados_equ: string[];
+  // Legacy (recursos internos mov.*)
   equipos_asignados: string[];
   operarios_asignados: { operario_id: string; rol_asignado: string }[];
   
