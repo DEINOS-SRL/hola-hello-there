@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState, useEffect, useRef } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
@@ -13,6 +14,7 @@ import type { Movimiento, WizardMovimientoData, EstadoMovimiento } from '../../t
 import { movimientosService } from '../../services/movimientosService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WizardMovimientoProps {
   open: boolean;
@@ -70,16 +72,45 @@ const initialData: WizardMovimientoData = {
 
 export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }: WizardMovimientoProps) {
   const { empresa } = useAuth();
+  const isMobile = useIsMobile();
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<WizardMovimientoData>(initialData);
   const [isLoading, setIsLoading] = useState(false);
   const [movimientoId, setMovimientoId] = useState<string | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [pendingClose, setPendingClose] = useState(false);
+  const initialDataRef = useRef<string>('');
+
+  // Track if data has changed
+  const hasChanges = () => {
+    return JSON.stringify(data) !== initialDataRef.current;
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && hasChanges()) {
+      setPendingClose(true);
+      setShowExitConfirm(true);
+    } else {
+      onOpenChange(newOpen);
+    }
+  };
+
+  const confirmExit = () => {
+    setShowExitConfirm(false);
+    setPendingClose(false);
+    onOpenChange(false);
+  };
+
+  const cancelExit = () => {
+    setShowExitConfirm(false);
+    setPendingClose(false);
+  };
 
   useEffect(() => {
     if (movimiento) {
       setMovimientoId(movimiento.id);
       setCurrentStep(getStepFromEstado(movimiento.estado));
-      setData({
+      const loadedData = {
         fecha_movimiento: movimiento.fecha_movimiento || new Date().toISOString().split('T')[0],
         cliente_id: movimiento.cliente_id || '',
         presupuesto_id: movimiento.presupuesto_id || '',
@@ -104,11 +135,14 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
         kilometrajes: [],
         calificaciones: [],
         observaciones_supervisor: movimiento.observaciones_supervisor || '',
-      });
+      };
+      setData(loadedData);
+      initialDataRef.current = JSON.stringify(loadedData);
     } else {
       setMovimientoId(null);
       setCurrentStep(1);
       setData(initialData);
+      initialDataRef.current = JSON.stringify(initialData);
     }
   }, [movimiento, open]);
 
@@ -254,13 +288,22 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {movimiento ? `Editar Movimiento #${movimiento.numero_movimiento}` : 'Nuevo Movimiento'}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className={cn(
+          "overflow-hidden flex flex-col",
+          isMobile 
+            ? "w-full h-full max-w-full max-h-full rounded-none" 
+            : "w-[80vw] max-w-[80vw] h-[85vh] max-h-[85vh]"
+        )}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {movimiento ? `Editar Movimiento #${movimiento.numero_movimiento}` : 'Nuevo Movimiento'}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Wizard para crear o editar un movimiento
+            </DialogDescription>
+          </DialogHeader>
 
         {/* Steps indicator */}
         <div className="space-y-4">
@@ -312,7 +355,7 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
             Anterior
           </Button>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isLoading}>
+            <Button variant="ghost" onClick={() => handleOpenChange(false)} disabled={isLoading}>
               Cancelar
             </Button>
             {currentStep < 5 ? (
@@ -330,7 +373,25 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Salir sin guardar?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tienes cambios sin guardar. Si sales ahora, perderás los datos ingresados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelExit}>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmExit} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Salir sin guardar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
