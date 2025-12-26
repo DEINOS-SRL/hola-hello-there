@@ -71,7 +71,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-[56px] md:h-[60px] border-b border-border bg-card flex items-center justify-between px-3 md:px-6 sticky top-0 z-40">
+    <header className="h-[56px] md:h-[60px] border-b border-border bg-card flex items-center justify-between px-3 md:px-6 sticky top-0 z-30">
       <div className="flex items-center gap-2 md:gap-4 flex-1">
         {/* Botón hamburguesa para mobile */}
         {isMobile && (

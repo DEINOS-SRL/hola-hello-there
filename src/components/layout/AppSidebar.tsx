@@ -103,19 +103,14 @@ const SIDEBAR_SEARCH_KEY = 'dnscloud-sidebar-search';
 const SEARCH_DEBOUNCE_MS = 150;
 
 export function AppSidebar() {
-  // Context de sidebar mobile
-  const { isOpen, isMobile, closeSidebar } = useSidebarContext();
+  // Context de sidebar mobile y desktop
+  const { isOpen, isMobile, closeSidebar, collapsed, setCollapsed } = useSidebarContext();
   
   // Detectar si es Mac para mostrar el shortcut correcto
   const isMac = useMemo(() => 
     typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0, 
   []);
   const shortcutKey = isMac ? '⌘B' : 'Ctrl+B';
-
-  const [collapsed, setCollapsed] = useState(() => {
-    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
-    return stored === 'true';
-  });
   const [pinned, setPinned] = useState(() => {
     const stored = localStorage.getItem(SIDEBAR_PINNED_KEY);
     return stored === 'true';
@@ -163,6 +158,13 @@ export function AppSidebar() {
   // Estado efectivo de colapsado (en mobile siempre expandido)
   // Considera hover-expand: si está colapsado pero hover-expanded, muestra como expandido
   const isCollapsed = !isMobile && collapsed && !isHoverExpanded;
+  
+  // Expandir favoritos automáticamente cuando el sidebar se expande desde colapsado
+  useEffect(() => {
+    if (!isCollapsed && !favoritosExpanded && favoritos.length > 0) {
+      setFavoritosExpanded(true);
+    }
+  }, [isCollapsed, favoritosExpanded, favoritos.length]);
 
   // Handlers para hover-expand temporal
   const handleMouseEnter = useCallback(() => {
@@ -236,8 +238,7 @@ export function AppSidebar() {
     // Si está fijado, no permitir colapsar
     if (pinned && value === true) return;
     setCollapsed(value);
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(value));
-  }, [pinned]);
+  }, [pinned, setCollapsed]);
 
   // Toggle para fijar/desfijar el sidebar
   const togglePinned = useCallback(() => {
@@ -247,9 +248,8 @@ export function AppSidebar() {
     // Si se fija, asegurar que esté expandido
     if (newPinned && collapsed) {
       setCollapsed(false);
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'false');
     }
-  }, [pinned, collapsed]);
+  }, [pinned, collapsed, setCollapsed]);
 
   // Estado para animar el reset del ancho
   const [isResetting, setIsResetting] = useState(false);
@@ -858,9 +858,9 @@ export function AppSidebar() {
         "bg-sidebar flex flex-col h-screen",
         // Mobile: posición fija con animación desde la izquierda
         isMobile && "fixed left-0 top-0 z-50 animate-slide-in-from-left shadow-2xl",
-        // Desktop: sticky normal, hover-expand usa posición absoluta para no empujar contenido
-        !isMobile && !isHoverExpanded && "sticky top-0 relative",
-        !isMobile && isHoverExpanded && "fixed left-0 top-0 z-40 shadow-xl",
+        // Desktop: sticky normal con z-index para estar sobre el header
+        !isMobile && !isHoverExpanded && "sticky top-0 z-50",
+        !isMobile && isHoverExpanded && "fixed left-0 top-0 z-50 shadow-xl",
         (!isDragging || isResetting) && !isMobile && "transition-[width] duration-300 ease-in-out"
       )}
       style={{ width: isMobile ? mobileWidth : sidebarWidth }}
@@ -884,137 +884,33 @@ export function AppSidebar() {
         </div>
       )}
       {/* Header con logo y empresa */}
-      <div className="p-3 border-b border-sidebar-border overflow-hidden">
-        <div className="flex items-center justify-between">
-          <div className={cn(
-            "flex items-center gap-2 overflow-hidden transition-all duration-300 ease-in-out",
-            !isMobile && collapsed && "justify-center w-full"
-          )}>
+      <div className={cn(
+        "border-b border-sidebar-border overflow-hidden relative z-30 bg-sidebar shrink-0",
+        !isMobile && collapsed && !isHoverExpanded ? "p-2" : "p-3"
+      )}>
+        {/* Layout cuando está colapsado: logo centrado con botón expandir */}
+        {!isMobile && collapsed && !isHoverExpanded ? (
+          <div className="flex flex-col items-center gap-2">
+            {/* Logo siempre visible */}
             <div className="relative">
-              <div className={cn(
-                "rounded-lg bg-primary flex items-center justify-center shrink-0 transition-all duration-300 ease-in-out",
-                !isMobile && collapsed ? "h-10 w-10" : "h-9 w-9"
-              )}>
+              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center shrink-0">
                 <span className="text-primary-foreground font-bold text-sm">DC</span>
               </div>
-              {/* Indicador de fijado - solo desktop */}
-              {!isMobile && pinned && (
+              {/* Indicador de fijado - visible cuando está colapsado */}
+              {pinned && (
                 <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary border-2 border-sidebar flex items-center justify-center animate-scale-in">
                   <Pin className="h-2 w-2 text-primary-foreground" />
                 </div>
               )}
             </div>
-            <div className={cn(
-              "min-w-0 transition-all duration-300 ease-in-out overflow-hidden",
-              !isMobile && collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-            )}>
-              <p className="font-semibold text-sidebar-foreground text-sm truncate whitespace-nowrap">
-                {empresa?.nombre || 'DNSCloud'}
-              </p>
-              <p className="text-xs text-sidebar-foreground/60 truncate whitespace-nowrap">
-                {user?.nombre} {user?.apellido}
-              </p>
-            </div>
-          </div>
-          
-          {/* Botón cerrar para mobile */}
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={closeSidebar}
-              className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          )}
-          
-          {/* Botones desktop */}
-          {!isMobile && (
-            <div className={cn(
-              "flex items-center gap-1 transition-all duration-300 ease-in-out overflow-hidden",
-              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-            )}>
-              {/* Botón fijar sidebar */}
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={togglePinned}
-                    className={cn(
-                      "h-7 w-7 shrink-0 transition-colors",
-                      pinned 
-                        ? "text-primary hover:text-primary/80 hover:bg-sidebar-accent" 
-                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                    )}
-                  >
-                    {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-                  <span>{pinned ? 'Desfijar menú' : 'Fijar menú expandido'}</span>
-                </TooltipContent>
-              </Tooltip>
-              
-              {/* Botón colapsar */}
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleSetCollapsed(true)}
-                    disabled={pinned}
-                    className={cn(
-                      "h-7 w-7 shrink-0",
-                      pinned 
-                        ? "text-sidebar-foreground/30 cursor-not-allowed" 
-                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                    )}
-                  >
-                    <PanelLeftClose className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-                  <span>{pinned ? 'Desfija para colapsar' : 'Colapsar menú'}</span>
-                  {!pinned && (
-                    <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
-                      {shortcutKey}
-                    </kbd>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-              
-              {/* Botón restablecer ancho */}
-              {savedWidth !== SIDEBAR_DEFAULT_WIDTH && (
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={resetSidebarWidth}
-                      className="h-7 w-7 shrink-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-                    <span>Restablecer ancho</span>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          )}
-          
-          {/* Botón expandir cuando está colapsado - Desktop */}
-          {!isMobile && isCollapsed && (
+            {/* Botón expandir - siempre visible cuando está colapsado */}
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handleSetCollapsed(false)}
-                  className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  className="h-7 w-7 shrink-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                 >
                   <PanelLeft className="h-4 w-4" />
                 </Button>
@@ -1026,12 +922,124 @@ export function AppSidebar() {
                 </kbd>
               </TooltipContent>
             </Tooltip>
-          )}
-        </div>
+          </div>
+        ) : (
+          /* Layout cuando está expandido: logo + texto + botones */
+          <div className="flex items-center justify-between">
+            {/* Logo y texto */}
+            <div className="flex items-center gap-2 overflow-hidden min-w-0 flex-1">
+              <div className="relative shrink-0">
+                <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                  <span className="text-primary-foreground font-bold text-sm">DC</span>
+                </div>
+                {/* Indicador de fijado */}
+                {!isMobile && pinned && (
+                  <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary border-2 border-sidebar flex items-center justify-center animate-scale-in">
+                    <Pin className="h-2 w-2 text-primary-foreground" />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-sidebar-foreground text-sm truncate whitespace-nowrap">
+                  {empresa?.nombre || 'DNSCloud'}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 truncate whitespace-nowrap">
+                  {user?.nombre} {user?.apellido}
+                </p>
+              </div>
+            </div>
+            
+            {/* Botón cerrar para mobile */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeSidebar}
+                className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground shrink-0"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            )}
+            
+            {/* Botones desktop cuando está expandido */}
+            {!isMobile && (
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Botón fijar sidebar */}
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={togglePinned}
+                      className={cn(
+                        "h-7 w-7 shrink-0 transition-colors",
+                        pinned 
+                          ? "text-primary hover:text-primary/80 hover:bg-sidebar-accent" 
+                          : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      )}
+                    >
+                      {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                    <span>{pinned ? 'Desfijar menú' : 'Fijar menú expandido'}</span>
+                  </TooltipContent>
+                </Tooltip>
+                
+                {/* Botón colapsar */}
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleSetCollapsed(true)}
+                      disabled={pinned}
+                      className={cn(
+                        "h-7 w-7 shrink-0",
+                        pinned 
+                          ? "text-sidebar-foreground/30 cursor-not-allowed" 
+                          : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      )}
+                    >
+                      <PanelLeftClose className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                    <span>{pinned ? 'Desfija para colapsar' : 'Colapsar menú'}</span>
+                    {!pinned && (
+                      <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                        {shortcutKey}
+                      </kbd>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+                
+                {/* Botón restablecer ancho */}
+                {savedWidth !== SIDEBAR_DEFAULT_WIDTH && (
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={resetSidebarWidth}
+                        className="h-7 w-7 shrink-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                      <span>Restablecer ancho</span>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Sección fija: Dashboard + Favoritos */}
-      <div className="px-2 pt-3 pb-2 space-y-1">
+      <div className="px-2 pt-3 pb-2 space-y-1 shrink-0">
         {/* Dashboard */}
         <NavItem item={{ name: 'Dashboard', href: '/dashboard', icon: Home }} icon={Home} />
 
@@ -1199,7 +1207,7 @@ export function AppSidebar() {
                 <div className="mt-0.5 ml-[22px] pl-4 border-l-2 border-sidebar-border">
                   <SortableFavorites
                     favoritos={favoritos}
-                    collapsed={collapsed}
+                    collapsed={isCollapsed}
                     onReorder={reorderFavoritos}
                     onRemove={toggleFavorito}
                     isRemoving={isRemoving}
@@ -1212,17 +1220,17 @@ export function AppSidebar() {
       </div>
 
       {/* Separador antes del área scrolleable */}
-      <div className="border-t border-sidebar-border mx-2" />
+      <div className="border-t border-sidebar-border mx-2 shrink-0" />
 
       {/* Navigation - Área scrolleable con módulos - scrollbar invisible */}
-      <nav ref={navScrollRef} className="flex-1 py-2 px-2 space-y-1 overflow-y-auto overscroll-contain scrollbar-hide">
+      <nav ref={navScrollRef} className="flex-1 py-2 px-2 space-y-1 overflow-y-auto overscroll-contain scrollbar-hide min-h-0">
 
         {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
 
           {/* Filtro de búsqueda de módulos - transparente */}
-          {!isCollapsed && visibleModules.length > 3 && (
-            <div className="px-2 pb-2 space-y-1">
+          {!isCollapsed && !isHoverExpanded && visibleModules.length > 3 && (
+            <div className="px-2 pb-2 space-y-1 mt-2">
               <div className="flex items-center gap-1">
                 <Tooltip delayDuration={300}>
                   <TooltipTrigger asChild>

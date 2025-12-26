@@ -4,9 +4,12 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface SidebarContextType {
   isOpen: boolean;
   isMobile: boolean;
+  collapsed: boolean;
   openSidebar: () => void;
   closeSidebar: () => void;
   toggleSidebar: () => void;
+  setCollapsed: (collapsed: boolean) => void;
+  toggleCollapsed: () => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -73,9 +76,16 @@ function useSwipeGesture(
   }, [enabled, onSwipeLeft, onSwipeRight]);
 }
 
+const SIDEBAR_COLLAPSED_KEY = 'dnscloud-sidebar-collapsed';
+
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
+  const [collapsed, setCollapsedState] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    return stored === 'true';
+  });
 
   // Cerrar sidebar cuando cambia a mobile
   useEffect(() => {
@@ -84,9 +94,18 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isMobile]);
 
+  // Sincronizar estado colapsado con localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
+    }
+  }, [collapsed]);
+
   const openSidebar = useCallback(() => setIsOpen(true), []);
   const closeSidebar = useCallback(() => setIsOpen(false), []);
   const toggleSidebar = useCallback(() => setIsOpen(prev => !prev), []);
+  const setCollapsed = useCallback((value: boolean) => setCollapsedState(value), []);
+  const toggleCollapsed = useCallback(() => setCollapsedState(prev => !prev), []);
 
   // Swipe gestures para mobile
   useSwipeGesture(
@@ -96,7 +115,16 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <SidebarContext.Provider value={{ isOpen, isMobile, openSidebar, closeSidebar, toggleSidebar }}>
+    <SidebarContext.Provider value={{ 
+      isOpen, 
+      isMobile, 
+      collapsed,
+      openSidebar, 
+      closeSidebar, 
+      toggleSidebar,
+      setCollapsed,
+      toggleCollapsed
+    }}>
       {children}
     </SidebarContext.Provider>
   );
