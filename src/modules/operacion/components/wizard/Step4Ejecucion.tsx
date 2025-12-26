@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Clock, FileImage, Gauge, ClipboardList } from 'lucide-react';
+import { Plus, Trash2, FileImage, Gauge, ClipboardList, Upload, Loader2, X } from 'lucide-react';
 import { movimientosService } from '../../services/movimientosService';
 import type { WizardMovimientoData } from '../../types';
 import { useQuery } from '@tanstack/react-query';
+import { movClient } from '../../services/movClient';
+import { toast } from 'sonner';
 
 interface Step4Props {
   data: WizardMovimientoData;
@@ -26,6 +28,8 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
   const [tareas, setTareas] = useState<TareaRow[]>(data.tareas.length > 0 ? data.tareas : [
     { descripcion: '', hora_inicio: '', hora_fin: '' }
   ]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing data
   const { data: tareasGuardadas } = useQuery({
@@ -100,6 +104,54 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
         }]
       });
     }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten imágenes');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no puede superar 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${movimientoId || 'nuevo'}_${Date.now()}.${fileExt}`;
+      const filePath = `remitos/${fileName}`;
+
+      const { error: uploadError } = await movClient.storage
+        .from('remitos-operacion')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = movClient.storage
+        .from('remitos-operacion')
+        .getPublicUrl(filePath);
+
+      updateData({ remito_url: urlData.publicUrl });
+      toast.success('Imagen subida correctamente');
+    } catch (error: any) {
+      toast.error(`Error al subir: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    updateData({ remito_url: '' });
   };
 
   return (
@@ -221,7 +273,7 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
         </Card>
       )}
 
-      {/* Remito */}
+      {/* Remito con Upload */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -231,22 +283,45 @@ export function Step4Ejecucion({ data, updateData, movimientoId }: Step4Props) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>URL de la imagen del remito</Label>
-              <Input
-                value={data.remito_url}
-                onChange={(e) => updateData({ remito_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
-            {data.remito_url && (
-              <div className="mt-4">
+            {!data.remito_url ? (
+              <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="remito-upload"
+                />
+                <label htmlFor="remito-upload" className="cursor-pointer">
+                  <div className="flex flex-col items-center gap-2">
+                    {isUploading ? (
+                      <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                    ) : (
+                      <Upload className="h-10 w-10 text-muted-foreground" />
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      {isUploading ? 'Subiendo...' : 'Haz clic o arrastra una imagen del remito'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">JPG, PNG o WEBP. Máximo 5MB</p>
+                  </div>
+                </label>
+              </div>
+            ) : (
+              <div className="relative inline-block">
                 <img 
                   src={data.remito_url} 
                   alt="Remito" 
-                  className="max-w-xs rounded-lg border"
-                  onError={(e) => (e.currentTarget.style.display = 'none')}
+                  className="max-w-sm rounded-lg border shadow-sm"
                 />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-8 w-8 rounded-full"
+                  onClick={handleRemoveImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>
