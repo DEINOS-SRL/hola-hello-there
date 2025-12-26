@@ -51,14 +51,11 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
     enabled: !!movimientoId,
   });
 
-  // Initialize datetime fields with fecha_movimiento and 06:00 time
+  // Initialize datetime field with fecha_movimiento and 06:00 time
   useEffect(() => {
     if (data.fecha_movimiento && !data.hora_inicio_programada) {
       const defaultDateTime = `${data.fecha_movimiento}T06:00`;
-      updateData({ 
-        hora_inicio_programada: defaultDateTime,
-        hora_fin_programada: defaultDateTime 
-      });
+      updateData({ hora_inicio_programada: defaultDateTime });
     }
   }, [data.fecha_movimiento]);
 
@@ -119,31 +116,17 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
   // Tab content components
   const HorarioContent = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-primary" />
-            Fecha y Hora de Inicio
-          </Label>
-          <Input
-            type="datetime-local"
-            value={data.hora_inicio_programada}
-            onChange={(e) => updateData({ hora_inicio_programada: e.target.value })}
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-primary" />
-            Fecha y Hora de Fin
-          </Label>
-          <Input
-            type="datetime-local"
-            value={data.hora_fin_programada}
-            onChange={(e) => updateData({ hora_fin_programada: e.target.value })}
-            className="w-full"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-primary" />
+          Horario de servicio
+        </Label>
+        <Input
+          type="datetime-local"
+          value={data.hora_inicio_programada}
+          onChange={(e) => updateData({ hora_inicio_programada: e.target.value })}
+          className="w-full max-w-xs"
+        />
       </div>
       
       <div className="space-y-2">
