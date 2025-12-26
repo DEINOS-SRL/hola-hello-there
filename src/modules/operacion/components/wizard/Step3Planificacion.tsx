@@ -187,19 +187,59 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
       <div className="space-y-6">
         {/* Equipos Section */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="flex items-center gap-2 text-base font-medium">
+          {/* Label + Autocomplete en la misma fila */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <Label className="flex items-center gap-2 text-base font-medium whitespace-nowrap">
               <Truck className="h-4 w-4 text-primary" />
               Equipos
               {data.equipos_asignados_equ.length > 0 && (
                 <Badge variant="secondary">{data.equipos_asignados_equ.length}</Badge>
               )}
             </Label>
+
+            {/* Equipment autocomplete */}
+            <Popover open={equipoOpen} onOpenChange={setEquipoOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Search className="h-4 w-4" />
+                  Añadir equipo
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <Command>
+                  <CommandInput 
+                    placeholder="Buscar equipo..." 
+                    value={equipoSearch}
+                    onValueChange={setEquipoSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>No se encontraron equipos</CommandEmpty>
+                    <CommandGroup>
+                      {filteredEquipos.slice(0, 10).map((equipo: any) => (
+                        <CommandItem
+                          key={equipo.id}
+                          onSelect={() => {
+                            toggleEquipo(equipo.id);
+                            setEquipoSearch('');
+                          }}
+                        >
+                          <Truck className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <div className="flex-1">
+                            <p className="font-medium">{equipo.codigo}</p>
+                            <p className="text-xs text-muted-foreground">{equipo.nombre}</p>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Selected Equipment Cards */}
           {selectedEquipos.length > 0 && (
-            <div className="flex flex-wrap gap-3 mb-4">
+            <div className="flex flex-wrap gap-3">
               {selectedEquipos.map((equipo: any) => (
                 <Card 
                   key={equipo.id} 
@@ -224,62 +264,63 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
               ))}
             </div>
           )}
-
-          {/* Equipment autocomplete */}
-          <Popover open={equipoOpen} onOpenChange={setEquipoOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Search className="h-4 w-4" />
-                Buscar y añadir equipos...
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="start">
-              <Command>
-                <CommandInput 
-                  placeholder="Buscar equipo..." 
-                  value={equipoSearch}
-                  onValueChange={setEquipoSearch}
-                />
-                <CommandList>
-                  <CommandEmpty>No se encontraron equipos</CommandEmpty>
-                  <CommandGroup>
-                    {filteredEquipos.slice(0, 10).map((equipo: any) => (
-                      <CommandItem
-                        key={equipo.id}
-                        onSelect={() => {
-                          toggleEquipo(equipo.id);
-                          setEquipoSearch('');
-                        }}
-                      >
-                        <Truck className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="font-medium">{equipo.codigo}</p>
-                          <p className="text-xs text-muted-foreground">{equipo.nombre}</p>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
         </div>
 
         {/* Operarios Section */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="flex items-center gap-2 text-base font-medium">
+          {/* Label + Autocomplete en la misma fila */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <Label className="flex items-center gap-2 text-base font-medium whitespace-nowrap">
               <Users className="h-4 w-4 text-primary" />
               Operarios
               {data.empleados_asignados.length > 0 && (
                 <Badge variant="secondary">{data.empleados_asignados.length}</Badge>
               )}
             </Label>
+
+            {/* Employee autocomplete */}
+            <Popover open={empleadoOpen} onOpenChange={setEmpleadoOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Search className="h-4 w-4" />
+                  Añadir operario
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <Command>
+                  <CommandInput 
+                    placeholder="Buscar operario..." 
+                    value={empleadoSearch}
+                    onValueChange={setEmpleadoSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>No se encontraron operarios</CommandEmpty>
+                    <CommandGroup>
+                      {filteredEmpleados.slice(0, 10).map((empleado: any) => (
+                        <CommandItem
+                          key={empleado.id}
+                          onSelect={() => {
+                            toggleEmpleado(empleado.id);
+                            setEmpleadoSearch('');
+                          }}
+                        >
+                          <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <div className="flex-1">
+                            <p className="font-medium">{empleado.apellido}, {empleado.nombre}</p>
+                            <p className="text-xs text-muted-foreground">{empleado.cargo || empleado.legajo}</p>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Selected Employees Cards */}
           {selectedEmpleados.length > 0 && (
-            <div className="flex flex-wrap gap-3 mb-4">
+            <div className="flex flex-wrap gap-3">
               {selectedEmpleados.map((empleado: any) => {
                 const asignado = data.empleados_asignados.find(e => e.empleado_id === empleado.id);
                 return (
@@ -320,45 +361,6 @@ export function Step3Planificacion({ data, updateData, movimientoId }: Step3Prop
               })}
             </div>
           )}
-
-          {/* Employee autocomplete */}
-          <Popover open={empleadoOpen} onOpenChange={setEmpleadoOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Search className="h-4 w-4" />
-                Buscar y añadir operarios...
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="start">
-              <Command>
-                <CommandInput 
-                  placeholder="Buscar operario..." 
-                  value={empleadoSearch}
-                  onValueChange={setEmpleadoSearch}
-                />
-                <CommandList>
-                  <CommandEmpty>No se encontraron operarios</CommandEmpty>
-                  <CommandGroup>
-                    {filteredEmpleados.slice(0, 10).map((empleado: any) => (
-                      <CommandItem
-                        key={empleado.id}
-                        onSelect={() => {
-                          toggleEmpleado(empleado.id);
-                          setEmpleadoSearch('');
-                        }}
-                      >
-                        <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="font-medium">{empleado.apellido}, {empleado.nombre}</p>
-                          <p className="text-xs text-muted-foreground">{empleado.cargo || empleado.legajo}</p>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
         </div>
       </div>
     );
