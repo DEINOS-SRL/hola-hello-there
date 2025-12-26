@@ -1,5 +1,6 @@
+import { createClient } from '@supabase/supabase-js';
 import { movClient } from './movClient';
-import type { 
+import type {
   Movimiento, 
   MovimientoInsert, 
   MovimientoUpdate, 
@@ -13,8 +14,24 @@ import type {
   MovimientoOperario,
   MovimientoTarea,
   CalificacionOperario,
-  EstadoMovimiento
+  EstadoMovimiento,
+  MovimientoEmpleado,
+  MovimientoEquipoEqu
 } from '../types';
+
+// Clientes para schemas externos
+const supabaseUrl = 'https://ezchqajzxaeepwqqzmyr.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6Y2hxYWp6eGFlZXB3cXF6bXlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MTU4NTAsImV4cCI6MjA4MjE5MTg1MH0.1ArbKx0dJqrnizjGg96pfjV_vKiM8GlKI-r15KMBhLo';
+
+const empClient = createClient(supabaseUrl, supabaseKey, {
+  db: { schema: 'emp' },
+  auth: { storage: localStorage, persistSession: true, autoRefreshToken: true },
+});
+
+const equClient = createClient(supabaseUrl, supabaseKey, {
+  db: { schema: 'equ' },
+  auth: { storage: localStorage, persistSession: true, autoRefreshToken: true },
+});
 
 export const movimientosService = {
   // ============ MOVIMIENTOS ============
@@ -376,5 +393,130 @@ export const movimientosService = {
       
       if (error) throw error;
     }
+  },
+
+  // ============ EMPLEADOS (emp.empleados) ============
+  async getEmpleadosActivos(): Promise<any[]> {
+    const { data, error } = await empClient
+      .from('empleados')
+      .select('id, nombre, apellido, legajo, cargo, estado')
+      .eq('estado', 'activo')
+      .order('apellido');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getMovimientoEmpleados(movimientoId: string): Promise<MovimientoEmpleado[]> {
+    const { data, error } = await movClient
+      .from('movimientos_empleados')
+      .select('*')
+      .eq('movimiento_id', movimientoId);
+    
+    if (error) throw error;
+    
+    // Fetch empleados data separately
+    if (data && data.length > 0) {
+      const empleadoIds = data.map((d: any) => d.empleado_id);
+      const { data: empleados } = await empClient
+        .from('empleados')
+        .select('id, nombre, apellido, legajo, cargo')
+        .in('id', empleadoIds);
+      
+      return data.map((me: any) => ({
+        ...me,
+        empleado: empleados?.find((e: any) => e.id === me.empleado_id)
+      }));
+    }
+    
+    return data || [];
+  },
+
+  async assignEmpleados(movimientoId: string, empleados: { empleado_id: string; rol_asignado: string }[]): Promise<void> {
+    // Eliminar asignaciones existentes
+    await movClient
+      .from('movimientos_empleados')
+      .delete()
+      .eq('movimiento_id', movimientoId);
+    
+    // Insertar nuevas asignaciones
+    if (empleados.length > 0) {
+      const { error } = await movClient
+        .from('movimientos_empleados')
+        .insert(empleados.map(emp => ({ 
+          movimiento_id: movimientoId, 
+          empleado_id: emp.empleado_id,
+          rol_asignado: emp.rol_asignado
+        })));
+      
+      if (error) throw error;
+    }
+  },
+
+  // ============ EQUIPOS EQU (equ.equipos) ============
+  async getEquiposActivos(): Promise<any[]> {
+    const { data, error } = await equClient
+      .from('equipos')
+      .select('id, codigo, nombre, numero_interno, estado')
+      .eq('activo', true)
+      .eq('estado', 'activo')
+      .order('codigo');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getMovimientoEquiposEqu(movimientoId: string): Promise<MovimientoEquipoEqu[]> {
+    const { data, error } = await movClient
+      .from('movimientos_equipos_equ')
+      .select('*')
+      .eq('movimiento_id', movimientoId);
+    
+    if (error) throw error;
+    
+    // Fetch equipos data separately
+    if (data && data.length > 0) {
+      const equipoIds = data.map((d: any) => d.equipo_id);
+      const { data: equipos } = await equClient
+        .from('equipos')
+        .select('id, codigo, nombre, numero_interno')
+        .in('id', equipoIds);
+      
+      return data.map((me: any) => ({
+        ...me,
+        equipo: equipos?.find((e: any) => e.id === me.equipo_id)
+      }));
+    }
+    
+    return data || [];
+  },
+
+  async assignEquiposEqu(movimientoId: string, equipoIds: string[]): Promise<void> {
+    // Eliminar asignaciones existentes
+    await movClient
+      .from('movimientos_equipos_equ')
+      .delete()
+      .eq('movimiento_id', movimientoId);
+    
+    // Insertar nuevas asignaciones
+    if (equipoIds.length > 0) {
+      const { error } = await movClient
+        .from('movimientos_equipos_equ')
+        .insert(equipoIds.map(equipo_id => ({ 
+          movimiento_id: movimientoId, 
+          equipo_id 
+        })));
+      
+      if (error) throw error;
+    }
+  },
+
+  async updateMovimientoEquipoEqu(id: string, data: Partial<MovimientoEquipoEqu>): Promise<void> {
+    const { error } = await movClient
+      .from('movimientos_equipos_equ')
+      .update(data)
+      .eq('id', id);
+    
+    if (error) throw error;
   }
 };

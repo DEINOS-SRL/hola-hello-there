@@ -56,6 +56,8 @@ const initialData: WizardMovimientoData = {
   hora_inicio_programada: '',
   hora_fin_programada: '',
   supervisor_id: '',
+  empleados_asignados: [],
+  equipos_asignados_equ: [],
   equipos_asignados: [],
   operarios_asignados: [],
   tareas: [],
@@ -92,6 +94,8 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
         hora_inicio_programada: movimiento.hora_inicio_programada || '',
         hora_fin_programada: movimiento.hora_fin_programada || '',
         supervisor_id: movimiento.supervisor_id || '',
+        empleados_asignados: [],
+        equipos_asignados_equ: [],
         equipos_asignados: [],
         operarios_asignados: [],
         tareas: [],
@@ -159,6 +163,10 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
           supervisor_id: data.supervisor_id || null,
           estado: 'planificado',
         });
+        // Nuevas asignaciones con módulos externos
+        await movimientosService.assignEmpleados(movimientoId, data.empleados_asignados);
+        await movimientosService.assignEquiposEqu(movimientoId, data.equipos_asignados_equ);
+        // Legacy (mantener compatibilidad)
         await movimientosService.assignEquipos(movimientoId, data.equipos_asignados);
         await movimientosService.assignOperarios(movimientoId, data.operarios_asignados);
       } else if (currentStep === 4 && movimientoId) {
