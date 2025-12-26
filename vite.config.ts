@@ -6,20 +6,34 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Generar versión automática basada en fecha de compilación
+  // Generar versión automática basada en fecha del último commit
   // Formato: YYYY.MM.DD.HHmm (ej: 2024.12.26.1430)
-  const buildDate = new Date();
-  const year = buildDate.getFullYear();
-  const month = String(buildDate.getMonth() + 1).padStart(2, '0');
-  const day = String(buildDate.getDate()).padStart(2, '0');
-  const hours = String(buildDate.getHours()).padStart(2, '0');
-  const minutes = String(buildDate.getMinutes()).padStart(2, '0');
+  // Intenta obtener la fecha del último commit, si no está disponible usa la fecha actual
+  let versionDate: Date;
+  try {
+    const { execSync } = require('child_process');
+    const commitDate = execSync('git log -1 --format=%ci', { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (commitDate) {
+      versionDate = new Date(commitDate);
+    } else {
+      versionDate = new Date();
+    }
+  } catch {
+    // Si git no está disponible o hay error, usar fecha actual
+    versionDate = new Date();
+  }
+  
+  const year = versionDate.getFullYear();
+  const month = String(versionDate.getMonth() + 1).padStart(2, '0');
+  const day = String(versionDate.getDate()).padStart(2, '0');
+  const hours = String(versionDate.getHours()).padStart(2, '0');
+  const minutes = String(versionDate.getMinutes()).padStart(2, '0');
   const autoVersion = `${year}.${month}.${day}.${hours}${minutes}`;
   
   return {
     define: {
       __APP_VERSION__: JSON.stringify(autoVersion),
-      __BUILD_TIME__: JSON.stringify(buildDate.toISOString()),
+      __BUILD_TIME__: JSON.stringify(versionDate.toISOString()),
     },
   server: {
     host: "::",
