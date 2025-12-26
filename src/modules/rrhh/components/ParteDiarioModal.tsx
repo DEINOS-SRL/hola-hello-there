@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { useCreateParteDiario, useUploadNovedadFoto } from '../hooks/usePartesDiarios';
 import { 
   ESTADO_ANIMO_LABELS, 
@@ -182,15 +182,14 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 scrollbar-hide">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b sticky top-0 bg-background z-10">
           <DialogTitle>Parte Diario de Tareas</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-            <ScrollArea className="flex-1 px-6">
-              <div className="space-y-6 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+            <div className="px-6 py-4 space-y-6">
                 {/* Estado de ánimo */}
                 <FormField
                   control={form.control}
@@ -431,10 +430,9 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                   )}
                 />
               </div>
-            </ScrollArea>
 
-            {/* Footer fijo */}
-            <div className="flex justify-end gap-2 p-4 border-t bg-background">
+            {/* Footer sticky */}
+            <div className="flex justify-end gap-2 p-4 border-t bg-background sticky bottom-0">
               <Button
                 type="button"
                 variant="outline"
