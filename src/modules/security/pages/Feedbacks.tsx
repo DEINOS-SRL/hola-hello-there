@@ -31,6 +31,7 @@ import {
   Eye as EyeIcon,
   EyeOff,
   History,
+  Timer,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -143,6 +144,7 @@ export default function Feedbacks() {
   const [nuevoEstado, setNuevoEstado] = useState<Feedback['estado']>('pendiente');
   const [nuevoComentario, setNuevoComentario] = useState('');
   const [esComentarioInterno, setEsComentarioInterno] = useState(false);
+  const [mostrarSoloInternos, setMostrarSoloInternos] = useState(false);
   // Hook de comentarios - se carga solo cuando hay un feedback seleccionado
   const { 
     comentarios, 
@@ -197,13 +199,45 @@ export default function Feedbacks() {
     return matchesSearch && matchesTipo && matchesEstado && matchesModulo && matchesSinRespuesta;
   });
 
-  const stats = {
-    total: feedbacks.length,
-    pendientes: feedbacks.filter(f => f.estado === 'pendiente').length,
-    enRevision: feedbacks.filter(f => f.estado === 'en_revision').length,
-    resueltos: feedbacks.filter(f => f.estado === 'resuelto').length,
-    sinRespuesta: feedbacks.filter(f => !f.respuesta).length,
-  };
+  const stats = useMemo(() => {
+    const resueltos = feedbacks.filter(f => f.estado === 'resuelto' || f.estado === 'cerrado');
+    
+    // Calcular tiempo promedio de resolución
+    const tiemposResolucion = resueltos
+      .filter(f => f.respondido_at)
+      .map(f => {
+        const createdAt = new Date(f.created_at).getTime();
+        const resolvedAt = new Date(f.respondido_at!).getTime();
+        return resolvedAt - createdAt;
+      });
+    
+    const tiempoPromedioMs = tiemposResolucion.length > 0 
+      ? tiemposResolucion.reduce((a, b) => a + b, 0) / tiemposResolucion.length 
+      : 0;
+    
+    // Convertir a horas/días
+    const tiempoPromedioHoras = tiempoPromedioMs / (1000 * 60 * 60);
+    const tiempoPromedioDias = tiempoPromedioHoras / 24;
+    
+    let tiempoPromedioLabel = 'N/A';
+    if (tiempoPromedioMs > 0) {
+      if (tiempoPromedioDias >= 1) {
+        tiempoPromedioLabel = `${tiempoPromedioDias.toFixed(1)} días`;
+      } else {
+        tiempoPromedioLabel = `${tiempoPromedioHoras.toFixed(1)} horas`;
+      }
+    }
+    
+    return {
+      total: feedbacks.length,
+      pendientes: feedbacks.filter(f => f.estado === 'pendiente').length,
+      enRevision: feedbacks.filter(f => f.estado === 'en_revision').length,
+      resueltos: resueltos.length,
+      sinRespuesta: feedbacks.filter(f => !f.respuesta).length,
+      tiempoPromedioLabel,
+      tiempoPromedioHoras,
+    };
+  }, [feedbacks]);
 
   // Datos para el gráfico de torta por tipo
   const TIPO_COLORS: Record<string, string> = {
@@ -512,7 +546,7 @@ export default function Feedbacks() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -554,6 +588,17 @@ export default function Feedbacks() {
                 <p className="text-2xl font-bold text-green-500">{stats.resueltos}</p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-green-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Tiempo promedio</p>
+                <p className="text-2xl font-bold text-primary">{stats.tiempoPromedioLabel}</p>
+              </div>
+              <Timer className="h-8 w-8 text-primary/50" />
             </div>
           </CardContent>
         </Card>
@@ -978,10 +1023,26 @@ export default function Feedbacks() {
 
               {/* Sección de Comentarios/Seguimiento */}
               <div className="space-y-3 border rounded-lg p-3">
-                <Label className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Comentarios de seguimiento ({comentarios.length})
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Comentarios de seguimiento ({comentarios.length})
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="filtro-internos"
+                      checked={mostrarSoloInternos}
+                      onCheckedChange={(checked) => setMostrarSoloInternos(checked === true)}
+                    />
+                    <label 
+                      htmlFor="filtro-internos" 
+                      className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer"
+                    >
+                      <EyeOff className="h-3 w-3" />
+                      Solo internos
+                    </label>
+                  </div>
+                </div>
                 
                 {/* Lista de comentarios */}
                 <ScrollArea className="max-h-40">
@@ -989,13 +1050,15 @@ export default function Feedbacks() {
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="h-4 w-4 animate-spin" />
                     </div>
-                  ) : comentarios.length === 0 ? (
+                  ) : comentarios.filter(c => !mostrarSoloInternos || c.es_interno).length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-2">
-                      No hay comentarios aún
+                      {mostrarSoloInternos ? 'No hay comentarios internos' : 'No hay comentarios aún'}
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {comentarios.map((comentario) => (
+                      {comentarios
+                        .filter(c => !mostrarSoloInternos || c.es_interno)
+                        .map((comentario) => (
                         <div 
                           key={comentario.id} 
                           className={`p-2 rounded text-sm ${comentario.es_interno ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-muted/50'}`}
