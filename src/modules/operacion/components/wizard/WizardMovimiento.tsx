@@ -294,7 +294,7 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
           "overflow-hidden flex flex-col",
           isMobile 
             ? "w-full h-full max-w-full max-h-full rounded-none" 
-            : "w-[95vw] max-w-[95vw] h-[90vh] max-h-[90vh]"
+            : "w-[80vw] max-w-[80vw] h-[85vh] max-h-[85vh]"
         )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
