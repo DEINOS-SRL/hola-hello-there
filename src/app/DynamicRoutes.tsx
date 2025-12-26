@@ -32,6 +32,7 @@ const Feedbacks = lazy(() => import('@/modules/security/pages/Feedbacks'));
 const RRHHIndex = lazy(() => import('@/modules/rrhh/pages/Index'));
 const RRHHEmpleados = lazy(() => import('@/modules/rrhh/pages/Empleados'));
 const RRHHAsistencia = lazy(() => import('@/modules/rrhh/pages/Asistencia'));
+const RRHHPartesDiarios = lazy(() => import('@/modules/rrhh/pages/PartesDiarios'));
 
 const ConocimientoIndex = lazy(() => import('@/modules/conocimiento/pages/Index'));
 const ConocimientoSGI = lazy(() => import('@/modules/conocimiento/pages/SGI'));
@@ -86,6 +87,7 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   '/rrhh': RRHHIndex,
   '/rrhh/empleados': RRHHEmpleados,
   '/rrhh/asistencia': RRHHAsistencia,
+  '/rrhh/partes-diarios': RRHHPartesDiarios,
   // Conocimiento
   '/conocimiento': ConocimientoIndex,
   '/conocimiento/sgi': ConocimientoSGI,
