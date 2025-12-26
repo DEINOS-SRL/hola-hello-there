@@ -26,6 +26,8 @@ import {
   Calendar,
   AlertTriangle,
   Info,
+  Copy,
+  Users,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -65,8 +67,10 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ImageLightbox, useImageLightbox } from '@/components/ui/image-lightbox';
 import { useFeedbacks } from '../hooks/useFeedbacks';
+import { useFeedbackComentarios } from '../hooks/useFeedbackComentarios';
 import { useAuth } from '@/contexts/AuthContext';
 import { Feedback } from '../services/feedbacksService';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { moduleRegistry } from '@/app/moduleRegistry';
@@ -132,6 +136,40 @@ export default function Feedbacks() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [respuesta, setRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState<Feedback['estado']>('pendiente');
+  const [nuevoComentario, setNuevoComentario] = useState('');
+
+  // Hook de comentarios - se carga solo cuando hay un feedback seleccionado
+  const { 
+    comentarios, 
+    isLoading: isLoadingComentarios, 
+    createComentario, 
+    isCreating: isCreatingComentario 
+  } = useFeedbackComentarios(selectedFeedback?.id || null);
+
+  // Función para copiar enlace al portapapeles
+  const copyToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Enlace copiado al portapapeles');
+    } catch (err) {
+      toast.error('No se pudo copiar el enlace');
+    }
+  };
+
+  // Función para agregar comentario
+  const handleAgregarComentario = () => {
+    if (!selectedFeedback || !user || !nuevoComentario.trim()) return;
+    
+    createComentario({
+      feedback_id: selectedFeedback.id,
+      usuario_id: user.id,
+      usuario_email: user.email,
+      usuario_nombre: (user as any).user_metadata?.nombre || user.email,
+      mensaje: nuevoComentario.trim(),
+      es_interno: false,
+    });
+    setNuevoComentario('');
+  };
 
   const filteredFeedbacks = feedbacks.filter((fb) => {
     const matchesSearch = 
@@ -851,25 +889,34 @@ export default function Feedbacks() {
                       }
                       
                       return (
-                        <a
-                          key={idx}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80 transition-colors"
-                          onClick={(e) => {
-                            // Mostrar toast de ayuda al hacer clic
-                            setTimeout(() => {
-                              toast.info(
-                                '¿No se abre el archivo? Puede ser bloqueado por una extensión del navegador (ad blocker, antivirus). Intenta desactivarlas o usa modo incógnito.',
-                                { duration: 8000 }
-                              );
-                            }, 2000);
-                          }}
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          <span className="truncate max-w-[100px]">{fileName}</span>
-                        </a>
+                        <div key={idx} className="flex items-center gap-1">
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80 transition-colors"
+                            onClick={(e) => {
+                              // Mostrar toast de ayuda al hacer clic
+                              setTimeout(() => {
+                                toast.info(
+                                  '¿No se abre el archivo? Puede ser bloqueado por una extensión del navegador (ad blocker, antivirus). Intenta desactivarlas o usa modo incógnito.',
+                                  { duration: 8000 }
+                                );
+                              }, 2000);
+                            }}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            <span className="truncate max-w-[100px]">{fileName}</span>
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(url)}
+                            className="p-1 text-xs bg-muted rounded hover:bg-muted/80 transition-colors"
+                            title="Copiar enlace"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -892,6 +939,73 @@ export default function Feedbacks() {
                   </div>
                 </div>
               )}
+
+              {/* Sección de Comentarios/Seguimiento */}
+              <div className="space-y-3 border rounded-lg p-3">
+                <Label className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Comentarios de seguimiento ({comentarios.length})
+                </Label>
+                
+                {/* Lista de comentarios */}
+                <ScrollArea className="max-h-40">
+                  {isLoadingComentarios ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : comentarios.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                      No hay comentarios aún
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {comentarios.map((comentario) => (
+                        <div key={comentario.id} className="p-2 bg-muted/50 rounded text-sm">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-xs">
+                              {comentario.usuario_nombre || comentario.usuario_email || 'Usuario'}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(comentario.created_at), { 
+                                addSuffix: true, 
+                                locale: es 
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-xs">{comentario.mensaje}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+
+                {/* Agregar nuevo comentario */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Agregar comentario..."
+                    value={nuevoComentario}
+                    onChange={(e) => setNuevoComentario(e.target.value)}
+                    className="text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleAgregarComentario();
+                      }
+                    }}
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={handleAgregarComentario}
+                    disabled={!nuevoComentario.trim() || isCreatingComentario}
+                  >
+                    {isCreatingComentario ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
 
               {/* Estado */}
               <div className="space-y-2">
