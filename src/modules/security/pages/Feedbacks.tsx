@@ -38,6 +38,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, L
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { playPopSound, playDingSound } from '@/lib/sounds';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
@@ -82,6 +83,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { moduleRegistry } from '@/app/moduleRegistry';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 // Colores para iniciales según rol
 const getRolColor = (rol?: string): string => {
@@ -537,8 +540,73 @@ export default function Feedbacks() {
         usuario_email: user.email,
         usuario_nombre: (user as any).user_metadata?.nombre || user.email,
       });
+      // Reproducir sonido según el nuevo estado
+      if (estado === 'resuelto') {
+        playDingSound();
+      } else {
+        playPopSound();
+      }
     }
     updateFeedback({ id, input: { estado } });
+  };
+
+  // Función para exportar historial individual a PDF
+  const exportarHistorialPDF = () => {
+    if (!selectedFeedback || historial.length === 0) {
+      toast.error('No hay historial para exportar');
+      return;
+    }
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 15;
+    let yPosition = margin;
+
+    // Título
+    pdf.setFontSize(16);
+    pdf.setTextColor(45, 139, 122);
+    pdf.text(`Historial de Feedback #${selectedFeedback.id.slice(0, 8)}`, margin, yPosition);
+    yPosition += 10;
+
+    // Info del feedback
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`Tipo: ${tipoLabels[selectedFeedback.tipo]}`, margin, yPosition);
+    yPosition += 5;
+    pdf.text(`Usuario: ${selectedFeedback.usuario_nombre || selectedFeedback.usuario_email}`, margin, yPosition);
+    yPosition += 5;
+    pdf.text(`Creado: ${format(new Date(selectedFeedback.created_at), 'dd/MM/yyyy HH:mm')}`, margin, yPosition);
+    yPosition += 10;
+
+    // Historial
+    pdf.setFontSize(12);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('Historial de cambios de estado:', margin, yPosition);
+    yPosition += 8;
+
+    pdf.setFontSize(9);
+    historial.forEach((item, idx) => {
+      if (yPosition > 270) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
+      const fecha = format(new Date(item.created_at), 'dd/MM/yyyy HH:mm');
+      const estadoAnterior = estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo';
+      const estadoNuevo = estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo;
+      
+      pdf.setTextColor(45, 139, 122);
+      pdf.text(`${idx + 1}.`, margin, yPosition);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`${fecha} - ${item.usuario_nombre || 'Sistema'}`, margin + 8, yPosition);
+      yPosition += 5;
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`   ${estadoAnterior} → ${estadoNuevo}`, margin + 8, yPosition);
+      yPosition += 7;
+    });
+
+    pdf.save(`historial-feedback-${selectedFeedback.id.slice(0, 8)}.pdf`);
+    toast.success('Historial exportado a PDF');
   };
 
   if (isLoading) {
@@ -1157,276 +1225,318 @@ export default function Feedbacks() {
                 </div>
               )}
 
-              {/* Sección de Comentarios/Seguimiento */}
-              <div className="space-y-3 border rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-2">
+              {/* Sección de Comentarios/Seguimiento - Colapsable */}
+              <Collapsible defaultOpen className="border rounded-lg">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors rounded-t-lg">
+                  <Label className="flex items-center gap-2 cursor-pointer">
                     <Users className="h-4 w-4" />
                     Comentarios de seguimiento ({comentarios.length})
                   </Label>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="filtro-internos"
-                      checked={mostrarSoloInternos}
-                      onCheckedChange={(checked) => setMostrarSoloInternos(checked === true)}
-                    />
-                    <label 
-                      htmlFor="filtro-internos" 
-                      className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer"
-                    >
-                      <EyeOff className="h-3 w-3" />
-                      Solo internos
-                    </label>
-                  </div>
-                </div>
-                
-                {/* Lista de comentarios */}
-                <ScrollArea className="h-52 rounded-md border bg-muted/20">
-                  {isLoadingComentarios ? (
-                    <div className="flex items-center justify-center py-4">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="animate-collapsible-down">
+                  <div className="p-3 pt-0 space-y-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <Checkbox
+                        id="filtro-internos"
+                        checked={mostrarSoloInternos}
+                        onCheckedChange={(checked) => setMostrarSoloInternos(checked === true)}
+                      />
+                      <label 
+                        htmlFor="filtro-internos" 
+                        className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer"
+                      >
+                        <EyeOff className="h-3 w-3" />
+                        Solo internos
+                      </label>
                     </div>
-                  ) : comentarios.filter(c => !mostrarSoloInternos || c.es_interno).length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-2">
-                      {mostrarSoloInternos ? 'No hay comentarios internos' : 'No hay comentarios aún'}
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {comentarios
-                        .filter(c => !mostrarSoloInternos || c.es_interno)
-                        .map((comentario) => (
-                        <div 
-                          key={comentario.id} 
-                          className={`p-2 rounded text-sm ${comentario.es_interno ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-muted/50'}`}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-xs">
-                                {comentario.usuario_nombre || comentario.usuario_email || 'Usuario'}
-                              </span>
-                              {comentario.es_interno && (
-                                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 gap-1 text-amber-600 border-amber-500/30">
-                                  <EyeOff className="h-2.5 w-2.5" />
-                                  Interno
-                                </Badge>
-                              )}
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(comentario.created_at), { 
-                                addSuffix: true, 
-                                locale: es 
-                              })}
-                            </span>
-                          </div>
-                          <p className="text-xs">{comentario.mensaje}</p>
+                    
+                    {/* Lista de comentarios */}
+                    <ScrollArea className="h-40 rounded-md border bg-muted/20 p-2">
+                      {isLoadingComentarios ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-
-                {/* Agregar nuevo comentario */}
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Agregar comentario..."
-                      value={nuevoComentario}
-                      onChange={(e) => setNuevoComentario(e.target.value)}
-                      className="text-sm"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleAgregarComentario();
-                        }
-                      }}
-                    />
-                    <Button 
-                      size="sm" 
-                      onClick={handleAgregarComentario}
-                      disabled={!nuevoComentario.trim() || isCreatingComentario}
-                    >
-                      {isCreatingComentario ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : comentarios.filter(c => !mostrarSoloInternos || c.es_interno).length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">
+                          {mostrarSoloInternos ? 'No hay comentarios internos' : 'No hay comentarios aún'}
+                        </p>
                       ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="comentario-interno"
-                      checked={esComentarioInterno}
-                      onCheckedChange={(checked) => setEsComentarioInterno(checked === true)}
-                    />
-                    <label 
-                      htmlFor="comentario-interno" 
-                      className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer"
-                    >
-                      <EyeOff className="h-3 w-3" />
-                      Marcar como interno (solo visible para administradores)
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Historial de cambios de estado */}
-              <div className="space-y-3 border rounded-lg p-3">
-                <Label className="flex items-center gap-2">
-                  <History className="h-4 w-4" />
-                  Historial de estados
-                </Label>
-                
-                <ScrollArea className="h-48 rounded-md border bg-muted/20 p-3">
-                  {isLoadingHistorial ? (
-                    <div className="flex items-center justify-center py-4">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  ) : historial.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-2">
-                      Sin cambios de estado registrados
-                    </p>
-                  ) : (
-                    <div className="relative">
-                      {/* Línea vertical del timeline */}
-                      <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-border" />
-                      
-                      <div className="space-y-4">
-                        {historial.map((item, idx) => {
-                          // Iconos y colores por estado
-                          const getEstadoIcon = (estado: string) => {
-                            switch (estado) {
-                              case 'pendiente': return Clock;
-                              case 'en_revision': return AlertCircle;
-                              case 'resuelto': return CheckCircle2;
-                              case 'cerrado': return XCircle;
-                              default: return Clock;
-                            }
-                          };
-                          const getEstadoColor = (estado: string) => {
-                            switch (estado) {
-                              case 'pendiente': return 'bg-amber-500 text-white';
-                              case 'en_revision': return 'bg-blue-500 text-white';
-                              case 'resuelto': return 'bg-green-500 text-white';
-                              case 'cerrado': return 'bg-muted-foreground text-white';
-                              default: return 'bg-muted text-muted-foreground';
-                            }
-                          };
-                          
-                          const IconNuevo = getEstadoIcon(item.estado_nuevo);
-                          const colorNuevo = getEstadoColor(item.estado_nuevo);
-                          
-                          return (
+                        <div className="space-y-2">
+                          {comentarios
+                            .filter(c => !mostrarSoloInternos || c.es_interno)
+                            .map((comentario) => (
                             <div 
-                              key={item.id} 
-                              className="relative pl-8 opacity-0 animate-timeline-enter" 
-                              style={{ 
-                                animationDelay: `${idx * 100}ms`,
-                                animationFillMode: 'forwards'
-                              }}
+                              key={comentario.id} 
+                              className={`p-2 rounded text-sm ${comentario.es_interno ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-muted/50'}`}
                             >
-                              {/* Ícono del estado nuevo con animación de escala */}
-                              <div 
-                                className={`absolute left-0 top-0 w-6 h-6 rounded-full ${colorNuevo} flex items-center justify-center shadow-md transition-transform hover:scale-110`}
-                              >
-                                <IconNuevo className="h-3 w-3" />
-                              </div>
-                              
-                              {/* Contenido del evento */}
-                              <div className="bg-background/60 rounded-md border p-2 space-y-1">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-xs font-medium">{item.usuario_nombre || 'Sistema'}</span>
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-xs">
+                                    {comentario.usuario_nombre || comentario.usuario_email || 'Usuario'}
                                   </span>
+                                  {comentario.es_interno && (
+                                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 gap-1 text-amber-600 border-amber-500/30">
+                                      <EyeOff className="h-2.5 w-2.5" />
+                                      Interno
+                                    </Badge>
+                                  )}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1">
-                                    {(() => {
-                                      const IconAnterior = getEstadoIcon(item.estado_anterior || 'pendiente');
-                                      return <IconAnterior className="h-2.5 w-2.5" />;
-                                    })()}
-                                    {estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo'}
-                                  </Badge>
-                                  <span className="text-muted-foreground">→</span>
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-1">
-                                    <IconNuevo className="h-2.5 w-2.5" />
-                                    {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
-                                  </Badge>
-                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDistanceToNow(new Date(comentario.created_at), { 
+                                    addSuffix: true, 
+                                    locale: es 
+                                  })}
+                                </span>
                               </div>
+                              <p className="text-xs">{comentario.mensaje}</p>
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+
+                    {/* Agregar nuevo comentario */}
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Agregar comentario..."
+                          value={nuevoComentario}
+                          onChange={(e) => setNuevoComentario(e.target.value)}
+                          className="text-sm"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleAgregarComentario();
+                            }
+                          }}
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={handleAgregarComentario}
+                          disabled={!nuevoComentario.trim() || isCreatingComentario}
+                        >
+                          {isCreatingComentario ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="comentario-interno"
+                          checked={esComentarioInterno}
+                          onCheckedChange={(checked) => setEsComentarioInterno(checked === true)}
+                        />
+                        <label 
+                          htmlFor="comentario-interno" 
+                          className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer"
+                        >
+                          <EyeOff className="h-3 w-3" />
+                          Marcar como interno
+                        </label>
                       </div>
                     </div>
-                  )}
-                </ScrollArea>
-              </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
-              {/* Asignar a usuario */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Asignar a
-                </Label>
-                <Select 
-                  value={selectedFeedback.asignado_a || 'sin-asignar'} 
-                  onValueChange={(v) => {
-                    if (!user) return;
-                    asignarFeedback({
-                      feedbackId: selectedFeedback.id,
-                      asignadoA: v === 'sin-asignar' ? null : v,
-                      asignadoPor: user.id,
-                      empresaId: selectedFeedback.empresa_id || undefined,
-                      feedbackTipo: tipoLabels[selectedFeedback.tipo],
-                    });
-                  }}
-                  disabled={isAsignando}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar usuario..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sin-asignar">Sin asignar</SelectItem>
-                    {usuariosAsignables.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>
-                        {u.nombre} {u.apellido} ({u.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedFeedback.asignado_a && (
-                  <p className="text-xs text-muted-foreground">
-                    Asignado {selectedFeedback.asignado_at && formatDistanceToNow(new Date(selectedFeedback.asignado_at), { addSuffix: true, locale: es })}
-                  </p>
-                )}
-              </div>
+              {/* Historial de cambios de estado - Colapsable */}
+              <Collapsible className="border rounded-lg">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors rounded-t-lg">
+                  <Label className="flex items-center gap-2 cursor-pointer">
+                    <History className="h-4 w-4" />
+                    Historial de estados ({historial.length})
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    {historial.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          exportarHistorialPDF();
+                        }}
+                      >
+                        <FileText className="h-3 w-3 mr-1" />
+                        PDF
+                      </Button>
+                    )}
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="animate-collapsible-down">
+                  <div className="p-3 pt-0">
+                    <ScrollArea className="h-40 rounded-md border bg-muted/20 p-2">
+                      {isLoadingHistorial ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        </div>
+                      ) : historial.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">
+                          Sin cambios de estado registrados
+                        </p>
+                      ) : (
+                        <div className="relative">
+                          {/* Línea vertical del timeline */}
+                          <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-border" />
+                          
+                          <div className="space-y-3">
+                            {historial.map((item, idx) => {
+                              // Iconos y colores por estado
+                              const getEstadoIcon = (estado: string) => {
+                                switch (estado) {
+                                  case 'pendiente': return Clock;
+                                  case 'en_revision': return AlertCircle;
+                                  case 'resuelto': return CheckCircle2;
+                                  case 'cerrado': return XCircle;
+                                  default: return Clock;
+                                }
+                              };
+                              const getEstadoColor = (estado: string) => {
+                                switch (estado) {
+                                  case 'pendiente': return 'bg-amber-500 text-white';
+                                  case 'en_revision': return 'bg-blue-500 text-white';
+                                  case 'resuelto': return 'bg-green-500 text-white';
+                                  case 'cerrado': return 'bg-muted-foreground text-white';
+                                  default: return 'bg-muted text-muted-foreground';
+                                }
+                              };
+                              
+                              const IconNuevo = getEstadoIcon(item.estado_nuevo);
+                              const colorNuevo = getEstadoColor(item.estado_nuevo);
+                              
+                              return (
+                                <div 
+                                  key={item.id} 
+                                  className="relative pl-8 opacity-0 animate-timeline-enter" 
+                                  style={{ 
+                                    animationDelay: `${idx * 100}ms`,
+                                    animationFillMode: 'forwards'
+                                  }}
+                                >
+                                  {/* Ícono del estado nuevo con animación de escala */}
+                                  <div 
+                                    className={`absolute left-0 top-0 w-5 h-5 rounded-full ${colorNuevo} flex items-center justify-center shadow-sm transition-transform hover:scale-110`}
+                                  >
+                                    <IconNuevo className="h-2.5 w-2.5" />
+                                  </div>
+                                  
+                                  {/* Contenido del evento */}
+                                  <div className="bg-background/60 rounded-md border p-1.5 space-y-0.5">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="text-[10px] font-medium">{item.usuario_nombre || 'Sistema'}</span>
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                                      <Badge variant="outline" className="text-[9px] px-1 py-0 gap-0.5">
+                                        {(() => {
+                                          const IconAnterior = getEstadoIcon(item.estado_anterior || 'pendiente');
+                                          return <IconAnterior className="h-2 w-2" />;
+                                        })()}
+                                        {estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo'}
+                                      </Badge>
+                                      <span className="text-muted-foreground">→</span>
+                                      <Badge variant="secondary" className="text-[9px] px-1 py-0 gap-0.5">
+                                        <IconNuevo className="h-2 w-2" />
+                                        {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
-              {/* Estado */}
-              <div className="space-y-2">
-                <Label>Estado</Label>
-                <Select value={nuevoEstado} onValueChange={(v) => setNuevoEstado(v as Feedback['estado'])}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(estadoLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Acciones - Colapsable */}
+              <Collapsible defaultOpen className="border rounded-lg">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors rounded-t-lg">
+                  <Label className="flex items-center gap-2 cursor-pointer">
+                    <Send className="h-4 w-4" />
+                    Gestión y respuesta
+                  </Label>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="animate-collapsible-down">
+                  <div className="p-3 pt-0 space-y-3">
+                    {/* Asignar a usuario */}
+                    <div className="space-y-1.5">
+                      <Label className="flex items-center gap-2 text-xs">
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Asignar a
+                      </Label>
+                      <Select 
+                        value={selectedFeedback.asignado_a || 'sin-asignar'} 
+                        onValueChange={(v) => {
+                          if (!user) return;
+                          asignarFeedback({
+                            feedbackId: selectedFeedback.id,
+                            asignadoA: v === 'sin-asignar' ? null : v,
+                            asignadoPor: user.id,
+                            empresaId: selectedFeedback.empresa_id || undefined,
+                            feedbackTipo: tipoLabels[selectedFeedback.tipo],
+                          });
+                        }}
+                        disabled={isAsignando}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Seleccionar usuario..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sin-asignar">Sin asignar</SelectItem>
+                          {usuariosAsignables.map((u) => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.nombre} {u.apellido}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedFeedback.asignado_a && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Asignado {selectedFeedback.asignado_at && formatDistanceToNow(new Date(selectedFeedback.asignado_at), { addSuffix: true, locale: es })}
+                        </p>
+                      )}
+                    </div>
 
-              {/* Nueva respuesta */}
-              <div className="space-y-2">
-                <Label>Respuesta (opcional)</Label>
-                <Textarea
-                  placeholder="Escribe una respuesta para el usuario..."
-                  value={respuesta}
-                  onChange={(e) => setRespuesta(e.target.value)}
-                  rows={3}
-                />
-              </div>
+                    {/* Estado */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Estado</Label>
+                      <Select value={nuevoEstado} onValueChange={(v) => setNuevoEstado(v as Feedback['estado'])}>
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(estadoLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Nueva respuesta */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Respuesta (opcional)</Label>
+                      <Textarea
+                        placeholder="Escribe una respuesta para el usuario..."
+                        value={respuesta}
+                        onChange={(e) => setRespuesta(e.target.value)}
+                        rows={2}
+                        className="text-sm resize-none"
+                      />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </ScrollArea>
           )}
