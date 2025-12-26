@@ -134,6 +134,8 @@ export function AppSidebar() {
   });
   const [isDragging, setIsDragging] = useState(false);
   const [dragWidth, setDragWidth] = useState<number | null>(null);
+  const [isHoverExpanded, setIsHoverExpanded] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { user, empresa, isAdmin } = useAuth();
   const { preservarScroll } = usePreferenciasGlobal();
   const { hasAnyPermission } = usePermissions();
@@ -159,7 +161,38 @@ export function AppSidebar() {
   }, [location.pathname]);
 
   // Estado efectivo de colapsado (en mobile siempre expandido)
-  const isCollapsed = !isMobile && collapsed;
+  // Considera hover-expand: si está colapsado pero hover-expanded, muestra como expandido
+  const isCollapsed = !isMobile && collapsed && !isHoverExpanded;
+
+  // Handlers para hover-expand temporal
+  const handleMouseEnter = useCallback(() => {
+    if (!isMobile && collapsed && !pinned) {
+      // Delay antes de expandir para evitar expansiones accidentales
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsHoverExpanded(true);
+      }, 200);
+    }
+  }, [isMobile, collapsed, pinned]);
+
+  const handleMouseLeave = useCallback(() => {
+    // Cancelar timeout si existe
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    if (isHoverExpanded) {
+      setIsHoverExpanded(false);
+    }
+  }, [isHoverExpanded]);
+
+  // Limpiar timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Búsqueda con debounce y persistencia en sessionStorage
   const [moduleSearchInput, setModuleSearchInput] = useState(() => {
@@ -804,10 +837,10 @@ export function AppSidebar() {
     );
   };
 
-  // Calculate actual width during drag
+  // Calculate actual width during drag or hover-expand
   const sidebarWidth = isDragging && dragWidth !== null 
     ? dragWidth 
-    : (collapsed ? SIDEBAR_MIN_WIDTH : savedWidth);
+    : (collapsed && !isHoverExpanded ? SIDEBAR_MIN_WIDTH : savedWidth);
 
   // En mobile, el sidebar siempre usa ancho fijo y es absoluto
   const mobileWidth = 280;
@@ -819,12 +852,15 @@ export function AppSidebar() {
 
   return (
     <aside 
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={cn(
         "bg-sidebar flex flex-col h-screen",
         // Mobile: posición fija con animación desde la izquierda
         isMobile && "fixed left-0 top-0 z-50 animate-slide-in-from-left shadow-2xl",
-        // Desktop: sticky normal
-        !isMobile && "sticky top-0 relative",
+        // Desktop: sticky normal, hover-expand usa posición absoluta para no empujar contenido
+        !isMobile && !isHoverExpanded && "sticky top-0 relative",
+        !isMobile && isHoverExpanded && "fixed left-0 top-0 z-40 shadow-xl",
         (!isDragging || isResetting) && !isMobile && "transition-[width] duration-300 ease-in-out"
       )}
       style={{ width: isMobile ? mobileWidth : sidebarWidth }}
