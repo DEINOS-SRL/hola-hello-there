@@ -28,6 +28,9 @@ import {
   Info,
   Copy,
   Users,
+  Eye as EyeIcon,
+  EyeOff,
+  History,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -68,9 +71,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ImageLightbox, useImageLightbox } from '@/components/ui/image-lightbox';
 import { useFeedbacks } from '../hooks/useFeedbacks';
 import { useFeedbackComentarios } from '../hooks/useFeedbackComentarios';
+import { useFeedbackHistorial } from '../hooks/useFeedbackHistorial';
 import { useAuth } from '@/contexts/AuthContext';
 import { Feedback } from '../services/feedbacksService';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { moduleRegistry } from '@/app/moduleRegistry';
@@ -137,7 +142,7 @@ export default function Feedbacks() {
   const [respuesta, setRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState<Feedback['estado']>('pendiente');
   const [nuevoComentario, setNuevoComentario] = useState('');
-
+  const [esComentarioInterno, setEsComentarioInterno] = useState(false);
   // Hook de comentarios - se carga solo cuando hay un feedback seleccionado
   const { 
     comentarios, 
@@ -145,6 +150,13 @@ export default function Feedbacks() {
     createComentario, 
     isCreating: isCreatingComentario 
   } = useFeedbackComentarios(selectedFeedback?.id || null);
+
+  // Hook de historial - se carga solo cuando hay un feedback seleccionado
+  const { 
+    historial, 
+    isLoading: isLoadingHistorial, 
+    createHistorial 
+  } = useFeedbackHistorial(selectedFeedback?.id || null);
 
   // Función para copiar enlace al portapapeles
   const copyToClipboard = async (url: string) => {
@@ -166,9 +178,10 @@ export default function Feedbacks() {
       usuario_email: user.email,
       usuario_nombre: (user as any).user_metadata?.nombre || user.email,
       mensaje: nuevoComentario.trim(),
-      es_interno: false,
+      es_interno: esComentarioInterno,
     });
     setNuevoComentario('');
+    setEsComentarioInterno(false);
   };
 
   const filteredFeedbacks = feedbacks.filter((fb) => {
@@ -398,6 +411,18 @@ export default function Feedbacks() {
   const handleResponder = () => {
     if (!selectedFeedback || !user) return;
     
+    // Registrar cambio de estado si cambió
+    if (nuevoEstado !== selectedFeedback.estado) {
+      createHistorial({
+        feedback_id: selectedFeedback.id,
+        estado_anterior: selectedFeedback.estado,
+        estado_nuevo: nuevoEstado,
+        usuario_id: user.id,
+        usuario_email: user.email,
+        usuario_nombre: (user as any).user_metadata?.nombre || user.email,
+      });
+    }
+    
     if (respuesta.trim()) {
       respondToFeedback({
         id: selectedFeedback.id,
@@ -415,6 +440,17 @@ export default function Feedbacks() {
   };
 
   const handleCambiarEstado = (id: string, estado: Feedback['estado']) => {
+    const feedback = feedbacks.find(f => f.id === id);
+    if (feedback && feedback.estado !== estado && user) {
+      createHistorial({
+        feedback_id: id,
+        estado_anterior: feedback.estado,
+        estado_nuevo: estado,
+        usuario_id: user.id,
+        usuario_email: user.email,
+        usuario_nombre: (user as any).user_metadata?.nombre || user.email,
+      });
+    }
     updateFeedback({ id, input: { estado } });
   };
 
@@ -960,11 +996,22 @@ export default function Feedbacks() {
                   ) : (
                     <div className="space-y-2">
                       {comentarios.map((comentario) => (
-                        <div key={comentario.id} className="p-2 bg-muted/50 rounded text-sm">
+                        <div 
+                          key={comentario.id} 
+                          className={`p-2 rounded text-sm ${comentario.es_interno ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-muted/50'}`}
+                        >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-xs">
-                              {comentario.usuario_nombre || comentario.usuario_email || 'Usuario'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-xs">
+                                {comentario.usuario_nombre || comentario.usuario_email || 'Usuario'}
+                              </span>
+                              {comentario.es_interno && (
+                                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 gap-1 text-amber-600 border-amber-500/30">
+                                  <EyeOff className="h-2.5 w-2.5" />
+                                  Interno
+                                </Badge>
+                              )}
+                            </div>
                             <span className="text-xs text-muted-foreground">
                               {formatDistanceToNow(new Date(comentario.created_at), { 
                                 addSuffix: true, 
@@ -980,31 +1027,86 @@ export default function Feedbacks() {
                 </ScrollArea>
 
                 {/* Agregar nuevo comentario */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Agregar comentario..."
-                    value={nuevoComentario}
-                    onChange={(e) => setNuevoComentario(e.target.value)}
-                    className="text-sm"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleAgregarComentario();
-                      }
-                    }}
-                  />
-                  <Button 
-                    size="sm" 
-                    onClick={handleAgregarComentario}
-                    disabled={!nuevoComentario.trim() || isCreatingComentario}
-                  >
-                    {isCreatingComentario ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Agregar comentario..."
+                      value={nuevoComentario}
+                      onChange={(e) => setNuevoComentario(e.target.value)}
+                      className="text-sm"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAgregarComentario();
+                        }
+                      }}
+                    />
+                    <Button 
+                      size="sm" 
+                      onClick={handleAgregarComentario}
+                      disabled={!nuevoComentario.trim() || isCreatingComentario}
+                    >
+                      {isCreatingComentario ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="comentario-interno"
+                      checked={esComentarioInterno}
+                      onCheckedChange={(checked) => setEsComentarioInterno(checked === true)}
+                    />
+                    <label 
+                      htmlFor="comentario-interno" 
+                      className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer"
+                    >
+                      <EyeOff className="h-3 w-3" />
+                      Marcar como interno (solo visible para administradores)
+                    </label>
+                  </div>
                 </div>
+              </div>
+
+              {/* Historial de cambios de estado */}
+              <div className="space-y-3 border rounded-lg p-3">
+                <Label className="flex items-center gap-2">
+                  <History className="h-4 w-4" />
+                  Historial de estados
+                </Label>
+                
+                <ScrollArea className="max-h-32">
+                  {isLoadingHistorial ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : historial.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                      Sin cambios de estado registrados
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {historial.map((item) => (
+                        <div key={item.id} className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">
+                            {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
+                          </span>
+                          <span className="font-medium">{item.usuario_nombre || 'Sistema'}</span>
+                          <span className="text-muted-foreground">cambió de</span>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            {estadoLabels[item.estado_anterior as keyof typeof estadoLabels] || item.estado_anterior || 'Nuevo'}
+                          </Badge>
+                          <span className="text-muted-foreground">→</span>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {estadoLabels[item.estado_nuevo as keyof typeof estadoLabels] || item.estado_nuevo}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
               </div>
 
               {/* Estado */}
