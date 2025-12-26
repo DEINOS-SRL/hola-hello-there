@@ -128,6 +128,7 @@ export interface Movimiento {
   
   // Step 4: Ejecución
   remito_url: string | null;
+  remitos_urls: string[];
   observaciones_operario: string | null;
   fecha_envio_supervisor: string | null;
   
@@ -176,6 +177,7 @@ export interface MovimientoUpdate {
   hora_fin_programada?: string | null;
   supervisor_id?: string | null;
   remito_url?: string | null;
+  remitos_urls?: string[];
   observaciones_operario?: string | null;
   fecha_envio_supervisor?: string | null;
   validado_por?: string | null;
@@ -299,7 +301,7 @@ export interface WizardMovimientoData {
   
   // Step 4
   tareas: { descripcion: string; hora_inicio: string; hora_fin: string }[];
-  remito_url: string;
+  remitos_urls: string[];
   observaciones_operario: string;
   kilometrajes: { equipo_id: string; kilometraje_inicio: number; kilometraje_fin: number }[];
   

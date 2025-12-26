@@ -63,7 +63,7 @@ const initialData: WizardMovimientoData = {
   equipos_asignados: [],
   operarios_asignados: [],
   tareas: [],
-  remito_url: '',
+  remitos_urls: [],
   observaciones_operario: '',
   kilometrajes: [],
   calificaciones: [],
@@ -130,7 +130,7 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
         equipos_asignados: [],
         operarios_asignados: [],
         tareas: [],
-        remito_url: movimiento.remito_url || '',
+        remitos_urls: movimiento.remitos_urls || [],
         observaciones_operario: movimiento.observaciones_operario || '',
         kilometrajes: [],
         calificaciones: [],
@@ -218,7 +218,7 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
         await movimientosService.assignOperarios(movimientoId, data.operarios_asignados);
       } else if (currentStep === 4 && movimientoId) {
         await movimientosService.update(movimientoId, {
-          remito_url: data.remito_url || null,
+          remitos_urls: data.remitos_urls,
           observaciones_operario: data.observaciones_operario || null,
           fecha_envio_supervisor: new Date().toISOString(),
           estado: 'en_ejecucion',
