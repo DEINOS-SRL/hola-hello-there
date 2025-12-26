@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
 
 const feedbackTypes = [
   { value: 'sugerencia', label: 'Sugerencia' },
@@ -37,10 +38,10 @@ interface FeedbackModalProps {
 }
 
 export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
-  const { user } = useAuth();
+  const { user, empresa } = useAuth();
+  const { createFeedback, isCreating } = useFeedbacks();
   const [tipo, setTipo] = useState<string>('');
   const [mensaje, setMensaje] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!tipo) {
@@ -55,34 +56,29 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       toast.error('El mensaje debe tener al menos 10 caracteres');
       return;
     }
-
-    setIsSubmitting(true);
-    
-    try {
-      // Simular envío (aquí iría la lógica real de guardado en BD)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('Feedback enviado:', {
-        tipo,
-        mensaje: mensaje.trim(),
-        usuario_id: user?.id,
-        fecha: new Date().toISOString(),
-      });
-      
-      toast.success('Gracias por tu feedback. Lo revisaremos pronto.');
-      setTipo('');
-      setMensaje('');
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error al enviar feedback:', error);
-      toast.error('Error al enviar el feedback. Intenta de nuevo.');
-    } finally {
-      setIsSubmitting(false);
+    if (!user) {
+      toast.error('Debes iniciar sesión para enviar feedback');
+      return;
     }
+
+    createFeedback({
+      usuario_id: user.id,
+      usuario_email: user.email || undefined,
+      usuario_nombre: user.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : undefined,
+      tipo: tipo as any,
+      mensaje: mensaje.trim(),
+      empresa_id: empresa?.id || undefined,
+    }, {
+      onSuccess: () => {
+        setTipo('');
+        setMensaje('');
+        onOpenChange(false);
+      }
+    });
   };
 
   const handleClose = () => {
-    if (!isSubmitting) {
+    if (!isCreating) {
       setTipo('');
       setMensaje('');
       onOpenChange(false);
@@ -105,7 +101,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="tipo">Tipo de feedback</Label>
-            <Select value={tipo} onValueChange={setTipo} disabled={isSubmitting}>
+            <Select value={tipo} onValueChange={setTipo} disabled={isCreating}>
               <SelectTrigger id="tipo">
                 <SelectValue placeholder="Selecciona un tipo..." />
               </SelectTrigger>
@@ -126,7 +122,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               placeholder="Describe tu sugerencia, problema o consulta..."
               value={mensaje}
               onChange={(e) => setMensaje(e.target.value)}
-              disabled={isSubmitting}
+              disabled={isCreating}
               rows={5}
               maxLength={1000}
               className="resize-none"
@@ -138,11 +134,11 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={handleClose} disabled={isCreating}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? (
+          <Button onClick={handleSubmit} disabled={isCreating}>
+            {isCreating ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Enviando...

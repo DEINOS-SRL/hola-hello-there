@@ -25,6 +25,7 @@ import Usuarios from '@/modules/security/pages/Usuarios';
 import Empresas from '@/modules/security/pages/Empresas';
 import Roles from '@/modules/security/pages/Roles';
 import ModulosAdmin from '@/modules/security/pages/Modulos';
+import Feedbacks from '@/modules/security/pages/Feedbacks';
 import RRHHIndex from '@/modules/rrhh/pages/Index';
 import RRHHEmpleados from '@/modules/rrhh/pages/Empleados';
 import RRHHAsistencia from '@/modules/rrhh/pages/Asistencia';
@@ -167,6 +168,7 @@ export function AppRoutes() {
         <Route path="configuracion/administracion/empresas" element={<Empresas />} />
         <Route path="configuracion/administracion/roles" element={<Roles />} />
         <Route path="configuracion/administracion/modulos" element={<ModulosAdmin />} />
+        <Route path="configuracion/administracion/feedbacks" element={<Feedbacks />} />
 
         {/* Rutas dinámicas de módulos desde BD */}
         {dynamicRoutes.map(({ path, component: Component }) => (

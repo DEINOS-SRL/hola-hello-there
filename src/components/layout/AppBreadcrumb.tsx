@@ -25,6 +25,7 @@ const routeLabels: Record<string, string> = {
   usuarios: 'Usuarios',
   empresas: 'Empresas',
   roles: 'Roles',
+  feedbacks: 'Feedbacks',
   aplicaciones: 'Aplicaciones',
   // Módulos
   empleados: 'Empleados',

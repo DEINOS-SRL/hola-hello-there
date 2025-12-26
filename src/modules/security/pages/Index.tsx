@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Users, Building2, Shield, LayoutGrid, Settings, UserCog } from 'lucide-react';
+import { Users, Building2, Shield, LayoutGrid, Settings, UserCog, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const adminModules = [
@@ -34,6 +34,14 @@ const adminModules = [
     href: '/configuracion/administracion/modulos',
     color: 'text-purple-500',
     bgColor: 'bg-purple-500/10',
+  },
+  {
+    title: 'Feedbacks',
+    description: 'Revisa sugerencias, reportes y consultas de usuarios',
+    icon: MessageSquare,
+    href: '/configuracion/administracion/feedbacks',
+    color: 'text-pink-500',
+    bgColor: 'bg-pink-500/10',
   },
 ];
 
