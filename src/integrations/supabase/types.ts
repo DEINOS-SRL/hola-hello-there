@@ -21,6 +21,7 @@ export type Database = {
     }
     Functions: {
       get_current_user_empresa_id: { Args: never; Returns: string }
+      get_current_usuario_id: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
