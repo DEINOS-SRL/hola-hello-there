@@ -32,6 +32,7 @@ import {
   EyeOff,
   History,
   Timer,
+  UserPlus,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -122,11 +123,14 @@ export default function Feedbacks() {
   const { user } = useAuth();
   const { 
     feedbacks, 
+    usuariosAsignables,
     isLoading, 
     updateFeedback, 
-    respondToFeedback, 
+    respondToFeedback,
+    asignarFeedback,
     isUpdating,
     isResponding,
+    isAsignando,
     getStatusBadgeVariant,
     getTipoBadgeVariant,
   } = useFeedbacks();
@@ -882,8 +886,8 @@ export default function Feedbacks() {
 
       {/* Detail Modal */}
       <Dialog open={!!selectedFeedback} onOpenChange={() => setSelectedFeedback(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               {selectedFeedback && (
                 <>
@@ -901,7 +905,8 @@ export default function Feedbacks() {
           </DialogHeader>
 
           {selectedFeedback && (
-            <div className="space-y-4">
+            <ScrollArea className="flex-1 pr-4 -mr-4">
+              <div className="space-y-4 pr-2">
               {/* Módulo de referencia */}
               {selectedFeedback.modulo_referencia && (
                 <div className="flex items-center gap-2">
@@ -1172,6 +1177,43 @@ export default function Feedbacks() {
                 </ScrollArea>
               </div>
 
+              {/* Asignar a usuario */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Asignar a
+                </Label>
+                <Select 
+                  value={selectedFeedback.asignado_a || 'sin-asignar'} 
+                  onValueChange={(v) => {
+                    if (!user) return;
+                    asignarFeedback({
+                      feedbackId: selectedFeedback.id,
+                      asignadoA: v === 'sin-asignar' ? null : v,
+                      asignadoPor: user.id,
+                    });
+                  }}
+                  disabled={isAsignando}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar usuario..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sin-asignar">Sin asignar</SelectItem>
+                    {usuariosAsignables.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.nombre} {u.apellido} ({u.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedFeedback.asignado_a && (
+                  <p className="text-xs text-muted-foreground">
+                    Asignado {selectedFeedback.asignado_at && formatDistanceToNow(new Date(selectedFeedback.asignado_at), { addSuffix: true, locale: es })}
+                  </p>
+                )}
+              </div>
+
               {/* Estado */}
               <div className="space-y-2">
                 <Label>Estado</Label>
@@ -1194,13 +1236,14 @@ export default function Feedbacks() {
                   placeholder="Escribe una respuesta para el usuario..."
                   value={respuesta}
                   onChange={(e) => setRespuesta(e.target.value)}
-                  rows={4}
+                  rows={3}
                 />
               </div>
             </div>
+          </ScrollArea>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 pt-4">
             <Button variant="outline" onClick={() => setSelectedFeedback(null)}>
               Cancelar
             </Button>

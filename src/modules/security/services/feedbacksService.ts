@@ -15,8 +15,19 @@ export interface Feedback {
   empresa_id: string | null;
   archivos_adjuntos: string[] | null;
   modulo_referencia: string | null;
+  asignado_a: string | null;
+  asignado_at: string | null;
+  asignado_por: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface UsuarioAsignable {
+  id: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+  empresa_id: string;
 }
 
 export interface CreateFeedbackInput {
@@ -35,6 +46,9 @@ export interface UpdateFeedbackInput {
   respuesta?: string;
   respondido_por?: string;
   respondido_at?: string;
+  asignado_a?: string | null;
+  asignado_at?: string | null;
+  asignado_por?: string | null;
 }
 
 // Función para subir archivos al bucket
@@ -140,4 +154,33 @@ export async function getMyFeedbacks(): Promise<Feedback[]> {
   }
 
   return (data as Feedback[]) || [];
+}
+
+// Obtener usuarios activos para asignar feedbacks
+export async function getUsuariosAsignables(): Promise<UsuarioAsignable[]> {
+  const { data, error } = await segClient
+    .from('usuarios')
+    .select('id, nombre, apellido, email, empresa_id')
+    .eq('activo', true)
+    .order('nombre', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching usuarios asignables:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+// Asignar feedback a un usuario
+export async function asignarFeedback(
+  feedbackId: string, 
+  asignadoA: string | null, 
+  asignadoPor: string
+): Promise<Feedback> {
+  return updateFeedback(feedbackId, {
+    asignado_a: asignadoA,
+    asignado_at: asignadoA ? new Date().toISOString() : null,
+    asignado_por: asignadoA ? asignadoPor : null,
+  });
 }
