@@ -183,7 +183,7 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 scrollbar-hide">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b sticky top-0 bg-background z-10">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b sticky top-0 bg-card z-10 shadow-sm">
           <DialogTitle>Parte Diario de Tareas</DialogTitle>
         </DialogHeader>
 
@@ -431,8 +431,8 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                 />
               </div>
 
-            {/* Footer sticky */}
-            <div className="flex justify-end gap-2 p-4 border-t bg-background sticky bottom-0">
+            {/* Footer sticky con fondo sólido */}
+            <div className="flex justify-end gap-2 p-4 border-t bg-card sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
               <Button
                 type="button"
                 variant="outline"
