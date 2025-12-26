@@ -13,6 +13,16 @@ export interface ParteDiario {
   updated_at: string;
 }
 
+export interface ParteActividad {
+  id: string;
+  parte_id: string;
+  descripcion: string;
+  hora_desde: string; // TIME format "HH:mm:ss"
+  hora_hasta: string;
+  orden: number;
+  created_at: string;
+}
+
 export interface ParteNovedad {
   id: string;
   parte_id: string;
@@ -27,13 +37,20 @@ export interface ParteNovedad {
 
 export interface ParteDiarioConNovedades extends ParteDiario {
   novedades: ParteNovedad[];
+  actividades: ParteActividad[];
+}
+
+export interface CreateActividadInput {
+  descripcion: string;
+  hora_desde: string;
+  hora_hasta: string;
 }
 
 export interface CreateParteDiarioInput {
   empleado_id: string;
-  actividades_realizadas: string;
   estado_animo: number;
   observaciones_adicionales?: string;
+  actividades?: CreateActividadInput[];
   novedades?: Omit<ParteNovedad, 'id' | 'parte_id' | 'estado' | 'respuesta_supervisor' | 'created_at' | 'updated_at'>[];
 }
 

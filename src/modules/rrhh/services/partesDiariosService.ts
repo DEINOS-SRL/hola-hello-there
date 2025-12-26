@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { 
   ParteDiario, 
   ParteNovedad, 
+  ParteActividad,
   ParteDiarioConNovedades,
   CreateParteDiarioInput,
   UpdateParteDiarioInput,
@@ -29,6 +30,16 @@ export async function getParteDiarioById(id: string): Promise<ParteDiarioConNove
   if (parteError) throw parteError;
   if (!parte) return null;
 
+  // Get actividades
+  const { data: actividades, error: actividadesError } = await rrhhClient
+    .from('partes_actividades')
+    .select('*')
+    .eq('parte_id', id)
+    .order('orden', { ascending: true });
+  
+  if (actividadesError) throw actividadesError;
+
+  // Get novedades
   const { data: novedades, error: novedadesError } = await rrhhClient
     .from('partes_novedades')
     .select('*')
@@ -39,6 +50,7 @@ export async function getParteDiarioById(id: string): Promise<ParteDiarioConNove
 
   return {
     ...parte,
+    actividades: actividades || [],
     novedades: novedades || []
   };
 }
@@ -54,6 +66,14 @@ export async function getParteDiarioByFecha(empleadoId: string, fecha: string): 
   if (parteError) throw parteError;
   if (!parte) return null;
 
+  const { data: actividades, error: actividadesError } = await rrhhClient
+    .from('partes_actividades')
+    .select('*')
+    .eq('parte_id', parte.id)
+    .order('orden', { ascending: true });
+  
+  if (actividadesError) throw actividadesError;
+
   const { data: novedades, error: novedadesError } = await rrhhClient
     .from('partes_novedades')
     .select('*')
@@ -64,6 +84,7 @@ export async function getParteDiarioByFecha(empleadoId: string, fecha: string): 
 
   return {
     ...parte,
+    actividades: actividades || [],
     novedades: novedades || []
   };
 }
@@ -76,12 +97,17 @@ export async function createParteDiario(input: CreateParteDiarioInput): Promise<
   if (empresaError) throw empresaError;
   if (!empresaId) throw new Error('No se pudo obtener la empresa del usuario');
 
+  // Generate actividades_realizadas from list
+  const actividadesTexto = input.actividades?.map(a => 
+    `${a.hora_desde.slice(0,5)} - ${a.hora_hasta.slice(0,5)}: ${a.descripcion}`
+  ).join('\n') || '';
+
   const { data: parte, error: parteError } = await rrhhClient
     .from('partes_diarios')
     .insert({
       empresa_id: empresaId,
       empleado_id: input.empleado_id,
-      actividades_realizadas: input.actividades_realizadas,
+      actividades_realizadas: actividadesTexto,
       estado_animo: input.estado_animo,
       observaciones_adicionales: input.observaciones_adicionales || null,
     })
@@ -89,6 +115,23 @@ export async function createParteDiario(input: CreateParteDiarioInput): Promise<
     .single();
   
   if (parteError) throw parteError;
+
+  // Insert actividades if any
+  if (input.actividades && input.actividades.length > 0) {
+    const actividadesData = input.actividades.map((a, index) => ({
+      parte_id: parte.id,
+      descripcion: a.descripcion,
+      hora_desde: a.hora_desde,
+      hora_hasta: a.hora_hasta,
+      orden: index,
+    }));
+
+    const { error: actividadesError } = await rrhhClient
+      .from('partes_actividades')
+      .insert(actividadesData);
+    
+    if (actividadesError) throw actividadesError;
+  }
 
   // Insert novedades if any
   if (input.novedades && input.novedades.length > 0) {

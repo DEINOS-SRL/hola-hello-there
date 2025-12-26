@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Lightbulb, AlertTriangle, AlertCircle, MessageSquare } from 'lucide-react';
+import { Lightbulb, AlertTriangle, AlertCircle, MessageSquare, Clock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -82,9 +81,28 @@ export function ParteDiarioDetailModal({ open, onOpenChange, parteId }: ParteDia
           {/* Actividades */}
           <div>
             <h3 className="font-semibold mb-2">Actividades realizadas</h3>
-            <p className="text-muted-foreground whitespace-pre-wrap bg-muted/30 p-4 rounded-lg">
-              {parte.actividades_realizadas}
-            </p>
+            {parte.actividades && parte.actividades.length > 0 ? (
+              <div className="space-y-2">
+                {parte.actividades.map((actividad) => (
+                  <div
+                    key={actividad.id}
+                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg"
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm font-medium text-primary shrink-0">
+                      {actividad.hora_desde.slice(0, 5)} - {actividad.hora_hasta.slice(0, 5)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {actividad.descripcion}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground whitespace-pre-wrap bg-muted/30 p-4 rounded-lg">
+                {parte.actividades_realizadas}
+              </p>
+            )}
           </div>
 
           {/* Observaciones */}

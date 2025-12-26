@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Plus, Eye, Trash2, FileText, Lightbulb, AlertTriangle, AlertCircle, MessageSquare } from 'lucide-react';
+import { Plus, Eye, Trash2, FileText, Lightbulb, AlertTriangle, AlertCircle, MessageSquare, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function PartesDiarios() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: partes, isLoading } = usePartesDiarios();
   const { data: stats } = useNovedadesStats();
   const deleteMutation = useDeleteParteDiario();
@@ -43,6 +45,17 @@ export default function PartesDiarios() {
 
   // TODO: Get empleado_id from user context or profile
   const empleadoId = user?.id || '';
+
+  // Handle ?action=nuevo query param
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'nuevo') {
+      setCreateModalOpen(true);
+      // Remove action param after opening modal
+      searchParams.delete('action');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleViewDetail = (id: string) => {
     setSelectedParteId(id);
@@ -78,6 +91,22 @@ export default function PartesDiarios() {
           Nuevo Parte
         </Button>
       </div>
+
+      {/* Quick access link info */}
+      <Card className="bg-muted/30 border-dashed">
+        <CardContent className="py-3 flex items-center gap-3">
+          <Clock className="h-5 w-5 text-primary" />
+          <div className="text-sm">
+            <span className="font-medium">Acceso rápido:</span>{' '}
+            <code className="bg-background px-2 py-0.5 rounded text-xs">
+              /rrhh/partes-diarios?action=nuevo
+            </code>
+            <span className="text-muted-foreground ml-2">
+              Abre directamente el formulario de nuevo parte
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
