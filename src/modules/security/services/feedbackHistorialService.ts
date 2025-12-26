@@ -35,16 +35,17 @@ export async function getHistorialByFeedback(feedbackId: string): Promise<Feedba
   return data || [];
 }
 
-export async function createHistorial(input: CreateHistorialInput): Promise<FeedbackHistorialEstado> {
+export async function createHistorial(input: CreateHistorialInput): Promise<FeedbackHistorialEstado | null> {
   const { data, error } = await segClient
     .from('feedback_historial_estados')
     .insert(input)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error creating historial:', error);
-    throw error;
+    // Don't throw - historial is secondary, don't block state change
+    return null;
   }
 
   return data;

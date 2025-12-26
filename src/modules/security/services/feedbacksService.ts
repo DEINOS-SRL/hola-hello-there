@@ -134,19 +134,22 @@ export async function createFeedback(input: CreateFeedbackInput): Promise<Feedba
 }
 
 export async function updateFeedback(id: string, input: UpdateFeedbackInput): Promise<Feedback> {
-  const { data, error } = await segClient
+  const { error } = await segClient
     .from('feedbacks')
     .update(input)
-    .eq('id', id)
-    .select()
-    .single();
+    .eq('id', id);
 
   if (error) {
     console.error('Error updating feedback:', error);
     throw error;
   }
 
-  return data;
+  // Fetch the updated record
+  const updated = await getFeedbackById(id);
+  if (!updated) {
+    throw new Error('Feedback not found after update');
+  }
+  return updated;
 }
 
 export async function respondToFeedback(
