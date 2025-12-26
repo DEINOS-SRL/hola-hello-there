@@ -28,6 +28,7 @@ export interface UsuarioAsignable {
   apellido: string;
   email: string;
   empresa_id: string;
+  rol?: string;
 }
 
 export interface CreateFeedbackInput {
@@ -156,20 +157,43 @@ export async function getMyFeedbacks(): Promise<Feedback[]> {
   return (data as Feedback[]) || [];
 }
 
-// Obtener usuarios activos para asignar feedbacks
+// Obtener usuarios activos para asignar feedbacks con rol
 export async function getUsuariosAsignables(): Promise<UsuarioAsignable[]> {
   const { data, error } = await segClient
     .from('usuarios')
-    .select('id, nombre, apellido, email, empresa_id')
+    .select(`
+      id, 
+      nombre, 
+      apellido, 
+      email, 
+      empresa_id,
+      usuario_rol!inner(rol:roles(nombre))
+    `)
     .eq('activo', true)
     .order('nombre', { ascending: true });
 
   if (error) {
     console.error('Error fetching usuarios asignables:', error);
-    throw error;
+    // Fallback sin rol si falla el join
+    const { data: fallbackData, error: fallbackError } = await segClient
+      .from('usuarios')
+      .select('id, nombre, apellido, email, empresa_id')
+      .eq('activo', true)
+      .order('nombre', { ascending: true });
+    
+    if (fallbackError) throw fallbackError;
+    return fallbackData || [];
   }
 
-  return data || [];
+  // Mapear para extraer el rol del primer resultado del join
+  return (data || []).map((u: any) => ({
+    id: u.id,
+    nombre: u.nombre,
+    apellido: u.apellido,
+    email: u.email,
+    empresa_id: u.empresa_id,
+    rol: u.usuario_rol?.[0]?.rol?.nombre || undefined,
+  }));
 }
 
 // Asignar feedback a un usuario

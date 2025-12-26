@@ -34,7 +34,7 @@ import {
   Timer,
   UserPlus,
 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -75,12 +75,56 @@ import { useFeedbacks } from '../hooks/useFeedbacks';
 import { useFeedbackComentarios } from '../hooks/useFeedbackComentarios';
 import { useFeedbackHistorial } from '../hooks/useFeedbackHistorial';
 import { useAuth } from '@/contexts/AuthContext';
-import { Feedback } from '../services/feedbacksService';
+import { Feedback, UsuarioAsignable } from '../services/feedbacksService';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { moduleRegistry } from '@/app/moduleRegistry';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+// Colores para iniciales según rol
+const getRolColor = (rol?: string): string => {
+  if (!rol) return 'bg-muted text-muted-foreground';
+  const rolLower = rol.toLowerCase();
+  if (rolLower.includes('admin')) return 'bg-purple-500/20 text-purple-600 dark:text-purple-400';
+  if (rolLower.includes('super')) return 'bg-amber-500/20 text-amber-600 dark:text-amber-400';
+  if (rolLower.includes('gerente') || rolLower.includes('manager')) return 'bg-blue-500/20 text-blue-600 dark:text-blue-400';
+  if (rolLower.includes('soporte') || rolLower.includes('support')) return 'bg-green-500/20 text-green-600 dark:text-green-400';
+  if (rolLower.includes('developer') || rolLower.includes('dev')) return 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400';
+  return 'bg-primary/20 text-primary';
+};
+
+// Componente para mostrar avatar con iniciales
+const UserAvatar = ({ user, size = 'sm' }: { user: UsuarioAsignable | undefined; size?: 'sm' | 'md' }) => {
+  if (!user) return <span className="text-muted-foreground">?</span>;
+  const initials = `${user.nombre?.charAt(0) || ''}${user.apellido?.charAt(0) || ''}`.toUpperCase();
+  const colorClass = getRolColor(user.rol);
+  const sizeClass = size === 'sm' ? 'w-5 h-5 text-[10px]' : 'w-6 h-6 text-xs';
+  
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={`${sizeClass} rounded-full ${colorClass} flex items-center justify-center font-semibold cursor-default`}>
+            {initials}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          <div className="space-y-1">
+            <p className="font-medium">{user.nombre} {user.apellido}</p>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
+            {user.rol && (
+              <Badge variant="outline" className="text-xs mt-1">
+                {user.rol}
+              </Badge>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
 
 // Labels para módulos
 const getModuloLabel = (moduloId: string | null): string => {
@@ -645,7 +689,7 @@ export default function Feedbacks() {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <RechartsTooltip 
                         formatter={(value: number) => [`${value} feedbacks`, 'Cantidad']}
                         contentStyle={{ 
                           backgroundColor: 'hsl(var(--card))', 
@@ -691,7 +735,7 @@ export default function Feedbacks() {
                       axisLine={false}
                       allowDecimals={false}
                     />
-                    <Tooltip 
+                    <RechartsTooltip 
                       formatter={(value: number) => [`${value} feedbacks`, 'Cantidad']}
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
@@ -885,13 +929,16 @@ export default function Feedbacks() {
                             <SelectValue>
                               {feedback.asignado_a ? (
                                 <div className="flex items-center gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-semibold text-primary">
-                                    {(() => {
-                                      const usr = usuariosAsignables.find(u => u.id === feedback.asignado_a);
-                                      if (!usr) return '?';
-                                      return `${usr.nombre?.charAt(0) || ''}${usr.apellido?.charAt(0) || ''}`.toUpperCase();
-                                    })()}
-                                  </div>
+                                  {(() => {
+                                    const usr = usuariosAsignables.find(u => u.id === feedback.asignado_a);
+                                    const initials = usr ? `${usr.nombre?.charAt(0) || ''}${usr.apellido?.charAt(0) || ''}`.toUpperCase() : '?';
+                                    const colorClass = getRolColor(usr?.rol);
+                                    return (
+                                      <div className={`w-5 h-5 rounded-full ${colorClass} flex items-center justify-center text-[10px] font-semibold`}>
+                                        {initials}
+                                      </div>
+                                    );
+                                  })()}
                                   <span className="text-sm truncate">
                                     {usuariosAsignables.find(u => u.id === feedback.asignado_a)?.nombre || 'Usuario'}
                                   </span>
@@ -905,16 +952,23 @@ export default function Feedbacks() {
                             <SelectItem value="sin-asignar">
                               <span className="text-muted-foreground">Sin asignar</span>
                             </SelectItem>
-                            {usuariosAsignables.map((u) => (
-                              <SelectItem key={u.id} value={u.id}>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-semibold text-primary">
-                                    {`${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase()}
+                            {usuariosAsignables.map((u) => {
+                              const initials = `${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase();
+                              const colorClass = getRolColor(u.rol);
+                              return (
+                                <SelectItem key={u.id} value={u.id}>
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-5 h-5 rounded-full ${colorClass} flex items-center justify-center text-[10px] font-semibold`}>
+                                      {initials}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span>{u.nombre} {u.apellido}</span>
+                                      {u.rol && <span className="text-xs text-muted-foreground">{u.rol}</span>}
+                                    </div>
                                   </div>
-                                  <span>{u.nombre} {u.apellido}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -963,7 +1017,7 @@ export default function Feedbacks() {
 
       {/* Detail Modal */}
       <Dialog open={!!selectedFeedback} onOpenChange={() => setSelectedFeedback(null)}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+        <DialogContent className="sm:max-w-2xl max-h-[95vh] flex flex-col overflow-hidden">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               {selectedFeedback && (
@@ -982,8 +1036,8 @@ export default function Feedbacks() {
           </DialogHeader>
 
           {selectedFeedback && (
-            <ScrollArea className="flex-1 pr-4 -mr-4">
-              <div className="space-y-4 pr-2">
+            <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
+              <div className="space-y-4 pr-2 pb-4">
               {/* Módulo de referencia */}
               {selectedFeedback.modulo_referencia && (
                 <div className="flex items-center gap-2">
