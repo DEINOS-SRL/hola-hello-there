@@ -16,6 +16,7 @@ import {
   User,
   ArrowLeftRight,
   DollarSign,
+  ClipboardList,
 } from 'lucide-react';
 import {
   CommandDialog,
@@ -85,6 +86,16 @@ const quickActions: QuickAction[] = [
     target: '/operacion/movimientos?action=new',
     keywords: ['crear', 'movimiento', 'traslado'],
     shortcut: '⇧M',
+  },
+  {
+    id: 'new-parte-diario',
+    label: 'Nuevo Parte Diario',
+    description: 'Registrar parte diario de tareas',
+    icon: ClipboardList,
+    action: 'navigate',
+    target: '/rrhh/partes-diarios?action=nuevo',
+    keywords: ['crear', 'parte', 'diario', 'tareas', 'actividades', 'rrhh'],
+    shortcut: '⇧D',
   },
   {
     id: 'new-part',
@@ -188,6 +199,11 @@ export function CommandSearch() {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
         e.preventDefault();
         navigate('/operacion/movimientos?action=new');
+      }
+      // Ctrl/Cmd + Shift + D para nuevo parte diario
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        navigate('/rrhh/partes-diarios?action=nuevo');
       }
     };
 
@@ -490,11 +506,12 @@ export function CommandSearch() {
             cerrar
           </span>
         </div>
-        <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/70">
+        <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/70 flex-wrap">
           <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+E</kbd> Empleado</span>
           <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+Q</kbd> Equipo</span>
           <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+P</kbd> Presupuesto</span>
           <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+M</kbd> Movimiento</span>
+          <span><kbd className="px-1 py-0.5 bg-muted/50 rounded font-mono">{isMac ? '⌘' : 'Ctrl'}+⇧+D</kbd> Parte Diario</span>
         </div>
       </div>
     </CommandDialog>
