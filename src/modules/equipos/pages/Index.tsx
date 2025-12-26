@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const equiposModules = [
   {
-    title: 'Listado de Equipos',
+    title: 'Maestro de Equipos',
     description: 'Ver y gestionar todos los equipos registrados',
     icon: List,
     href: '/equipos/listado',
