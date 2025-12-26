@@ -8,6 +8,7 @@ import { AppHeader } from './AppHeader';
 import { AppBreadcrumb } from './AppBreadcrumb';
 import { CommandSearch } from './CommandSearch';
 import { MobileBottomNav } from './MobileBottomNav';
+import { ParteDiarioReminder } from '@/modules/rrhh/components/ParteDiarioReminder';
 import { cn } from '@/lib/utils';
 
 interface AppLayoutProps {
@@ -58,6 +59,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
       {isMobile && <MobileBottomNav />}
       
       <CommandSearch />
+      <ParteDiarioReminder />
     </div>
   );
 }
