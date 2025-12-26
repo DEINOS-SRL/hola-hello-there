@@ -7,6 +7,7 @@ import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { AppBreadcrumb } from './AppBreadcrumb';
 import { CommandSearch } from './CommandSearch';
+import { MobileBottomNav } from './MobileBottomNav';
 import { cn } from '@/lib/utils';
 
 interface AppLayoutProps {
@@ -44,13 +45,18 @@ function AppLayoutContent({ children }: AppLayoutProps) {
           ref={mainScrollRef} 
           className={cn(
             "flex-1 min-h-0 overflow-auto overscroll-contain",
-            isMobile ? "p-4" : "p-6"
+            // Mobile: padding extra abajo para la navegación inferior
+            isMobile ? "p-4 pb-20" : "p-6"
           )}
         >
           <AppBreadcrumb />
           {children}
         </main>
       </div>
+      
+      {/* Navegación inferior solo en mobile */}
+      {isMobile && <MobileBottomNav />}
+      
       <CommandSearch />
     </div>
   );
