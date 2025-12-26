@@ -156,16 +156,28 @@ export default function Feedbacks() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="p-3 rounded-lg bg-primary/10">
-          <MessageSquare className="h-8 w-8 text-primary" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-lg bg-primary/10">
+            <MessageSquare className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Feedbacks</h1>
+            <p className="text-muted-foreground">
+              Gestiona las sugerencias, reportes y consultas de los usuarios
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Feedbacks</h1>
-          <p className="text-muted-foreground">
-            Gestiona las sugerencias, reportes y consultas de los usuarios
-          </p>
-        </div>
+        
+        {/* Contador de pendientes destacado */}
+        {stats.pendientes > 0 && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg animate-pulse-soft">
+            <Clock className="h-5 w-5 text-amber-500" />
+            <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+              {stats.pendientes} {stats.pendientes === 1 ? 'pendiente' : 'pendientes'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
