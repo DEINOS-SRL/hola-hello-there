@@ -25,7 +25,7 @@ interface WizardMovimientoProps {
 
 const STEPS = [
   { id: 1, title: 'Datos Generales y Cliente', estado: 'generado' as EstadoMovimiento },
-  { id: 2, title: 'Línea de Servicio', estado: 'asignacion_recursos' as EstadoMovimiento },
+  { id: 2, title: 'Servicio', estado: 'asignacion_recursos' as EstadoMovimiento },
   { id: 3, title: 'Planificación', estado: 'planificado' as EstadoMovimiento },
   { id: 4, title: 'Ejecución', estado: 'en_ejecucion' as EstadoMovimiento },
   { id: 5, title: 'Cierre Operativo', estado: 'cierre_operativo' as EstadoMovimiento },
@@ -196,9 +196,17 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
           estado: 'asignacion_recursos',
         });
       } else if (currentStep === 3 && movimientoId) {
+        // Extract time only from datetime-local value (format: "2025-12-26T06:00" -> "06:00")
+        const horaInicio = data.hora_inicio_programada?.includes('T') 
+          ? data.hora_inicio_programada.split('T')[1] 
+          : data.hora_inicio_programada;
+        const horaFin = data.hora_fin_programada?.includes('T') 
+          ? data.hora_fin_programada.split('T')[1] 
+          : data.hora_fin_programada;
+        
         await movimientosService.update(movimientoId, {
-          hora_inicio_programada: data.hora_inicio_programada || null,
-          hora_fin_programada: data.hora_fin_programada || null,
+          hora_inicio_programada: horaInicio || null,
+          hora_fin_programada: horaFin || null,
           supervisor_id: data.supervisor_id || null,
           estado: 'planificado',
         });
@@ -339,7 +347,10 @@ export function WizardMovimiento({ open, onOpenChange, movimiento, onComplete }:
         </div>
 
         {/* Step content */}
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className={cn(
+          "flex-1 py-4",
+          isMobile ? "overflow-x-auto px-4 -mx-6" : "overflow-y-auto"
+        )}>
           {currentStep === 1 && <Step1DatosGenerales data={data} updateData={updateData} />}
           {currentStep === 2 && <Step2LineaServicio data={data} updateData={updateData} />}
           {currentStep === 3 && <Step3Planificacion data={data} updateData={updateData} movimientoId={movimientoId} />}
