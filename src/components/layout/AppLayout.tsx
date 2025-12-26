@@ -44,7 +44,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
         <main 
           ref={mainScrollRef} 
           className={cn(
-            "flex-1 min-h-0 overflow-auto overscroll-contain",
+            "flex-1 min-h-0 overflow-auto overscroll-contain scrollbar-hide",
             // Mobile: padding extra abajo para la navegación inferior
             isMobile ? "p-4 pb-20" : "p-6"
           )}
