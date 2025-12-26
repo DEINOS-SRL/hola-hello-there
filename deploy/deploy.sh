@@ -1,8 +1,8 @@
 #!/bin/bash
 # Script de deploy manual para dnscloud.deinos.com.ar
 
-echo "🚀 Iniciando deploy a producción..."
-echo ""
+echo "🚀 Iniciando deploy a VPS de Producción..."
+echo "Realizado por DEINOS BUILD - 26/12/2025"
 
 # Conectar al servidor y ejecutar comandos
 ssh -i ~/.ssh/clavesecreta root@137.184.0.21 << 'ENDSSH'

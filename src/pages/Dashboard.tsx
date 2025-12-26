@@ -98,10 +98,10 @@ export default function Dashboard() {
 
     loadVersion();
     
-    // Observar cambios en el archivo cada 2 segundos en desarrollo
+    // Observar cambios en el archivo cada 2 minutos después de un commit
     const interval = setInterval(() => {
       loadVersion();
-    }, 2000);
+    }, 120000);
 
     return () => clearInterval(interval);
   }, []);

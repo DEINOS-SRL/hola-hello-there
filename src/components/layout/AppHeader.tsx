@@ -87,7 +87,7 @@ export function AppHeader() {
         
         {/* Barra de búsqueda - oculta en mobile muy pequeño */}
         <div className="relative max-w-md w-full hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
           <Input
             type="search"
             placeholder="Buscar..."
