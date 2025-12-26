@@ -240,11 +240,11 @@ export function CommandSearch() {
     recentMovimientos.forEach(mov => {
       records.push({
         id: `mov-${mov.id}`,
-        label: mov.equipo_descripcion,
-        description: `Movimiento · ${mov.origen} → ${mov.destino}`,
+        label: mov.asunto,
+        description: `Movimiento #${mov.numero_movimiento} · ${mov.ubicacion || 'Sin ubicación'}`,
         icon: ArrowLeftRight,
         route: `/operacion/movimientos?action=edit&id=${mov.id}`,
-        keywords: ['editar', 'movimiento', mov.equipo_descripcion, mov.origen, mov.destino],
+        keywords: ['editar', 'movimiento', mov.asunto, mov.ubicacion || ''],
       });
     });
 
