@@ -15,10 +15,10 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "transition-colors duration-200",
-          // Mobile: inputs más grandes (44px min touch target) y texto más grande
-          "h-12 px-4 py-3 text-base",
-          // Desktop: tamaño normal
-          "md:h-10 md:px-3 md:py-2 md:text-sm",
+      // Mobile: inputs más grandes (44px min touch target) y texto más grande
+      "h-12 px-4 py-3 text-base",
+      // Desktop: mantener altura/texto, sin reducir padding horizontal (evita solapamiento con iconos)
+      "md:h-10 md:py-2 md:text-sm",
           className,
         )}
         ref={ref}
