@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputWithIcon } from '@/shared/components/InputWithIcon';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -130,10 +131,7 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                 <FormItem>
                   <FormLabel>Nombre Oficial</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="Ej: Tech Solutions S.A." className="pl-11" {...field} />
-                    </div>
+                    <InputWithIcon icon={Building2} placeholder="Ej: Tech Solutions S.A." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,10 +145,7 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                 <FormItem>
                   <FormLabel>Dirección</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="Ej: Av. Corrientes 1234, CABA" className="pl-11" {...field} />
-                    </div>
+                    <InputWithIcon icon={MapPin} placeholder="Ej: Av. Corrientes 1234, CABA" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -185,10 +180,7 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                 <FormItem>
                   <FormLabel>Webhook URL (Integración)</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="https://api.empresa.com/webhook" className="pl-11" {...field} />
-                    </div>
+                    <InputWithIcon icon={Globe} placeholder="https://api.empresa.com/webhook" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
