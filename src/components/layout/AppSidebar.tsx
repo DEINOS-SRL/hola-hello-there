@@ -28,7 +28,7 @@ import {
   MessageSquare,
   ExternalLink,
 } from 'lucide-react';
-import { FeedbackModal } from '@/components/modals/FeedbackModal';
+// FeedbackModal se maneja de forma centralizada desde AppHeader vía deeplink (?modal=feedback)
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferenciasGlobal } from '@/contexts/PreferenciasContext';
@@ -139,7 +139,7 @@ export function AppSidebar() {
   const { arbol: modulosArbol, isLoading } = useModulosDB();
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
-  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  // Modal de feedback se abre vía deeplink (?modal=feedback) y lo renderiza AppHeader
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Ref para el input de búsqueda
@@ -156,31 +156,11 @@ export function AppSidebar() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  // Detectar parámetro ?modal=feedback en la URL para abrir el modal
-  useEffect(() => {
-    const modalParam = searchParams.get('modal');
-    if (modalParam === 'feedback') {
-      setFeedbackModalOpen(true);
-    }
-  }, [searchParams]);
-
-  // Función para manejar el cambio del modal (sincroniza con URL)
-  const handleFeedbackModalChange = (open: boolean) => {
-    setFeedbackModalOpen(open);
-    if (!open) {
-      // Limpiar parámetro de la URL al cerrar
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('modal');
-      setSearchParams(newParams, { replace: true });
-    }
-  };
-
-  // Función para abrir el modal y actualizar la URL
+  // Abrir modal de feedback vía deeplink (?modal=feedback). El modal se renderiza en AppHeader.
   const openFeedbackModal = () => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set('modal', 'feedback');
     setSearchParams(newParams, { replace: true });
-    setFeedbackModalOpen(true);
   };
 
   // Estado efectivo de colapsado (en mobile siempre expandido)
@@ -1530,8 +1510,7 @@ export function AppSidebar() {
         </Popover>
       </div>
 
-      {/* Modal de Feedback */}
-      <FeedbackModal open={feedbackModalOpen} onOpenChange={handleFeedbackModalChange} />
+      {/* Modal de Feedback: se renderiza en AppHeader */}
     </aside>
   );
 }

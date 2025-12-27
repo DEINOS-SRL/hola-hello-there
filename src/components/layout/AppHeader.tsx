@@ -71,15 +71,13 @@ export function AppHeader() {
   }, [searchParams]);
 
   // Función para manejar el cambio del modal (sincroniza con URL)
-  const handleFeedbackModalChange = (open: boolean) => {
+  const handleFeedbackModalChange = React.useCallback((open: boolean) => {
     setFeedbackOpen(open);
-    if (!open) {
-      // Limpiar parámetro de la URL al cerrar
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('modal');
-      setSearchParams(newParams, { replace: true });
-    }
-  };
+    const newParams = new URLSearchParams(searchParams);
+    if (open) newParams.set('modal', 'feedback');
+    else newParams.delete('modal');
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Función para abrir el modal y actualizar la URL
   const openFeedbackModal = () => {

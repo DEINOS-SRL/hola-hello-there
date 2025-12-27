@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { MessageSquare, Send, Loader2, X, FileIcon, Upload } from 'lucide-react';
 import {
   Dialog,
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebarContext } from '@/contexts/SidebarContext';
 import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
 import { uploadFeedbackAttachment } from '@/modules/security/services/feedbacksService';
 import { compressImage } from '@/lib/imageCompression';
@@ -66,6 +67,7 @@ interface FeedbackModalProps {
 
 export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const { user, empresa } = useAuth();
+  const { isMobile, collapsed } = useSidebarContext();
   const { createFeedback, isCreating } = useFeedbacks();
   const [tipo, setTipo] = useState<string>('');
   const [moduloReferencia, setModuloReferencia] = useState<string>('');
@@ -209,27 +211,42 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     }
   };
 
-  const handleClose = () => {
-    if (!isCreating && !isUploading) {
-      setTipo('');
-      setModuloReferencia('');
-      setMensaje('');
-      setFiles([]);
-      onOpenChange(false);
+  const handleClose = useCallback((open: boolean) => {
+    // Solo notificar el cambio, no limpiar estado aquí para evitar parpadeos
+    onOpenChange(open);
+  }, [onOpenChange]);
+
+  // Limpiar estado cuando el modal se cierra completamente (después de la animación)
+  useEffect(() => {
+    if (!open) {
+      // Delay más largo para que la animación termine completamente
+      const timer = setTimeout(() => {
+        setTipo('');
+        setModuloReferencia('');
+        setMensaje('');
+        setFiles([]);
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [open]);
 
   const isSubmitting = isCreating || isUploading;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md sm:max-h-[95vh] max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <MessageSquare className="h-5 w-5 text-primary ml-1" />
+      <DialogContent
+        className={cn(
+          "sm:max-h-[95vh] max-h-[90vh] overflow-hidden flex flex-col",
+          // En desktop con sidebar colapsado, damos más ancho para mejor legibilidad
+          !isMobile && collapsed ? "sm:max-w-xl" : "sm:max-w-md",
+        )}
+      >
+        <DialogHeader className="pr-20 sm:pr-24 !pt-4 !pb-4 sm:!pt-4 sm:!pb-4">
+          <DialogTitle className="flex items-center gap-3 max-w-[calc(100%-3rem)]">
+            <MessageSquare className="h-5 w-5 text-primary ml-2" />
             Enviar Feedback
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="max-w-[calc(100%-3rem)] pr-2 pl-2">
             Tu opinión nos ayuda a mejorar la plataforma
           </DialogDescription>
         </DialogHeader>
