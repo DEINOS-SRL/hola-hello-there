@@ -1,22 +1,21 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Clock, Loader2 } from 'lucide-react';
+import { Clock, Loader2, Type, AlignLeft } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { rrhhClient } from '../services/rrhhClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { ModalTitle, InputWithIcon, TextareaWithIcon } from '@/shared/components';
 
 interface HorarioModalProps {
   open: boolean;
@@ -131,10 +130,9 @@ export function HorarioModal({ open, onOpenChange }: HorarioModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
+          <ModalTitle icon={Clock}>
             Nuevo Horario de Trabajo
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription>
             Configure un nuevo horario laboral para asignar a empleados
           </DialogDescription>
@@ -144,7 +142,8 @@ export function HorarioModal({ open, onOpenChange }: HorarioModalProps) {
           {/* Nombre */}
           <div className="space-y-2">
             <Label htmlFor="nombre">Nombre del Horario *</Label>
-            <Input
+            <InputWithIcon
+              icon={Type}
               id="nombre"
               placeholder="Ej: Horario Oficina, Turno Mañana..."
               value={nombre}
@@ -155,7 +154,8 @@ export function HorarioModal({ open, onOpenChange }: HorarioModalProps) {
           {/* Descripción */}
           <div className="space-y-2">
             <Label htmlFor="descripcion">Descripción (opcional)</Label>
-            <Textarea
+            <TextareaWithIcon
+              icon={AlignLeft}
               id="descripcion"
               placeholder="Descripción del horario..."
               value={descripcion}

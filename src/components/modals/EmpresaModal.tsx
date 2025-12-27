@@ -10,10 +10,9 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { InputWithIcon, TextareaWithIcon } from '@/shared/components';
+import { InputWithIcon, TextareaWithIcon, ModalTitle } from '@/shared/components';
 import { useToast } from '@/hooks/use-toast';
 import {
   Form,
@@ -111,10 +110,9 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
-            <Building2 className="h-6 w-6" />
+          <ModalTitle icon={Building2}>
             {isEditing ? 'Editar Empresa' : 'Nueva Empresa'}
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos de la empresa existente.' : 'Completa los datos para registrar una nueva empresa.'}
           </DialogDescription>

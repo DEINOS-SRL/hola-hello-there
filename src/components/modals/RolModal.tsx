@@ -11,10 +11,9 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { InputWithIcon, TextareaWithIcon, SelectWithIcon } from '@/shared/components';
+import { InputWithIcon, TextareaWithIcon, SelectWithIcon, ModalTitle } from '@/shared/components';
 import { SelectItem } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -120,10 +119,9 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
-            <Shield className="h-6 w-6" />
+          <ModalTitle icon={Shield}>
             {isEditing ? 'Editar Rol' : 'Nuevo Rol'}
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos del rol existente.' : 'Define un nuevo rol para asignar permisos.'}
           </DialogDescription>

@@ -11,10 +11,9 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { InputWithIcon, SelectWithIcon } from '@/shared/components';
+import { InputWithIcon, SelectWithIcon, ModalTitle } from '@/shared/components';
 import { Switch } from '@/components/ui/switch';
 import { SelectItem } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -139,10 +138,9 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
-            <User className="h-6 w-6" />
+          <ModalTitle icon={User}>
             {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos personales y de acceso del usuario.' : 'Completa la ficha para dar de alta un nuevo usuario.'}
           </DialogDescription>
