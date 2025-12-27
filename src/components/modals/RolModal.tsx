@@ -125,7 +125,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="md">
+      <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-primary">
             <Shield className="h-6 w-6" />
