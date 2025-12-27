@@ -146,8 +146,8 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
                   <FormLabel>Nombre del Rol</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Shield className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Ej: Administrador, Supervisor..." className="pl-9" {...field} />
+                      <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input placeholder="Ej: Administrador, Supervisor..." className="pl-10" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -163,10 +163,10 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
                   <FormLabel>Descripción</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <AlignLeft className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <AlignLeft className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Textarea
                         placeholder="Descripción de las responsabilidades..."
-                        className="pl-9 min-h-[80px] resize-none"
+                        className="pl-10 min-h-[80px] resize-none"
                         {...field}
                       />
                     </div>
@@ -187,8 +187,8 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
                     value={field.value || "global"}
                   >
                     <FormControl>
-                      <SelectTrigger className="pl-9 relative">
-                        <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <SelectTrigger className="pl-10 relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         <SelectValue placeholder="Seleccionar alcance" />
                       </SelectTrigger>
                     </FormControl>
