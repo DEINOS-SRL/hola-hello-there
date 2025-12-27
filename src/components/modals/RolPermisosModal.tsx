@@ -438,7 +438,7 @@ export function RolPermisosModal({ open, onOpenChange, rolPermisos, onSuccess }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[1100px] max-h-[90vh] overflow-hidden">
+      <DialogContent size="2xl" className="max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             <div className="flex items-center gap-2">
