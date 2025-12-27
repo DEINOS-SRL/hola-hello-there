@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Building2, User } from 'lucide-react';
+import { Loader2, Building2, User, Activity } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
@@ -10,19 +10,13 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { SelectWithIcon, ModalTitle } from '@/shared/components';
 
 const empresaUsuarioSchema = z.object({
   empresa_id: z.string().uuid('Seleccione una empresa'),
@@ -167,14 +161,11 @@ export function EmpresaUsuarioModal({ open, onOpenChange, empresaUsuario, onSucc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent size="md">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              {isEditing ? 'Editar Asignación' : 'Asignar Usuario a Empresa'}
-            </div>
-          </DialogTitle>
+          <ModalTitle icon={Building2}>
+            {isEditing ? 'Editar Asignación' : 'Asignar Usuario a Empresa'}
+          </ModalTitle>
           <DialogDescription>
             {isEditing 
               ? 'Modifica el estado de la asignación usuario-empresa' 
@@ -186,85 +177,76 @@ export function EmpresaUsuarioModal({ open, onOpenChange, empresaUsuario, onSucc
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="empresa_id">Empresa *</Label>
-            <Select
+            <SelectWithIcon
+              icon={Building2}
+              placeholder="Seleccione una empresa"
               value={watchedValues.empresa_id}
               onValueChange={(value) => setValue('empresa_id', value)}
               disabled={isEditing}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccione una empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                {empresas.map((empresa) => (
-                  <SelectItem key={empresa.id} value={empresa.id}>
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      {empresa.nombre}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {empresas.map((empresa) => (
+                <SelectItem key={empresa.id} value={empresa.id}>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    {empresa.nombre}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectWithIcon>
             {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="user_id">Usuario *</Label>
-            <Select
+            <SelectWithIcon
+              icon={User}
+              placeholder="Seleccione un usuario"
               value={watchedValues.user_id}
               onValueChange={(value) => setValue('user_id', value)}
               disabled={isEditing}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccione un usuario" />
-              </SelectTrigger>
-              <SelectContent>
-                {usuarios.map((usuario) => (
-                  <SelectItem key={usuario.user_id} value={usuario.user_id}>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <div className="flex flex-col">
-                        <span>{usuario.nombre}</span>
-                        <span className="text-xs text-muted-foreground">{usuario.email}</span>
-                      </div>
+              {usuarios.map((usuario) => (
+                <SelectItem key={usuario.user_id} value={usuario.user_id}>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <div className="flex flex-col">
+                      <span>{usuario.nombre}</span>
+                      <span className="text-xs text-muted-foreground">{usuario.email}</span>
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectWithIcon>
             {errors.user_id && <p className="text-xs text-destructive">{errors.user_id.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="estado">Estado *</Label>
-            <Select
+            <SelectWithIcon
+              icon={Activity}
+              placeholder="Seleccione estado"
               value={watchedValues.estado}
               onValueChange={(value) => setValue('estado', value as 'activo' | 'inactivo' | 'suspendido')}
             >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="activo">
-                  <div className="flex items-center gap-2">
-                    {getEstadoBadge('activo')}
-                    <span>Activo</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="inactivo">
-                  <div className="flex items-center gap-2">
-                    {getEstadoBadge('inactivo')}
-                    <span>Inactivo</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="suspendido">
-                  <div className="flex items-center gap-2">
-                    {getEstadoBadge('suspendido')}
-                    <span>Suspendido</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+              <SelectItem value="activo">
+                <div className="flex items-center gap-2">
+                  {getEstadoBadge('activo')}
+                  <span>Activo</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="inactivo">
+                <div className="flex items-center gap-2">
+                  {getEstadoBadge('inactivo')}
+                  <span>Inactivo</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="suspendido">
+                <div className="flex items-center gap-2">
+                  {getEstadoBadge('suspendido')}
+                  <span>Suspendido</span>
+                </div>
+              </SelectItem>
+            </SelectWithIcon>
             {errors.estado && <p className="text-xs text-destructive">{errors.estado.message}</p>}
           </div>
 

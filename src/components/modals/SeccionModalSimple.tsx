@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, FolderTree } from 'lucide-react';
+import { Loader2, FolderTree, Code, Package, AlignLeft, Hash } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
@@ -10,13 +10,11 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { InputWithIcon, TextareaWithIcon, ModalTitle } from '@/shared/components';
 
 const seccionSchema = z.object({
   codigo: z.string().min(2, 'El código debe tener al menos 2 caracteres'),
@@ -103,14 +101,11 @@ export function SeccionModalSimple({ open, onOpenChange, seccion, onSuccess }: S
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-hidden">
+      <DialogContent size="md" className="max-h-[85vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <FolderTree className="h-5 w-5" />
-              {isEditing ? 'Editar Sección' : 'Nueva Sección'}
-            </div>
-          </DialogTitle>
+          <ModalTitle icon={FolderTree}>
+            {isEditing ? 'Editar Sección' : 'Nueva Sección'}
+          </ModalTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos de la sección' : 'Completa los datos para crear una nueva sección'}
           </DialogDescription>
@@ -120,9 +115,10 @@ export function SeccionModalSimple({ open, onOpenChange, seccion, onSuccess }: S
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="codigo">Código *</Label>
-              <Input 
-                id="codigo" 
-                {...register('codigo')} 
+              <InputWithIcon
+                icon={Code}
+                id="codigo"
+                {...register('codigo')}
                 placeholder="ej: rrhh, operacion"
                 className="font-mono"
               />
@@ -131,26 +127,33 @@ export function SeccionModalSimple({ open, onOpenChange, seccion, onSuccess }: S
 
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre *</Label>
-              <Input id="nombre" {...register('nombre')} placeholder="ej: Recursos Humanos" />
+              <InputWithIcon
+                icon={Package}
+                id="nombre"
+                {...register('nombre')}
+                placeholder="ej: Recursos Humanos"
+              />
               {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="descripcion">Descripción</Label>
-              <Textarea 
-                id="descripcion" 
-                {...register('descripcion')} 
+              <TextareaWithIcon
+                icon={AlignLeft}
+                id="descripcion"
+                {...register('descripcion')}
                 placeholder="Descripción opcional de la sección"
-                rows={3}
+                className="min-h-[80px] resize-none"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="orden">Orden</Label>
-              <Input 
-                id="orden" 
-                type="number" 
-                {...register('orden', { valueAsNumber: true })} 
+              <InputWithIcon
+                icon={Hash}
+                id="orden"
+                type="number"
+                {...register('orden', { valueAsNumber: true })}
                 min={0}
               />
               {errors.orden && <p className="text-xs text-destructive">{errors.orden.message}</p>}

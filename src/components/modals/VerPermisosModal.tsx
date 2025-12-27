@@ -6,11 +6,11 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { ModalTitle } from '@/shared/components';
 
 interface VerPermisosModalProps {
   open: boolean;
@@ -84,10 +84,9 @@ export function VerPermisosModal({ open, onOpenChange, rol }: VerPermisosModalPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
+          <ModalTitle icon={Shield}>
             Permisos del Rol
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription>
             {rol ? (
               <>
