@@ -185,8 +185,8 @@ export function RolPermisosModal({ open, onOpenChange, rolPermisos, onSuccess }:
         
         const rolesConSeccion = (data || []).map(rol => ({
           ...rol,
-          seccion_nombre: rol.secciones?.nombre || 'Sin sección',
-          seccion_codigo: rol.secciones?.codigo || 'sin_codigo'
+          seccion_nombre: (rol.secciones as any)?.nombre || 'Sin sección',
+          seccion_codigo: (rol.secciones as any)?.codigo || 'sin_codigo'
         }));
         
         setRolesPorEmpresa(rolesConSeccion);

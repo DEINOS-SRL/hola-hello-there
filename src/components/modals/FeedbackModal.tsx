@@ -397,7 +397,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={() => handleClose(false)} disabled={isSubmitting}>
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
