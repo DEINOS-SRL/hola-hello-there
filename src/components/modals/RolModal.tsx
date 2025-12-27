@@ -14,16 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { InputWithIcon } from '@/shared/components/InputWithIcon';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { InputWithIcon, TextareaWithIcon, SelectWithIcon } from '@/shared/components';
+import { SelectItem } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import {
   Form,
@@ -164,14 +156,12 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
                 <FormItem>
                   <FormLabel>Descripción</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <AlignLeft className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Textarea
-                        placeholder="Descripción de las responsabilidades..."
-                        className="pl-11 min-h-[80px] resize-none"
-                        {...field}
-                      />
-                    </div>
+                    <TextareaWithIcon
+                      icon={AlignLeft}
+                      placeholder="Descripción de las responsabilidades..."
+                      className="min-h-[80px] resize-none"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -184,25 +174,21 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Empresa (Opcional)</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(value === "global" ? "" : value)}
-                    value={field.value || "global"}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="pl-11 relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <SelectValue placeholder="Seleccionar alcance" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
+                  <FormControl>
+                    <SelectWithIcon
+                      icon={Building2}
+                      placeholder="Seleccionar alcance"
+                      onValueChange={(value) => field.onChange(value === "global" ? "" : value)}
+                      value={field.value || "global"}
+                    >
                       <SelectItem value="global" className="font-semibold text-primary">
                         Global (Todas las empresas)
                       </SelectItem>
                       {empresas?.map((e: any) => (
                         <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </SelectWithIcon>
+                  </FormControl>
                   <FormDescription>
                     Si seleccionas "Global", el rol estará disponible para todas las empresas.
                   </FormDescription>

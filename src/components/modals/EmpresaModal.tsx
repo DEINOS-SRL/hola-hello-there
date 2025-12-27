@@ -13,9 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { InputWithIcon } from '@/shared/components/InputWithIcon';
-import { Textarea } from '@/components/ui/textarea';
+import { InputWithIcon, TextareaWithIcon } from '@/shared/components';
 import { useToast } from '@/hooks/use-toast';
 import {
   Form,
@@ -159,14 +157,12 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                 <FormItem>
                   <FormLabel>Horarios de Atención</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Textarea 
-                        placeholder="Ej: Lunes a Viernes de 9:00 a 18:00hs" 
-                        className="pl-11 min-h-[80px] resize-none" 
-                        {...field} 
-                      />
-                    </div>
+                    <TextareaWithIcon
+                      icon={Clock}
+                      placeholder="Ej: Lunes a Viernes de 9:00 a 18:00hs"
+                      className="min-h-[80px] resize-none"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
