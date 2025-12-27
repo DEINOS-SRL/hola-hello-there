@@ -2,31 +2,23 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Clock, LogIn, LogOut, User, Loader2 } from 'lucide-react';
+import { Clock, LogIn, LogOut, User, Loader2, Tag, AlignLeft } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { rrhhClient } from '../services/rrhhClient';
 import { useAuth } from '@/contexts/AuthContext';
 import type { TipoAsistencia } from '../types/asistencia';
+import { ModalTitle, InputWithIcon, SelectWithIcon, TextareaWithIcon } from '@/shared/components';
 
 interface Empleado {
   id: string;
@@ -236,10 +228,7 @@ export function RegistrarAsistenciaModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            Registrar Asistencia
-          </DialogTitle>
+          <ModalTitle icon={Clock}>Registrar Asistencia</ModalTitle>
           <DialogDescription>
             {format(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
           </DialogDescription>
@@ -261,10 +250,8 @@ export function RegistrarAsistenciaModal({
             {/* Seleccionar empleado */}
             <div className="space-y-2">
               <Label htmlFor="empleado">Empleado</Label>
-              <Select value={empleadoId} onValueChange={setEmpleadoId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar empleado..." />
-                </SelectTrigger>
+              <SelectWithIcon icon={User} value={empleadoId} onValueChange={setEmpleadoId}>
+                <SelectValue placeholder="Seleccionar empleado..." />
                 <SelectContent>
                   {loadingEmpleados ? (
                     <div className="flex items-center justify-center py-4">
@@ -286,14 +273,15 @@ export function RegistrarAsistenciaModal({
                     ))
                   )}
                 </SelectContent>
-              </Select>
+              </SelectWithIcon>
             </div>
 
             <TabsContent value="entrada" className="mt-0 space-y-4">
               {/* Hora de entrada */}
               <div className="space-y-2">
                 <Label htmlFor="hora-entrada">Hora de Entrada</Label>
-                <Input
+                <InputWithIcon
+                  icon={Clock}
                   id="hora-entrada"
                   type="time"
                   value={horaEntrada}
@@ -304,10 +292,8 @@ export function RegistrarAsistenciaModal({
               {/* Tipo de asistencia */}
               <div className="space-y-2">
                 <Label htmlFor="tipo">Tipo de Registro</Label>
-                <Select value={tipo} onValueChange={(v) => setTipo(v as TipoAsistencia)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                <SelectWithIcon icon={Tag} value={tipo} onValueChange={(v) => setTipo(v as TipoAsistencia)}>
+                  <SelectValue />
                   <SelectContent>
                     {tiposAsistencia.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
@@ -315,7 +301,7 @@ export function RegistrarAsistenciaModal({
                       </SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </SelectWithIcon>
               </div>
             </TabsContent>
 
@@ -323,7 +309,8 @@ export function RegistrarAsistenciaModal({
               {/* Hora de salida */}
               <div className="space-y-2">
                 <Label htmlFor="hora-salida">Hora de Salida</Label>
-                <Input
+                <InputWithIcon
+                  icon={Clock}
                   id="hora-salida"
                   type="time"
                   value={horaSalida}
@@ -335,7 +322,8 @@ export function RegistrarAsistenciaModal({
             {/* Observaciones */}
             <div className="space-y-2">
               <Label htmlFor="observaciones">Observaciones (opcional)</Label>
-              <Textarea
+              <TextareaWithIcon
+                icon={AlignLeft}
                 id="observaciones"
                 placeholder="Agregar observaciones..."
                 value={observaciones}

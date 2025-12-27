@@ -9,17 +9,10 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Popover,
@@ -32,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { rrhhClient } from '../services/rrhhClient';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Horario } from '../types/asistencia';
+import { ModalTitle, SelectWithIcon } from '@/shared/components';
 
 interface Empleado {
   id: string;
@@ -175,10 +169,7 @@ export function AsignarHorarioModal({ open, onOpenChange }: AsignarHorarioModalP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            Asignar Horario a Empleado
-          </DialogTitle>
+          <ModalTitle icon={Clock}>Asignar Horario a Empleado</ModalTitle>
           <DialogDescription>
             Seleccione un empleado y asígnele un horario de trabajo
           </DialogDescription>
@@ -188,10 +179,8 @@ export function AsignarHorarioModal({ open, onOpenChange }: AsignarHorarioModalP
           {/* Seleccionar empleado */}
           <div className="space-y-2">
             <Label>Empleado *</Label>
-            <Select value={empleadoId} onValueChange={setEmpleadoId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar empleado..." />
-              </SelectTrigger>
+            <SelectWithIcon icon={User} value={empleadoId} onValueChange={setEmpleadoId}>
+              <SelectValue placeholder="Seleccionar empleado..." />
               <SelectContent>
                 {loadingEmpleados ? (
                   <div className="flex items-center justify-center py-4">
@@ -213,16 +202,14 @@ export function AsignarHorarioModal({ open, onOpenChange }: AsignarHorarioModalP
                   ))
                 )}
               </SelectContent>
-            </Select>
+            </SelectWithIcon>
           </div>
 
           {/* Seleccionar horario */}
           <div className="space-y-2">
             <Label>Horario *</Label>
-            <Select value={horarioId} onValueChange={setHorarioId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar horario..." />
-              </SelectTrigger>
+            <SelectWithIcon icon={Clock} value={horarioId} onValueChange={setHorarioId}>
+              <SelectValue placeholder="Seleccionar horario..." />
               <SelectContent>
                 {loadingHorarios ? (
                   <div className="flex items-center justify-center py-4">
@@ -246,7 +233,7 @@ export function AsignarHorarioModal({ open, onOpenChange }: AsignarHorarioModalP
                   ))
                 )}
               </SelectContent>
-            </Select>
+            </SelectWithIcon>
           </div>
 
           {/* Detalle del horario seleccionado */}
