@@ -19,20 +19,23 @@ export function versionWatcher(): Plugin {
         } catch (error) {
           console.warn('No se pudo copiar .version.json inicial:', error);
         }
-      }
-      
-      // Observar cambios en .version.json
-      watch(versionFile, { persistent: true }, (eventType) => {
-        if (eventType === 'change') {
-          try {
-            // Copiar a public/ para que sea accesible vía fetch
-            copyFileSync(versionFile, publicVersionFile);
-            console.log('✅ Versión actualizada en runtime');
-          } catch (error) {
-            console.error('Error copiando .version.json:', error);
-          }
+        
+        // Observar cambios solo si el archivo existe
+        try {
+          watch(versionFile, { persistent: true }, (eventType) => {
+            if (eventType === 'change') {
+              try {
+                copyFileSync(versionFile, publicVersionFile);
+                console.log('✅ Versión actualizada en runtime');
+              } catch (error) {
+                console.error('Error copiando .version.json:', error);
+              }
+            }
+          });
+        } catch (error) {
+          console.warn('No se pudo observar .version.json:', error);
         }
-      });
+      }
     }
   };
 }

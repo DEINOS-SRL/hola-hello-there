@@ -145,7 +145,7 @@ export function FuncionalidadModal({ open, onOpenChange, funcionalidad, onSucces
         
         const modulosConSeccion = (data || []).map(modulo => ({
           ...modulo,
-          seccion_nombre: modulo.secciones?.nombre || 'Sin sección'
+          seccion_nombre: (modulo.secciones as any)?.nombre || 'Sin sección'
         }));
         
         setModulos(modulosConSeccion);
