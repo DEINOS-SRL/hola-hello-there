@@ -246,11 +246,9 @@ export function ModuloModalNew({ open, onOpenChange, modulo, onSuccess }: Modulo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="xl" className="max-h-[85vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              {isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}
-            </div>
+          <DialogTitle className="flex items-center gap-2 text-primary">
+            <Package className="h-5 w-5" />
+            {isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}
           </DialogTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos del módulo' : 'Completa los datos para crear un nuevo módulo'}

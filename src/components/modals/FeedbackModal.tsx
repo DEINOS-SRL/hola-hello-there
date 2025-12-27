@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSidebarContext } from '@/contexts/SidebarContext';
 import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
 import { uploadFeedbackAttachment } from '@/modules/security/services/feedbacksService';
 import { compressImage } from '@/lib/imageCompression';
@@ -67,7 +66,6 @@ interface FeedbackModalProps {
 
 export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const { user, empresa } = useAuth();
-  const { isMobile, collapsed } = useSidebarContext();
   const { createFeedback, isCreating } = useFeedbacks();
   const [tipo, setTipo] = useState<string>('');
   const [moduloReferencia, setModuloReferencia] = useState<string>('');
@@ -235,11 +233,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className={cn(
-          "sm:max-h-[95vh] max-h-[90vh] overflow-hidden flex flex-col",
-          // En desktop con sidebar colapsado, damos más ancho para mejor legibilidad
-          !isMobile && collapsed ? "sm:max-w-xl" : "sm:max-w-md",
-        )}
+        size="lg"
+        className="sm:max-h-[95vh] max-h-[90vh] overflow-hidden flex flex-col"
       >
         <DialogHeader className="pr-20 sm:pr-24 !pt-4 !pb-4 sm:!pt-4 sm:!pb-4">
           <DialogTitle className="flex items-center gap-3 max-w-[calc(100%-3rem)]">
