@@ -12,7 +12,10 @@ import {
   Package, 
   Settings,
   Plus,
-  X
+  X,
+  Code,
+  AlignLeft,
+  Hash
 } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import {
@@ -21,23 +24,16 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { InputWithIcon, TextareaWithIcon, SelectWithIcon, ModalTitle } from '@/shared/components';
 
 const funcionalidadSchema = z.object({
   modulo_id: z.string().uuid('Seleccione un módulo'),
@@ -326,10 +322,9 @@ export function FuncionalidadModal({ open, onOpenChange, funcionalidad, onSucces
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="xl" className="max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-primary">
-            <Zap className="h-5 w-5" />
+          <ModalTitle icon={Zap}>
             {isEditing ? 'Editar Funcionalidad' : 'Nueva Funcionalidad'}
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos de la funcionalidad' : 'Completa los datos para crear una nueva funcionalidad'}
           </DialogDescription>
@@ -340,38 +335,36 @@ export function FuncionalidadModal({ open, onOpenChange, funcionalidad, onSucces
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="modulo_id">Módulo *</Label>
-                <Select
+                <SelectWithIcon
+                  icon={Package}
+                  placeholder="Seleccione un módulo"
                   value={watchedValues.modulo_id}
                   onValueChange={(value) => setValue('modulo_id', value)}
                   disabled={loadingData}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione un módulo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {modulos.map((modulo) => (
-                      <SelectItem key={modulo.id} value={modulo.id}>
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-green-500" />
-                          <div className="flex flex-col">
-                            <span>{modulo.nombre}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {modulo.seccion_nombre} • {modulo.codigo}
-                            </span>
-                          </div>
+                  {modulos.map((modulo) => (
+                    <SelectItem key={modulo.id} value={modulo.id}>
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-green-500" />
+                        <div className="flex flex-col">
+                          <span>{modulo.nombre}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {modulo.seccion_nombre} • {modulo.codigo}
+                          </span>
                         </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectWithIcon>
                 {errors.modulo_id && <p className="text-xs text-destructive">{errors.modulo_id.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="codigo">Código *</Label>
-                <Input 
-                  id="codigo" 
-                  {...register('codigo')} 
+                <InputWithIcon
+                  icon={Code}
+                  id="codigo"
+                  {...register('codigo')}
                   placeholder="ej: rrhh.empleados.crear, operacion.movimientos.ver"
                   className="font-mono"
                 />
@@ -380,17 +373,23 @@ export function FuncionalidadModal({ open, onOpenChange, funcionalidad, onSucces
 
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre *</Label>
-                <Input id="nombre" {...register('nombre')} placeholder="ej: Crear Empleado, Ver Movimientos" />
+                <InputWithIcon
+                  icon={Zap}
+                  id="nombre"
+                  {...register('nombre')}
+                  placeholder="ej: Crear Empleado, Ver Movimientos"
+                />
                 {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="descripcion">Descripción</Label>
-                <Textarea 
-                  id="descripcion" 
-                  {...register('descripcion')} 
+                <TextareaWithIcon
+                  icon={AlignLeft}
+                  id="descripcion"
+                  {...register('descripcion')}
                   placeholder="Descripción opcional de la funcionalidad"
-                  rows={2}
+                  className="min-h-[60px] resize-none"
                 />
               </div>
 
@@ -448,10 +447,11 @@ export function FuncionalidadModal({ open, onOpenChange, funcionalidad, onSucces
 
               <div className="space-y-2">
                 <Label htmlFor="orden">Orden</Label>
-                <Input 
-                  id="orden" 
-                  type="number" 
-                  {...register('orden', { valueAsNumber: true })} 
+                <InputWithIcon
+                  icon={Hash}
+                  id="orden"
+                  type="number"
+                  {...register('orden', { valueAsNumber: true })}
                   min={0}
                 />
                 {errors.orden && <p className="text-xs text-destructive">{errors.orden.message}</p>}

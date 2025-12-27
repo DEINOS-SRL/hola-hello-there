@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Shield, Building2, Folder, Users } from 'lucide-react';
+import { Loader2, Shield, Building2, Folder, Users, AlignLeft } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
@@ -10,22 +10,14 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { InputWithIcon, TextareaWithIcon, SelectWithIcon, ModalTitle } from '@/shared/components';
 
 const rolSchema = z.object({
   empresa_id: z.string().uuid('Seleccione una empresa'),
@@ -226,10 +218,9 @@ export function RolModalNew({ open, onOpenChange, rol, onSuccess }: RolModalProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-h-[85vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-primary">
-            <Shield className="h-5 w-5" />
+          <ModalTitle icon={Shield}>
             {isEditing ? 'Editar Rol' : 'Nuevo Rol'}
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos del rol' : 'Completa los datos para crear un nuevo rol por sección'}
           </DialogDescription>
@@ -240,70 +231,65 @@ export function RolModalNew({ open, onOpenChange, rol, onSuccess }: RolModalProp
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="empresa_id">Empresa *</Label>
-                <Select
+                <SelectWithIcon
+                  icon={Building2}
+                  placeholder="Seleccione una empresa"
                   value={watchedValues.empresa_id}
                   onValueChange={(value) => setValue('empresa_id', value)}
                   disabled={isEditing || loadingData}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione una empresa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {empresas.map((empresa) => (
-                      <SelectItem key={empresa.id} value={empresa.id}>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          {empresa.nombre}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {empresas.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id}>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        {empresa.nombre}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectWithIcon>
                 {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="seccion_id">Sección *</Label>
-                <Select
+                <SelectWithIcon
+                  icon={Folder}
+                  placeholder="Seleccione una sección"
                   value={watchedValues.seccion_id}
                   onValueChange={(value) => setValue('seccion_id', value)}
                   disabled={isEditing || loadingData}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione una sección" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {secciones.map((seccion) => (
-                      <SelectItem key={seccion.id} value={seccion.id}>
-                        <div className="flex items-center gap-2">
-                          <Folder className="h-4 w-4 text-blue-500" />
-                          <div className="flex flex-col">
-                            <span>{seccion.nombre}</span>
-                            <span className="text-xs text-muted-foreground font-mono">
-                              {seccion.codigo}
-                            </span>
-                          </div>
+                  {secciones.map((seccion) => (
+                    <SelectItem key={seccion.id} value={seccion.id}>
+                      <div className="flex items-center gap-2">
+                        <Folder className="h-4 w-4 text-blue-500" />
+                        <div className="flex flex-col">
+                          <span>{seccion.nombre}</span>
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {seccion.codigo}
+                          </span>
                         </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectWithIcon>
                 {errors.seccion_id && <p className="text-xs text-destructive">{errors.seccion_id.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre del Rol *</Label>
-                <Input id="nombre" {...register('nombre')} placeholder="ej: Administrador RRHH" />
+                <InputWithIcon icon={Shield} id="nombre" {...register('nombre')} placeholder="ej: Administrador RRHH" />
                 {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="descripcion">Descripción</Label>
-                <Textarea 
-                  id="descripcion" 
-                  {...register('descripcion')} 
+                <TextareaWithIcon
+                  icon={AlignLeft}
+                  id="descripcion"
+                  {...register('descripcion')}
                   placeholder="Descripción del rol y sus responsabilidades"
-                  rows={3}
+                  className="min-h-[80px] resize-none"
                 />
               </div>
 

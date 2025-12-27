@@ -23,23 +23,17 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { SelectWithIcon, ModalTitle } from '@/shared/components';
 
 const rolPermisosSchema = z.object({
   empresa_id: z.string().uuid('Seleccione una empresa'),
@@ -440,12 +434,9 @@ export function RolPermisosModal({ open, onOpenChange, rolPermisos, onSuccess }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="2xl" className="max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5" />
-              Gestionar Permisos del Rol
-            </div>
-          </DialogTitle>
+          <ModalTitle icon={ShieldCheck}>
+            Gestionar Permisos del Rol
+          </ModalTitle>
           <DialogDescription>
             Configura qué funcionalidades y acciones específicas puede realizar este rol. Los permisos son a nivel de funcionalidad con control granular por acción.
           </DialogDescription>
@@ -456,54 +447,48 @@ export function RolPermisosModal({ open, onOpenChange, rolPermisos, onSuccess }:
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="empresa_id">Empresa *</Label>
-                <Select
+                <SelectWithIcon
+                  icon={Building2}
+                  placeholder="Seleccione una empresa"
                   value={watchedValues.empresa_id}
                   onValueChange={(value) => setValue('empresa_id', value)}
                   disabled={loadingData}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione una empresa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {empresas.map((empresa) => (
-                      <SelectItem key={empresa.id} value={empresa.id}>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          {empresa.nombre}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {empresas.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id}>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        {empresa.nombre}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectWithIcon>
                 {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="rol_id">Rol *</Label>
-                <Select
+                <SelectWithIcon
+                  icon={Shield}
+                  placeholder="Seleccione un rol"
                   value={watchedValues.rol_id}
                   onValueChange={(value) => setValue('rol_id', value)}
                   disabled={loadingRoles || !selectedEmpresa}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione un rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rolesPorEmpresa.map((rol) => (
-                      <SelectItem key={rol.id} value={rol.id}>
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-green-500" />
-                          <div className="flex flex-col">
-                            <span>{rol.nombre}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {rol.seccion_nombre}
-                            </span>
-                          </div>
+                  {rolesPorEmpresa.map((rol) => (
+                    <SelectItem key={rol.id} value={rol.id}>
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-green-500" />
+                        <div className="flex flex-col">
+                          <span>{rol.nombre}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {rol.seccion_nombre}
+                          </span>
                         </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectWithIcon>
                 {errors.rol_id && <p className="text-xs text-destructive">{errors.rol_id.message}</p>}
               </div>
 
