@@ -36,6 +36,7 @@ import { useSidebarContext } from '@/contexts/SidebarContext';
 import { usePermissions } from '@/core/security/permissions';
 import { useModulosDB, type ModuloConHijos } from '@/modules/security/hooks/useModulos';
 import { useFavoritos } from '@/modules/security/hooks/useFavoritos';
+import { usePrefetch } from '@/shared/hooks/usePrefetch';
 import { SortableFavorites } from './SortableFavorites';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -138,6 +139,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { arbol: modulosArbol, isLoading } = useModulosDB();
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
+  const { prefetchOnHover } = usePrefetch();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
   // Modal de feedback se abre vía deeplink (?modal=feedback) y lo renderiza AppHeader
   const [searchParams, setSearchParams] = useSearchParams();
@@ -577,12 +579,18 @@ export function AppSidebar() {
       toggleFavorito(modulo.id);
     };
 
+    // Handler para prefetch en hover
+    const handleMouseEnterLink = useCallback(() => {
+      return prefetchOnHover(modulo.ruta);
+    }, [modulo.ruta]);
+
     const content = (
       <div className="group/item relative flex items-center w-full">
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <RouterNavLink
               to={modulo.ruta}
+              onMouseEnter={handleMouseEnterLink}
               className={cn(
                 "relative flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm flex-1 min-w-0",
                 "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
@@ -710,6 +718,7 @@ export function AppSidebar() {
                     <RouterNavLink 
                       key={hijo.id} 
                       to={hijo.ruta}
+                      onMouseEnter={() => prefetchOnHover(hijo.ruta)}
                       className={cn(
                         "flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all duration-200",
                         "hover:bg-accent hover:text-accent-foreground",
@@ -791,6 +800,7 @@ export function AppSidebar() {
                       <RouterNavLink 
                         key={hijo.id} 
                         to={hijo.ruta}
+                        onMouseEnter={() => prefetchOnHover(hijo.ruta)}
                         className={cn(
                           "flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all duration-200",
                           "hover:bg-accent hover:text-accent-foreground",
