@@ -24,23 +24,16 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { ModalTitle, SelectWithIcon, InputWithIcon } from '@/shared/components';
 
 const empresaFuncionalidadesSchema = z.object({
   empresa_id: z.string().uuid('Seleccione una empresa'),
@@ -402,12 +395,7 @@ export function EmpresaFuncionalidadesModal({ open, onOpenChange, empresaFuncion
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="2xl" className="max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <ToggleLeft className="h-5 w-5" />
-              Gestionar Feature Flags por Empresa
-            </div>
-          </DialogTitle>
+          <ModalTitle icon={ToggleLeft}>Gestionar Feature Flags por Empresa</ModalTitle>
           <DialogDescription>
             Habilita o deshabilita funcionalidades específicas para esta empresa. Solo las funcionalidades habilitadas estarán disponibles para los usuarios de la empresa.
           </DialogDescription>
@@ -418,25 +406,21 @@ export function EmpresaFuncionalidadesModal({ open, onOpenChange, empresaFuncion
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="empresa_id">Empresa *</Label>
-                <Select
+                <SelectWithIcon
+                  icon={Building2}
                   value={watchedValues.empresa_id}
                   onValueChange={(value) => setValue('empresa_id', value)}
                   disabled={loadingData}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione una empresa" />
-                  </SelectTrigger>
+                  <SelectValue placeholder="Seleccione una empresa" />
                   <SelectContent>
                     {empresas.map((empresa) => (
                       <SelectItem key={empresa.id} value={empresa.id}>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          {empresa.nombre}
-                        </div>
+                        {empresa.nombre}
                       </SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </SelectWithIcon>
                 {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
               </div>
 
@@ -478,15 +462,13 @@ export function EmpresaFuncionalidadesModal({ open, onOpenChange, empresaFuncion
                   <ToggleRight className="h-4 w-4" />
                   Feature Flags por Funcionalidad
                 </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar funcionalidades..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="text-sm"
-                  />
-                </div>
+                <InputWithIcon
+                  icon={Search}
+                  placeholder="Buscar funcionalidades..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="text-sm"
+                />
               </CardHeader>
               <CardContent className="space-y-2">
                 {!selectedEmpresa ? (
