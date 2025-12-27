@@ -207,7 +207,7 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+        <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}</DialogTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos del módulo' : 'Completa los datos para crear un nuevo módulo'}
