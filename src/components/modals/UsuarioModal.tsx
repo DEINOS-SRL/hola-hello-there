@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputWithIcon } from '@/shared/components/InputWithIcon';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -164,10 +165,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                   <FormItem>
                     <FormLabel>Nombre</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Input placeholder="Nombre" className="pl-11" {...field} />
-                      </div>
+                      <InputWithIcon icon={User} placeholder="Nombre" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -180,10 +178,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                   <FormItem>
                     <FormLabel>Apellido</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Input placeholder="Apellido" className="pl-11" {...field} />
-                      </div>
+                      <InputWithIcon icon={User} placeholder="Apellido" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -198,10 +193,13 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                 <FormItem>
                   <FormLabel>Correo Electrónico</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="usuario@empresa.com" type="email" className="pl-11" {...field} disabled={isEditing} />
-                    </div>
+                    <InputWithIcon
+                      icon={Mail}
+                      placeholder="usuario@empresa.com"
+                      type="email"
+                      disabled={isEditing}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -216,10 +214,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                   <FormItem>
                     <FormLabel>DNI / Identificación</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Input placeholder="12.345.678" className="pl-11" {...field} />
-                      </div>
+                      <InputWithIcon icon={CreditCard} placeholder="12.345.678" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -232,10 +227,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                   <FormItem>
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Input placeholder="+54 9 11 ..." className="pl-11" {...field} />
-                      </div>
+                      <InputWithIcon icon={Phone} placeholder="+54 9 11 ..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,10 +242,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                 <FormItem>
                   <FormLabel>Dirección</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="Calle 123, Ciudad" className="pl-11" {...field} />
-                    </div>
+                    <InputWithIcon icon={MapPin} placeholder="Calle 123, Ciudad" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

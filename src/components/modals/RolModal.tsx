@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputWithIcon } from '@/shared/components/InputWithIcon';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -145,10 +146,11 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
                 <FormItem>
                   <FormLabel>Nombre del Rol</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="Ej: Administrador, Supervisor..." className="pl-11" {...field} />
-                    </div>
+                    <InputWithIcon
+                      icon={Shield}
+                      placeholder="Ej: Administrador, Supervisor..."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

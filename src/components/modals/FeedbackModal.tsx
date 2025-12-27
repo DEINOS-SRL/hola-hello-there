@@ -237,7 +237,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         className="sm:max-h-[95vh] max-h-[90vh] overflow-hidden flex flex-col"
       >
         <DialogHeader className="pr-20 sm:pr-24 !pt-4 !pb-4 sm:!pt-4 sm:!pb-4">
-          <DialogTitle className="flex items-center gap-3 max-w-[calc(100%-3rem)]">
+          <DialogTitle className="flex items-center gap-3 max-w-[calc(100%-3rem)] text-primary">
             <MessageSquare className="h-5 w-5 text-primary ml-2" />
             Enviar Feedback
           </DialogTitle>
