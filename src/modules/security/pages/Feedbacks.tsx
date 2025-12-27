@@ -941,7 +941,7 @@ export default function Feedbacks() {
                   placeholder="Buscar por mensaje, email o nombre..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
+                  className="pl-10"
                 />
               </div>
             </div>

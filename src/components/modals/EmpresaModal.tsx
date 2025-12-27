@@ -131,8 +131,8 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                   <FormLabel>Nombre Oficial</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Ej: Tech Solutions S.A." className="pl-9" {...field} />
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input placeholder="Ej: Tech Solutions S.A." className="pl-10" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -148,8 +148,8 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                   <FormLabel>Dirección</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Ej: Av. Corrientes 1234, CABA" className="pl-9" {...field} />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input placeholder="Ej: Av. Corrientes 1234, CABA" className="pl-10" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -165,10 +165,10 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                   <FormLabel>Horarios de Atención</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Textarea 
                         placeholder="Ej: Lunes a Viernes de 9:00 a 18:00hs" 
-                        className="pl-9 min-h-[80px] resize-none" 
+                        className="pl-10 min-h-[80px] resize-none" 
                         {...field} 
                       />
                     </div>
@@ -186,8 +186,8 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                   <FormLabel>Webhook URL (Integración)</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Globe className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="https://api.empresa.com/webhook" className="pl-9" {...field} />
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input placeholder="https://api.empresa.com/webhook" className="pl-10" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
