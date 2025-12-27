@@ -1,11 +1,10 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Lightbulb, AlertTriangle, AlertCircle, MessageSquare, Clock } from 'lucide-react';
+import { Lightbulb, AlertTriangle, AlertCircle, MessageSquare, Clock, ClipboardList } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,6 +17,7 @@ import {
   ESTADO_NOVEDAD_LABELS,
   type TipoNovedad 
 } from '../types/partesDiarios';
+import { ModalTitle } from '@/shared/components';
 
 interface ParteDiarioDetailModalProps {
   open: boolean;
@@ -62,10 +62,9 @@ export function ParteDiarioDetailModal({ open, onOpenChange, parteId }: ParteDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <span>Parte del {format(new Date(parte.fecha), "d 'de' MMMM, yyyy", { locale: es })}</span>
-            <span className="text-2xl">{estadoAnimo?.emoji}</span>
-          </DialogTitle>
+          <ModalTitle icon={ClipboardList}>
+            Parte del {format(new Date(parte.fecha), "d 'de' MMMM, yyyy", { locale: es })} {estadoAnimo?.emoji}
+          </ModalTitle>
         </DialogHeader>
 
         <div className="space-y-6">

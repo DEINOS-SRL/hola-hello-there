@@ -3,7 +3,6 @@ import type { LucideIcon } from "lucide-react";
 
 import {
   Select,
-  SelectContent,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -27,6 +26,21 @@ export function SelectWithIcon({
   children,
   ...props
 }: SelectWithIconProps) {
+  // Separar SelectValue y SelectContent de children
+  const childArray = React.Children.toArray(children);
+  
+  // Buscar SelectContent en children
+  const selectContent = childArray.find(
+    (child) => React.isValidElement(child) && 
+    (child.type as any)?.displayName === 'SelectContent'
+  );
+  
+  // Buscar SelectValue en children (si se pasó explícitamente)
+  const selectValue = childArray.find(
+    (child) => React.isValidElement(child) && 
+    (child.type as any)?.displayName === 'SelectValue'
+  );
+
   return (
     <Select {...props}>
       <div className={cn("relative", containerClassName)}>
@@ -37,12 +51,10 @@ export function SelectWithIcon({
           )}
         />
         <SelectTrigger className={cn("pl-11", triggerClassName)}>
-          <SelectValue placeholder={placeholder} />
+          {selectValue || <SelectValue placeholder={placeholder} />}
         </SelectTrigger>
       </div>
-      <SelectContent>
-        {children}
-      </SelectContent>
+      {selectContent}
     </Select>
   );
 }

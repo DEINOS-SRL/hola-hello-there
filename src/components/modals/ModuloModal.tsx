@@ -25,7 +25,7 @@ import { ModalTitle, InputWithIcon, SelectWithIcon, TextareaWithIcon } from '@/s
 import { LayoutGrid, Type, AlignLeft, Route, Hash, Link as LinkIcon } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import {
   Form,
   FormControl,
@@ -206,7 +206,7 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="lg" className="max-h-[85vh] flex flex-col">
+      <DialogContent size="lg" className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <ModalTitle icon={LayoutGrid}>{isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}</ModalTitle>
           <DialogDescription>
@@ -214,8 +214,7 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 overflow-y-auto">
-          <form id="modulo-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 pr-4">
+        <form id="modulo-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre *</Label>
               <InputWithIcon icon={Type} id="nombre" {...register('nombre')} />
@@ -386,7 +385,6 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
               </div>
             </div>
           </form>
-        </ScrollArea>
 
         <DialogFooter className="pt-4 border-t">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
