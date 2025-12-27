@@ -126,7 +126,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader className="pb-4 border-b">
+        <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-primary">
             <Shield className="h-6 w-6" />
             {isEditing ? 'Editar Rol' : 'Nuevo Rol'}
@@ -137,7 +137,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="nombre"
