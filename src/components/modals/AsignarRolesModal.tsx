@@ -8,21 +8,15 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { ModalTitle, SelectWithIcon } from '@/shared/components';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
@@ -209,10 +203,7 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
-            <Shield className="h-6 w-6" />
-            Asignar Roles
-          </DialogTitle>
+          <ModalTitle icon={Shield}>Asignar Roles</ModalTitle>
           <DialogDescription>
             {usuario ? (
               <>Gestiona los roles de acceso para <strong>{usuario.nombre} {usuario.apellido}</strong> en cada módulo.</>
@@ -231,11 +222,12 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
             {/* Selector de módulo */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Módulo del Sistema</Label>
-              <Select value={selectedModulo} onValueChange={setSelectedModulo}>
-                <SelectTrigger className="pl-11 relative bg-muted/30">
-                  <Box className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <SelectValue placeholder="Seleccionar módulo" />
-                </SelectTrigger>
+              <SelectWithIcon
+                icon={Box}
+                value={selectedModulo}
+                onValueChange={setSelectedModulo}
+              >
+                <SelectValue placeholder="Seleccionar módulo" />
                 <SelectContent>
                   {modulos?.map((modulo) => (
                     <SelectItem key={modulo.id} value={modulo.id}>
@@ -243,7 +235,7 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </SelectWithIcon>
             </div>
 
             <Separator />

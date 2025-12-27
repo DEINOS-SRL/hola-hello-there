@@ -15,14 +15,14 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { ModalTitle, InputWithIcon, SelectWithIcon, TextareaWithIcon } from '@/shared/components';
+import { LayoutGrid, Type, AlignLeft, Route, Hash, Link as LinkIcon } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -208,7 +208,7 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-primary">{isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}</DialogTitle>
+          <ModalTitle icon={LayoutGrid}>{isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}</ModalTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos del módulo' : 'Completa los datos para crear un nuevo módulo'}
           </DialogDescription>
@@ -218,59 +218,61 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
           <form id="modulo-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 pr-4">
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre *</Label>
-              <Input id="nombre" {...register('nombre')} />
+              <InputWithIcon icon={Type} id="nombre" {...register('nombre')} />
               {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="descripcion">Descripción</Label>
-              <Textarea id="descripcion" {...register('descripcion')} placeholder="Describe la funcionalidad del módulo" />
+              <TextareaWithIcon icon={AlignLeft} id="descripcion" {...register('descripcion')} placeholder="Describe la funcionalidad del módulo" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Icono</Label>
-                <Select value={icono} onValueChange={(value) => setValue('icono', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar icono" />
-                  </SelectTrigger>
+                <SelectWithIcon
+                  icon={LayoutGrid}
+                  value={icono}
+                  onValueChange={(value) => setValue('icono', value)}
+                >
+                  <SelectValue placeholder="Seleccionar icono" />
                   <SelectContent>
                     {iconOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </SelectWithIcon>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="ruta">Ruta</Label>
-                <Input id="ruta" {...register('ruta')} placeholder="/modulo" />
+                <InputWithIcon icon={Route} id="ruta" {...register('ruta')} placeholder="/modulo" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Módulo Padre</Label>
-                <Select
+                <SelectWithIcon
+                  icon={FolderOpen}
                   value={moduloPadreId || 'none'}
                   onValueChange={(value) => setValue('modulo_padre_id', value === 'none' ? '' : value)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Ninguno (Principal)" />
-                  </SelectTrigger>
+                  <SelectValue placeholder="Ninguno (Principal)" />
                   <SelectContent>
                     <SelectItem value="none">Ninguno (Principal)</SelectItem>
                     {filteredModulosPadre.map((m: any) => (
                       <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </SelectWithIcon>
                 <p className="text-xs text-muted-foreground">Si seleccionas un padre, este será un submódulo</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="orden">Orden</Label>
-                <Input
+                <InputWithIcon
+                  icon={Hash}
                   id="orden"
                   type="number"
                   {...register('orden', { valueAsNumber: true })}
@@ -296,11 +298,9 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="link_documentos" className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4" />
-                    Carpeta del módulo
-                  </Label>
-                  <Input
+                  <Label htmlFor="link_documentos">Carpeta del módulo</Label>
+                  <InputWithIcon
+                    icon={FolderOpen}
                     id="link_documentos"
                     {...register('link_documentos')}
                     placeholder="https://drive.google.com/..."
@@ -310,11 +310,9 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="repositorio" className="flex items-center gap-2">
-                    <Github className="h-4 w-4" />
-                    Repositorio
-                  </Label>
-                  <Input
+                  <Label htmlFor="repositorio">Repositorio</Label>
+                  <InputWithIcon
+                    icon={Github}
                     id="repositorio"
                     {...register('repositorio')}
                     placeholder="https://github.com/..."

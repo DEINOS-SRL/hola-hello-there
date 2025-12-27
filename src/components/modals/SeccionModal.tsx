@@ -10,16 +10,15 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
+import { ModalTitle, InputWithIcon, TextareaWithIcon } from '@/shared/components';
+import { Code, Type, AlignLeft, Hash } from 'lucide-react';
 
 const seccionSchema = z.object({
   codigo: z.string().min(2, 'El código debe tener al menos 2 caracteres'),
@@ -208,10 +207,9 @@ export function SeccionModal({ open, onOpenChange, seccion, onSuccess }: Seccion
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-h-[80vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-primary">
-            <FolderTree className="h-5 w-5" />
+          <ModalTitle icon={FolderTree}>
             {isEditing ? 'Editar Sección' : 'Nueva Sección'}
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos de la sección' : 'Completa los datos para crear una nueva sección'}
           </DialogDescription>
@@ -222,7 +220,8 @@ export function SeccionModal({ open, onOpenChange, seccion, onSuccess }: Seccion
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="codigo">Código *</Label>
-                <Input 
+                <InputWithIcon
+                  icon={Code}
                   id="codigo" 
                   {...register('codigo')} 
                   placeholder="ej: rrhh, operacion"
@@ -233,13 +232,19 @@ export function SeccionModal({ open, onOpenChange, seccion, onSuccess }: Seccion
 
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre *</Label>
-                <Input id="nombre" {...register('nombre')} placeholder="ej: Recursos Humanos" />
+                <InputWithIcon
+                  icon={Type}
+                  id="nombre"
+                  {...register('nombre')}
+                  placeholder="ej: Recursos Humanos"
+                />
                 {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="descripcion">Descripción</Label>
-                <Textarea 
+                <TextareaWithIcon
+                  icon={AlignLeft}
                   id="descripcion" 
                   {...register('descripcion')} 
                   placeholder="Descripción opcional de la sección"
@@ -249,7 +254,8 @@ export function SeccionModal({ open, onOpenChange, seccion, onSuccess }: Seccion
 
               <div className="space-y-2">
                 <Label htmlFor="orden">Orden</Label>
-                <Input 
+                <InputWithIcon
+                  icon={Hash}
                   id="orden" 
                   type="number" 
                   {...register('orden', { valueAsNumber: true })} 
