@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, UserCheck, UserX, Edit, Trash2, Loader2, Shield, X, Filter } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, UserCheck, UserX, Edit, Trash2, Shield, X, Filter, Users } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ import { AsignarRolesModal } from '@/components/modals/AsignarRolesModal';
 import { PerfilUsuarioModal } from '@/components/modals/PerfilUsuarioModal';
 import { EmpresaUsuarioModal } from '@/components/modals/EmpresaUsuarioModal';
 import { UsuarioRolesModal } from '@/components/modals/UsuarioRolesModal';
+import { TableSkeleton } from '@/shared/components';
 
 export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -230,9 +231,7 @@ export default function Usuarios() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
+            <TableSkeleton rows={6} columns={6} showFilters={false} />
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
               <p>No se encontraron usuarios</p>

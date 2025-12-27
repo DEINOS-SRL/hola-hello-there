@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Loader2, UserCheck, Clock, UserX, Upload, Download } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, UserCheck, Clock, UserX, Upload, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,7 @@ import { EmpleadoModal } from '../components/EmpleadoModal';
 import { ImportarEmpleadosModal } from '../components/ImportarEmpleadosModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActionParam } from '@/hooks/useActionParam';
+import { TableSkeleton } from '@/shared/components';
 import type { Empleado } from '../types';
 
 const estadoBadgeVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -275,9 +276,7 @@ export default function Empleados() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
+            <TableSkeleton rows={6} columns={6} showFilters={false} />
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
               <p>No se encontraron empleados</p>
