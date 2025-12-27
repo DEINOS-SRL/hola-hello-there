@@ -53,10 +53,36 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 | `ModuloModalNew`          | `xl`   | Layout de 2 columnas                         |
 | `SeccionModal`            | `lg`   | Formulario + árbol de navegación             |
 | `RolModalNew`             | `lg`   | Layout de 2 columnas                         |
-
 ## Reglas de Diseño
 
-### 1. Inputs con Iconos
+### 1. Títulos de Modal (DialogTitle)
+Los títulos de todos los modales DEBEN usar el color primario (`text-primary`):
+
+```tsx
+// ✅ Correcto - Con color primario
+<DialogTitle className="flex items-center gap-2 text-primary">
+  <Shield className="h-5 w-5" />
+  Nuevo Rol
+</DialogTitle>
+
+// ✅ Correcto - Con tamaño personalizado
+<DialogTitle className="flex items-center gap-2 text-xl text-primary">
+  <User className="h-6 w-6" />
+  Editar Usuario
+</DialogTitle>
+
+// ❌ Incorrecto - Sin color primario (queda negro/foreground)
+<DialogTitle>
+  <div className="flex items-center gap-2">
+    <Shield className="h-5 w-5" />
+    Nuevo Rol
+  </div>
+</DialogTitle>
+```
+
+**Nota importante**: No usar `<div>` como wrapper directo del título. Aplicar las clases directamente al `DialogTitle`.
+
+### 2. Inputs con Iconos
 Todos los inputs con iconos deben usar:
 - Icono: `absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`
 - Input: `className="pl-11"` (padding-left de 44px)
@@ -68,13 +94,13 @@ Todos los inputs con iconos deben usar:
 </div>
 ```
 
-### 2. Altura Máxima
+### 3. Altura Máxima
 Para modales con contenido largo, agregar:
 ```tsx
 <DialogContent size="xl" className="max-h-[90vh] overflow-hidden">
 ```
 
-### 3. Scroll Interno
+### 4. Scroll Interno
 Si el contenido requiere scroll:
 ```tsx
 <DialogContent size="xl" className="max-h-[90vh] overflow-hidden">
@@ -99,6 +125,7 @@ Los modales incluyen animaciones suaves predefinidas:
 - Botones de acción siempre a la derecha en el footer
 - Botón de cancelar siempre con `variant="outline"`
 - Botón de confirmar siempre con `variant="default"` (color primario)
+- **Títulos siempre con `text-primary`**
 
 ---
 

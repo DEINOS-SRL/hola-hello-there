@@ -226,11 +226,9 @@ export function RolModalNew({ open, onOpenChange, rol, onSuccess }: RolModalProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-h-[85vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              {isEditing ? 'Editar Rol' : 'Nuevo Rol'}
-            </div>
+          <DialogTitle className="flex items-center gap-2 text-primary">
+            <Shield className="h-5 w-5" />
+            {isEditing ? 'Editar Rol' : 'Nuevo Rol'}
           </DialogTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos del rol' : 'Completa los datos para crear un nuevo rol por sección'}

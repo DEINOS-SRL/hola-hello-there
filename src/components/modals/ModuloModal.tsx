@@ -208,7 +208,7 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}</DialogTitle>
+          <DialogTitle className="text-primary">{isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}</DialogTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos del módulo' : 'Completa los datos para crear un nuevo módulo'}
           </DialogDescription>

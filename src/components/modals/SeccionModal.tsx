@@ -208,11 +208,9 @@ export function SeccionModal({ open, onOpenChange, seccion, onSuccess }: Seccion
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="max-h-[80vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <FolderTree className="h-5 w-5" />
-              {isEditing ? 'Editar Sección' : 'Nueva Sección'}
-            </div>
+          <DialogTitle className="flex items-center gap-2 text-primary">
+            <FolderTree className="h-5 w-5" />
+            {isEditing ? 'Editar Sección' : 'Nueva Sección'}
           </DialogTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos de la sección' : 'Completa los datos para crear una nueva sección'}

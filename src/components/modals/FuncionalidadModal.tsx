@@ -326,11 +326,9 @@ export function FuncionalidadModal({ open, onOpenChange, funcionalidad, onSucces
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="xl" className="max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              {isEditing ? 'Editar Funcionalidad' : 'Nueva Funcionalidad'}
-            </div>
+          <DialogTitle className="flex items-center gap-2 text-primary">
+            <Zap className="h-5 w-5" />
+            {isEditing ? 'Editar Funcionalidad' : 'Nueva Funcionalidad'}
           </DialogTitle>
           <DialogDescription>
             {isEditing ? 'Modifica los datos de la funcionalidad' : 'Completa los datos para crear una nueva funcionalidad'}
