@@ -143,7 +143,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="lg">
+      <DialogContent size="xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-primary">
             <User className="h-6 w-6" />
