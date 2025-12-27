@@ -24,6 +24,7 @@ const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 
 // Lazy loading para módulos (code-splitting por módulo)
 const SeguridadIndex = lazy(() => import('@/modules/security/pages/Index'));
+const AdminSeguridad = lazy(() => import('@/modules/security/pages/AdminSeguridadSimple'));
 const Usuarios = lazy(() => import('@/modules/security/pages/Usuarios'));
 const Empresas = lazy(() => import('@/modules/security/pages/Empresas'));
 const Roles = lazy(() => import('@/modules/security/pages/Roles'));
@@ -76,6 +77,7 @@ const implementedRoutes: Record<string, React.ComponentType> = {
   '/configuracion/preferencias': ConfiguracionPreferencias,
   // Administración (antes Seguridad)
   '/configuracion/administracion': SeguridadIndex,
+  '/configuracion/administracion/seguridad': AdminSeguridad,
   '/configuracion/administracion/usuarios': Usuarios,
   '/configuracion/administracion/empresas': Empresas,
   '/configuracion/administracion/roles': Roles,
@@ -188,6 +190,7 @@ export function AppRoutes() {
         <Route path="configuracion/notificaciones" element={<ConfiguracionNotificaciones />} />
         <Route path="configuracion/preferencias" element={<ConfiguracionPreferencias />} />
         <Route path="configuracion/administracion" element={<SeguridadIndex />} />
+        <Route path="configuracion/administracion/seguridad" element={<AdminSeguridad />} />
         <Route path="configuracion/administracion/usuarios" element={<Usuarios />} />
         <Route path="configuracion/administracion/empresas" element={<Empresas />} />
         <Route path="configuracion/administracion/roles" element={<Roles />} />

@@ -1,8 +1,17 @@
 import { Link } from 'react-router-dom';
-import { Users, Building2, Shield, LayoutGrid, Settings, UserCog, MessageSquare } from 'lucide-react';
+import { Users, Building2, Shield, LayoutGrid, Settings, UserCog, MessageSquare, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const adminModules = [
+  {
+    title: 'Panel de Seguridad',
+    description: 'Dashboard completo del sistema RBAC multi-tenant con formularios avanzados',
+    icon: ShieldCheck,
+    href: '/configuracion/administracion/seguridad',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-500/10',
+    featured: true,
+  },
   {
     title: 'Empresas',
     description: 'Administra las empresas registradas en la plataforma',
@@ -61,9 +70,35 @@ export default function SeguridadIndex() {
         </div>
       </div>
 
+      {/* Featured Panel */}
+      {adminModules.filter(m => m.featured).map((module) => {
+        const Icon = module.icon;
+        return (
+          <Link key={module.href} to={module.href}>
+            <Card className="hover:shadow-xl hover:border-primary/50 transition-all group cursor-pointer border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-3 rounded-lg w-fit ${module.bgColor}`}>
+                    <Icon className={`h-6 w-6 ${module.color}`} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                      {module.title}
+                    </CardTitle>
+                    <CardDescription className="mt-1 text-sm">
+                      {module.description}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+        );
+      })}
+
       {/* Modules Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {adminModules.map((module) => {
+        {adminModules.filter(m => !m.featured).map((module) => {
           const Icon = module.icon;
           return (
             <Link key={module.href} to={module.href}>

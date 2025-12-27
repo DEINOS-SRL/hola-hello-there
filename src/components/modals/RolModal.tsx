@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield, Building2, AlignLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { segClient } from '@/modules/security/services/segClient';
 import {
@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -25,6 +24,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
 
 const rolSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -53,14 +61,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
     },
   });
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<RolFormData>({
+  const form = useForm<RolFormData>({
     resolver: zodResolver(rolSchema),
     defaultValues: {
       nombre: '',
@@ -69,23 +70,23 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
     },
   });
 
-  const empresaId = watch('empresa_id');
+  const empresaId = form.watch('empresa_id');
 
   useEffect(() => {
     if (rol) {
-      reset({
+      form.reset({
         nombre: rol.nombre,
         descripcion: rol.descripcion || '',
         empresa_id: rol.empresa_id || '',
       });
     } else {
-      reset({
+      form.reset({
         nombre: '',
         descripcion: '',
         empresa_id: '',
       });
     }
-  }, [rol, reset]);
+  }, [rol, form]);
 
   const onSubmit = async (data: RolFormData) => {
     try {
@@ -125,56 +126,100 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'Editar Rol' : 'Nuevo Rol'}</DialogTitle>
+        <DialogHeader className="pb-4 border-b">
+          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
+            <Shield className="h-6 w-6" />
+            {isEditing ? 'Editar Rol' : 'Nuevo Rol'}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Modifica los datos del rol' : 'Completa los datos para crear un nuevo rol'}
+            {isEditing ? 'Modifica los datos del rol existente.' : 'Define un nuevo rol para asignar permisos.'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nombre">Nombre *</Label>
-            <Input id="nombre" {...register('nombre')} />
-            {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
-          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <FormField
+              control={form.control}
+              name="nombre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre del Rol</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Shield className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Ej: Administrador, Supervisor..." className="pl-9" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label htmlFor="descripcion">Descripción</Label>
-            <Textarea id="descripcion" {...register('descripcion')} placeholder="Describe las funciones del rol" />
-          </div>
+            <FormField
+              control={form.control}
+              name="descripcion"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <AlignLeft className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Textarea
+                        placeholder="Descripción de las responsabilidades..."
+                        className="pl-9 min-h-[80px] resize-none"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label>Empresa (opcional)</Label>
-            <Select 
-              value={empresaId || "global"} 
-              onValueChange={(value) => setValue('empresa_id', value === "global" ? "" : value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Global (todas las empresas)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="global">Global</SelectItem>
-                {empresas?.map((e: any) => (
-                  <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Si no seleccionas empresa, el rol será global
-            </p>
-          </div>
+            <FormField
+              control={form.control}
+              name="empresa_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Empresa (Opcional)</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value === "global" ? "" : value)}
+                    value={field.value || "global"}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="pl-9 relative">
+                        <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Seleccionar alcance" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="global" className="font-semibold text-primary">
+                        Global (Todas las empresas)
+                      </SelectItem>
+                      {empresas?.map((e: any) => (
+                        <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Si seleccionas "Global", el rol estará disponible para todas las empresas.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? 'Guardar cambios' : 'Crear rol'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90">
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditing ? 'Guardar Cambios' : 'Crear Rol'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

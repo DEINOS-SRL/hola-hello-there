@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Building2, MapPin, Clock, Globe } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
@@ -14,9 +14,16 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 const empresaSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -38,12 +45,7 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
   const { toast } = useToast();
   const isEditing = !!empresa;
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<EmpresaFormData>({
+  const form = useForm<EmpresaFormData>({
     resolver: zodResolver(empresaSchema),
     defaultValues: {
       nombre: '',
@@ -55,21 +57,21 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
 
   useEffect(() => {
     if (empresa) {
-      reset({
+      form.reset({
         nombre: empresa.nombre,
         direccion: empresa.direccion || '',
         horarios: empresa.horarios || '',
         webhook_url: empresa.webhook_url || '',
       });
     } else {
-      reset({
+      form.reset({
         nombre: '',
         direccion: '',
         horarios: '',
         webhook_url: '',
       });
     }
-  }, [empresa, reset]);
+  }, [empresa, form]);
 
   const onSubmit = async (data: EmpresaFormData) => {
     try {
@@ -108,47 +110,102 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'Editar Empresa' : 'Nueva Empresa'}</DialogTitle>
+      <DialogContent className="sm:max-w-[500px] overflow-hidden">
+        <DialogHeader className="pb-4 border-b">
+          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
+            <Building2 className="h-6 w-6" />
+            {isEditing ? 'Editar Empresa' : 'Nueva Empresa'}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Modifica los datos de la empresa' : 'Completa los datos para crear una nueva empresa'}
+            {isEditing ? 'Modifica los datos de la empresa existente.' : 'Completa los datos para registrar una nueva empresa.'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nombre">Nombre *</Label>
-            <Input id="nombre" {...register('nombre')} />
-            {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
-          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-4">
+            <FormField
+              control={form.control}
+              name="nombre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre Oficial</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Ej: Tech Solutions S.A." className="pl-9" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label htmlFor="direccion">Dirección</Label>
-            <Input id="direccion" {...register('direccion')} />
-          </div>
+            <FormField
+              control={form.control}
+              name="direccion"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dirección</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Ej: Av. Corrientes 1234, CABA" className="pl-9" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label htmlFor="horarios">Horarios</Label>
-            <Textarea id="horarios" {...register('horarios')} placeholder="Ej: Lun-Vie 9:00-18:00" />
-          </div>
+            <FormField
+              control={form.control}
+              name="horarios"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Horarios de Atención</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Textarea 
+                        placeholder="Ej: Lunes a Viernes de 9:00 a 18:00hs" 
+                        className="pl-9 min-h-[80px] resize-none" 
+                        {...field} 
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label htmlFor="webhook_url">Webhook URL</Label>
-            <Input id="webhook_url" type="url" {...register('webhook_url')} placeholder="https://" />
-            {errors.webhook_url && <p className="text-xs text-destructive">{errors.webhook_url.message}</p>}
-          </div>
+            <FormField
+              control={form.control}
+              name="webhook_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Webhook URL (Integración)</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="https://api.empresa.com/webhook" className="pl-9" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? 'Guardar cambios' : 'Crear empresa'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90">
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditing ? 'Guardar Cambios' : 'Crear Empresa'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

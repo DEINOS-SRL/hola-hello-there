@@ -23,6 +23,7 @@ export const securityManifest: ModuleManifest = {
   ],
   routes: [],
   navItems: [
+    { label: 'Panel de Seguridad', path: '/configuracion/administracion/seguridad', icon: 'ShieldCheck', requiredPermissions: ['security.empresas.read'] },
     { label: 'Empresas', path: '/configuracion/administracion/empresas', icon: 'Building2', requiredPermissions: ['security.empresas.read'] },
     { label: 'Usuarios', path: '/configuracion/administracion/usuarios', icon: 'Users', requiredPermissions: ['security.usuarios.read'] },
     { label: 'Roles', path: '/configuracion/administracion/roles', icon: 'Shield', requiredPermissions: ['security.roles.read'] },

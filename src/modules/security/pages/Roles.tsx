@@ -20,7 +20,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { RolModal } from '@/components/modals/RolModal';
+import { RolModalNew } from '@/components/modals/RolModalNew';
 import { VerPermisosModal } from '@/components/modals/VerPermisosModal';
+import { RolPermisosModal } from '@/components/modals/RolPermisosModal';
 
 export default function Roles() {
   const [searchTerm, setSearchTerm] = useState('');

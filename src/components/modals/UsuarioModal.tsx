@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, Mail, CreditCard, Phone, MapPin, Building2, UserCheck } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { segClient } from '@/modules/security/services/segClient';
 import {
@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -25,6 +24,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
 
 const usuarioSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -58,14 +66,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
     },
   });
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<UsuarioFormData>({
+  const form = useForm<UsuarioFormData>({
     resolver: zodResolver(usuarioSchema),
     defaultValues: {
       nombre: '',
@@ -79,12 +80,9 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
     },
   });
 
-  const activo = watch('activo');
-  const empresaId = watch('empresa_id');
-
   useEffect(() => {
     if (usuario) {
-      reset({
+      form.reset({
         nombre: usuario.nombre || '',
         apellido: usuario.apellido || '',
         email: usuario.email,
@@ -95,7 +93,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
         activo: usuario.activo ?? true,
       });
     } else {
-      reset({
+      form.reset({
         nombre: '',
         apellido: '',
         email: '',
@@ -106,7 +104,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
         activo: true,
       });
     }
-  }, [usuario, reset]);
+  }, [usuario, form]);
 
   const onSubmit = async (data: UsuarioFormData) => {
     try {
@@ -145,87 +143,182 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader className="pb-4 border-b">
+          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
+            <User className="h-6 w-6" />
+            {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Modifica los datos del usuario' : 'Completa los datos para crear un nuevo usuario'}
+            {isEditing ? 'Modifica los datos personales y de acceso del usuario.' : 'Completa la ficha para dar de alta un nuevo usuario.'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="nombre">Nombre *</Label>
-              <Input id="nombre" {...register('nombre')} />
-              {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="nombre"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nombre</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Nombre" className="pl-9" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="apellido"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Apellido</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Apellido" className="pl-9" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="apellido">Apellido *</Label>
-              <Input id="apellido" {...register('apellido')} />
-              {errors.apellido && <p className="text-xs text-destructive">{errors.apellido.message}</p>}
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input id="email" type="email" {...register('email')} disabled={isEditing} />
-            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dni">DNI</Label>
-              <Input id="dni" {...register('dni')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="telefono">Teléfono</Label>
-              <Input id="telefono" {...register('telefono')} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="direccion">Dirección</Label>
-            <Input id="direccion" {...register('direccion')} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Empresa *</Label>
-            <Select 
-              value={empresaId || ""} 
-              onValueChange={(value) => setValue('empresa_id', value, { shouldValidate: true })}
-            >
-              <SelectTrigger className={errors.empresa_id ? "border-destructive" : ""}>
-                <SelectValue placeholder="Seleccionar empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                {empresas?.map((e: any) => (
-                  <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="activo">Usuario activo</Label>
-            <Switch
-              id="activo"
-              checked={activo}
-              onCheckedChange={(checked) => setValue('activo', checked)}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Correo Electrónico</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="usuario@empresa.com" type="email" className="pl-9" {...field} disabled={isEditing} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? 'Guardar cambios' : 'Crear usuario'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="dni"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>DNI / Identificación</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="12.345.678" className="pl-9" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="telefono"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Teléfono</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="+54 9 11 ..." className="pl-9" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="direccion"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dirección</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Calle 123, Ciudad" className="pl-9" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="empresa_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Empresa Asignada</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="pl-9 relative">
+                        <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Seleccionar empresa" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {empresas?.map((e: any) => (
+                        <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="activo"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5 flex items-center gap-2">
+                    <UserCheck className="h-5 w-5 text-primary" />
+                    <div>
+                      <FormLabel className="text-base">Usuario Activo</FormLabel>
+                      <FormDescription>
+                        Permitir acceso al sistema a este usuario
+                      </FormDescription>
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90">
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditing ? 'Guardar Cambios' : 'Crear Usuario'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

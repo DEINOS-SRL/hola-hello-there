@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Shield, ShieldCheck, ShieldX } from 'lucide-react';
+import { Loader2, Shield, ShieldCheck, ShieldX, Box } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface AsignarRolesModalProps {
   open: boolean;
@@ -207,14 +208,14 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
+        <DialogHeader className="pb-4 border-b">
+          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
+            <Shield className="h-6 w-6" />
             Asignar Roles
           </DialogTitle>
           <DialogDescription>
             {usuario ? (
-              <>Gestiona los roles de <strong>{usuario.nombre} {usuario.apellido}</strong></>
+              <>Gestiona los roles de acceso para <strong>{usuario.nombre} {usuario.apellido}</strong> en cada módulo.</>
             ) : (
               'Selecciona un usuario'
             )}
@@ -223,15 +224,16 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
 
         {isLoading ? (
           <div className="flex items-center justify-center h-40">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5 pt-4">
             {/* Selector de módulo */}
             <div className="space-y-2">
-              <Label>Módulo</Label>
+              <Label className="text-sm font-medium">Módulo del Sistema</Label>
               <Select value={selectedModulo} onValueChange={setSelectedModulo}>
-                <SelectTrigger>
+                <SelectTrigger className="pl-9 relative bg-muted/30">
+                  <Box className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder="Seleccionar módulo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -247,36 +249,46 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
             <Separator />
 
             {/* Lista de roles */}
-            <div className="space-y-2">
-              <Label>Roles disponibles</Label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Roles Disponibles</Label>
+                {selectedRoles.size > 0 && (
+                  <Badge variant="secondary" className="px-2">
+                    {selectedRoles.size} seleccionado{selectedRoles.size !== 1 && 's'}
+                  </Badge>
+                )}
+              </div>
+
               {loadingUserRoles ? (
-                <div className="flex items-center justify-center h-20">
+                <div className="flex items-center justify-center h-40 border rounded-md border-dashed">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : !selectedModulo ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Selecciona un módulo para ver los roles
-                </p>
+                <div className="flex flex-col items-center justify-center h-40 border rounded-md border-dashed bg-muted/10 text-muted-foreground">
+                  <Box className="h-8 w-8 mb-2 opacity-50" />
+                  <p className="text-sm">Selecciona un módulo arriba</p>
+                </div>
               ) : (
-                <ScrollArea className="h-[250px] rounded-md border p-3">
-                  <div className="space-y-3">
+                <ScrollArea className="h-[300px] pr-4">
+                  <div className="space-y-2">
                     {roles?.map((rol) => {
                       const isSelected = selectedRoles.has(rol.id);
                       return (
                         <div
                           key={rol.id}
-                          className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                          className={cn(
+                            "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all duration-200",
                             isSelected
-                              ? 'bg-primary/5 border-primary/30'
-                              : 'hover:bg-muted/50'
-                          }`}
+                              ? "bg-primary/5 border-primary shadow-sm"
+                              : "hover:bg-accent hover:border-accent-foreground/20 border-transparent bg-card"
+                          )}
                           onClick={() => toggleRole(rol.id)}
                         >
                           <Checkbox
                             id={`rol-${rol.id}`}
                             checked={isSelected}
                             onCheckedChange={() => toggleRole(rol.id)}
-                            className="mt-0.5"
+                            className={cn("mt-1", isSelected && "data-[state=checked]:bg-primary data-[state=checked]:border-primary")}
                           />
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center gap-2">
@@ -287,13 +299,13 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
                               )}
                               <Label
                                 htmlFor={`rol-${rol.id}`}
-                                className="font-medium cursor-pointer"
+                                className={cn("font-medium cursor-pointer text-base", isSelected ? "text-primary" : "text-foreground")}
                               >
                                 {rol.nombre}
                               </Label>
                             </div>
                             {rol.descripcion && (
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-sm text-muted-foreground leading-snug">
                                 {rol.descripcion}
                               </p>
                             )}
@@ -308,27 +320,25 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
 
             {/* Resumen de cambios */}
             {hasChanges() && (
-              <div className="flex items-center gap-2 text-sm">
-                <Badge variant="secondary">
-                  {selectedRoles.size} rol{selectedRoles.size !== 1 ? 'es' : ''} seleccionado{selectedRoles.size !== 1 ? 's' : ''}
-                </Badge>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-muted-foreground">Cambios pendientes</span>
+              <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-md border border-yellow-200 dark:border-yellow-800 text-sm text-yellow-800 dark:text-yellow-200 animate-in fade-in slide-in-from-bottom-2">
+                <Shield className="h-4 w-4" />
+                <span>Tienes cambios sin guardar en este módulo.</span>
               </div>
             )}
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="pt-4 border-t mt-4">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending || !hasChanges()}
+            className="bg-primary hover:bg-primary/90 min-w-[140px]"
           >
             {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Guardar cambios
+            Guardar Cambios
           </Button>
         </DialogFooter>
       </DialogContent>

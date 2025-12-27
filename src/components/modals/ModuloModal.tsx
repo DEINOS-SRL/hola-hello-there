@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Eye, Edit3, FolderOpen, Github } from 'lucide-react';
+import { Loader2, Eye, Edit3, FolderOpen, Github, LayoutGrid, Link, FileText, ToggleLeft, ToggleRight, ListOrdered } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -19,13 +19,21 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
 
 const iconOptions = [
   { value: 'Shield', label: 'Escudo (Seguridad)' },
@@ -242,8 +250,8 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Módulo Padre</Label>
-                <Select 
-                  value={moduloPadreId || 'none'} 
+                <Select
+                  value={moduloPadreId || 'none'}
                   onValueChange={(value) => setValue('modulo_padre_id', value === 'none' ? '' : value)}
                 >
                   <SelectTrigger>
@@ -261,11 +269,11 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
 
               <div className="space-y-2">
                 <Label htmlFor="orden">Orden</Label>
-                <Input 
-                  id="orden" 
-                  type="number" 
-                  {...register('orden', { valueAsNumber: true })} 
-                  placeholder="0" 
+                <Input
+                  id="orden"
+                  type="number"
+                  {...register('orden', { valueAsNumber: true })}
+                  placeholder="0"
                 />
               </div>
             </div>
@@ -284,17 +292,17 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
 
             <div className="border-t pt-4 space-y-4">
               <h4 className="font-medium text-sm">Documentación</h4>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="link_documentos" className="flex items-center gap-2">
                     <FolderOpen className="h-4 w-4" />
                     Carpeta del módulo
                   </Label>
-                  <Input 
-                    id="link_documentos" 
-                    {...register('link_documentos')} 
-                    placeholder="https://drive.google.com/..." 
+                  <Input
+                    id="link_documentos"
+                    {...register('link_documentos')}
+                    placeholder="https://drive.google.com/..."
                     type="url"
                   />
                   {errors.link_documentos && <p className="text-xs text-destructive">{errors.link_documentos.message}</p>}
@@ -305,10 +313,10 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
                     <Github className="h-4 w-4" />
                     Repositorio
                   </Label>
-                  <Input 
-                    id="repositorio" 
-                    {...register('repositorio')} 
-                    placeholder="https://github.com/..." 
+                  <Input
+                    id="repositorio"
+                    {...register('repositorio')}
+                    placeholder="https://github.com/..."
                     type="url"
                   />
                 </div>
@@ -319,7 +327,7 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
                   Documento PRD
                   <span className="text-xs text-muted-foreground">(Markdown)</span>
                 </Label>
-                
+
                 <Tabs value={prdTab} onValueChange={(v) => setPrdTab(v as 'edit' | 'preview')}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="edit" className="flex items-center gap-2">
@@ -331,15 +339,15 @@ export function ModuloModal({ open, onOpenChange, modulo, onSuccess }: ModuloMod
                       Vista previa
                     </TabsTrigger>
                   </TabsList>
-                  
+
                   <TabsContent value="edit" className="mt-2">
-                    <Textarea 
-                      {...register('prd_documento')} 
+                    <Textarea
+                      {...register('prd_documento')}
                       placeholder="# Título del PRD&#10;&#10;## Descripción&#10;&#10;Escribe aquí el documento PRD en formato Markdown..."
                       className="min-h-[200px] font-mono text-sm"
                     />
                   </TabsContent>
-                  
+
                   <TabsContent value="preview" className="mt-2">
                     <div className="min-h-[200px] max-h-[300px] overflow-auto rounded-md border bg-muted/30 p-4">
                       {prdDocumento ? (

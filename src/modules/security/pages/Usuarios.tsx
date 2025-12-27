@@ -42,6 +42,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { UsuarioModal } from '@/components/modals/UsuarioModal';
 import { AsignarRolesModal } from '@/components/modals/AsignarRolesModal';
+import { PerfilUsuarioModal } from '@/components/modals/PerfilUsuarioModal';
+import { EmpresaUsuarioModal } from '@/components/modals/EmpresaUsuarioModal';
+import { UsuarioRolesModal } from '@/components/modals/UsuarioRolesModal';
 
 export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState('');
