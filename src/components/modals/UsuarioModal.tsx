@@ -14,16 +14,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { InputWithIcon } from '@/shared/components/InputWithIcon';
+import { InputWithIcon, SelectWithIcon } from '@/shared/components';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import {
   Form,
@@ -255,19 +248,18 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Empresa Asignada</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="pl-11 relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <SelectValue placeholder="Seleccionar empresa" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
+                  <FormControl>
+                    <SelectWithIcon
+                      icon={Building2}
+                      placeholder="Seleccionar empresa"
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
                       {empresas?.map((e: any) => (
                         <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </SelectWithIcon>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

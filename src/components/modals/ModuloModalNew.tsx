@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Package, ChevronDown, ChevronRight, Folder, FolderOpen, Settings } from 'lucide-react';
+import { Loader2, Puzzle, ChevronDown, ChevronRight, Folder, FolderOpen, Settings, Package, Code, AlignLeft, Hash } from 'lucide-react';
 import { segClient } from '@/modules/security/services/segClient';
 import {
   Dialog,
@@ -13,19 +13,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
+import { InputWithIcon, TextareaWithIcon, SelectWithIcon } from '@/shared/components';
 import { useToast } from '@/hooks/use-toast';
 
 const moduloSchema = z.object({
@@ -246,8 +239,8 @@ export function ModuloModalNew({ open, onOpenChange, modulo, onSuccess }: Modulo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="xl" className="max-h-[85vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-primary">
-            <Package className="h-5 w-5" />
+          <DialogTitle className="flex items-center gap-2 text-xl text-primary">
+            <Puzzle className="h-6 w-6" />
             {isEditing ? 'Editar Módulo' : 'Nuevo Módulo'}
           </DialogTitle>
           <DialogDescription>
@@ -260,38 +253,36 @@ export function ModuloModalNew({ open, onOpenChange, modulo, onSuccess }: Modulo
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="seccion_id">Sección *</Label>
-                <Select
+                <SelectWithIcon
+                  icon={Folder}
+                  placeholder="Seleccione una sección"
                   value={watchedValues.seccion_id}
                   onValueChange={(value) => setValue('seccion_id', value)}
                   disabled={loadingData}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione una sección" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {secciones.map((seccion) => (
-                      <SelectItem key={seccion.id} value={seccion.id}>
-                        <div className="flex items-center gap-2">
-                          <Folder className="h-4 w-4 text-blue-500" />
-                          <div className="flex flex-col">
-                            <span>{seccion.nombre}</span>
-                            <span className="text-xs text-muted-foreground font-mono">
-                              {seccion.codigo}
-                            </span>
-                          </div>
+                  {secciones.map((seccion) => (
+                    <SelectItem key={seccion.id} value={seccion.id}>
+                      <div className="flex items-center gap-2">
+                        <Folder className="h-4 w-4 text-blue-500" />
+                        <div className="flex flex-col">
+                          <span>{seccion.nombre}</span>
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {seccion.codigo}
+                          </span>
                         </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectWithIcon>
                 {errors.seccion_id && <p className="text-xs text-destructive">{errors.seccion_id.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="codigo">Código *</Label>
-                <Input 
-                  id="codigo" 
-                  {...register('codigo')} 
+                <InputWithIcon
+                  icon={Code}
+                  id="codigo"
+                  {...register('codigo')}
                   placeholder="ej: rrhh.empleados, operacion.movimientos"
                   className="font-mono"
                 />
@@ -300,26 +291,33 @@ export function ModuloModalNew({ open, onOpenChange, modulo, onSuccess }: Modulo
 
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre *</Label>
-                <Input id="nombre" {...register('nombre')} placeholder="ej: Empleados, Movimientos" />
+                <InputWithIcon
+                  icon={Package}
+                  id="nombre"
+                  {...register('nombre')}
+                  placeholder="ej: Empleados, Movimientos"
+                />
                 {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="descripcion">Descripción</Label>
-                <Textarea 
-                  id="descripcion" 
-                  {...register('descripcion')} 
+                <TextareaWithIcon
+                  icon={AlignLeft}
+                  id="descripcion"
+                  {...register('descripcion')}
                   placeholder="Descripción opcional del módulo"
-                  rows={3}
+                  className="min-h-[80px] resize-none"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="orden">Orden</Label>
-                <Input 
-                  id="orden" 
-                  type="number" 
-                  {...register('orden', { valueAsNumber: true })} 
+                <InputWithIcon
+                  icon={Hash}
+                  id="orden"
+                  type="number"
+                  {...register('orden', { valueAsNumber: true })}
                   min={0}
                 />
                 {errors.orden && <p className="text-xs text-destructive">{errors.orden.message}</p>}
