@@ -153,12 +153,28 @@ export default {
           "20%, 40%, 60%, 80%": { transform: "translateX(2px)" },
         },
         "dialog-in": {
-          "0%": { opacity: "0", transform: "translate(-50%, -48%) scale(0.96)" },
+          "0%": { opacity: "0", transform: "translate(-50%, -48%) scale(0.95)" },
           "100%": { opacity: "1", transform: "translate(-50%, -50%) scale(1)" },
         },
         "dialog-out": {
           "0%": { opacity: "1", transform: "translate(-50%, -50%) scale(1)" },
-          "100%": { opacity: "0", transform: "translate(-50%, -48%) scale(0.96)" },
+          "100%": { opacity: "0", transform: "translate(-50%, -48%) scale(0.95)" },
+        },
+        "dialog-overlay-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "dialog-overlay-out": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
+        "dialog-content-show": {
+          "0%": { opacity: "0", transform: "translate(-50%, -50%) scale(0.96)" },
+          "100%": { opacity: "1", transform: "translate(-50%, -50%) scale(1)" },
+        },
+        "dialog-content-hide": {
+          "0%": { opacity: "1", transform: "translate(-50%, -50%) scale(1)" },
+          "100%": { opacity: "0", transform: "translate(-50%, -50%) scale(0.96)" },
         },
       },
       animation: {
@@ -175,8 +191,12 @@ export default {
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "shake": "shake 0.4s ease-in-out",
-        "dialog-in": "dialog-in 0.2s ease-out",
-        "dialog-out": "dialog-out 0.15s ease-in",
+        "dialog-in": "dialog-in 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+        "dialog-out": "dialog-out 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+        "dialog-overlay-in": "dialog-overlay-in 0.2s ease-out",
+        "dialog-overlay-out": "dialog-overlay-out 0.15s ease-in",
+        "dialog-content-show": "dialog-content-show 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "dialog-content-hide": "dialog-content-hide 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },
