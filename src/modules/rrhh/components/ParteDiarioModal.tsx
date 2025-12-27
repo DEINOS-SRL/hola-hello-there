@@ -2,12 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { X, Plus, Camera, Loader2, Clock, CheckCircle2, Circle, Save, AlertTriangle } from 'lucide-react';
+import { X, Plus, Camera, Loader2, Clock, CheckCircle2, Circle, Save, AlertTriangle, ClipboardList, AlignLeft, Tag } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -28,19 +27,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { ModalTitle, TextareaWithIcon, SelectWithIcon, InputWithIcon } from '@/shared/components';
 import { useCreateParteDiario, useUploadNovedadFoto } from '../hooks/usePartesDiarios';
 import { 
   ESTADO_ANIMO_LABELS, 
@@ -358,7 +351,7 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
           {/* Header fijo con progreso */}
           <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0 space-y-4 animate-fade-in">
             <div className="flex items-center justify-between">
-              <DialogTitle>Parte Diario de Tareas</DialogTitle>
+              <ModalTitle icon={ClipboardList}>Parte Diario de Tareas</ModalTitle>
               {lastSaved && (
                 <Badge variant="outline" className="text-xs font-normal gap-1">
                   <Save className="h-3 w-3" />
@@ -502,7 +495,8 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Input
+                      <InputWithIcon
+                        icon={AlignLeft}
                         placeholder="¿Qué actividad realizaste?"
                         value={newActividad.descripcion}
                         onChange={(e) => setNewActividad({ ...newActividad, descripcion: e.target.value })}
@@ -512,7 +506,7 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                             handleAddActividad();
                           }
                         }}
-                        className="flex-1"
+                        containerClassName="flex-1"
                       />
                       <Button
                         type="button"
@@ -557,21 +551,18 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                           control={form.control}
                           name={`novedades.${index}.tipo`}
                           render={({ field }) => (
-                            <Select
+                            <SelectWithIcon
+                              icon={Tag}
                               value={field.value}
                               onValueChange={field.onChange}
+                              containerClassName="w-48"
                             >
-                              <SelectTrigger className="w-40">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.entries(TIPO_NOVEDAD_LABELS).map(([value, { label }]) => (
-                                  <SelectItem key={value} value={value}>
-                                    {label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              {Object.entries(TIPO_NOVEDAD_LABELS).map(([value, { label }]) => (
+                                <SelectItem key={value} value={value}>
+                                  {label}
+                                </SelectItem>
+                              ))}
+                            </SelectWithIcon>
                           )}
                         />
                         <Button
@@ -588,7 +579,8 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                         control={form.control}
                         name={`novedades.${index}.descripcion`}
                         render={({ field }) => (
-                          <Textarea
+                          <TextareaWithIcon
+                            icon={AlignLeft}
                             placeholder="Describe la novedad..."
                             className="min-h-[80px] resize-none"
                             {...field}
@@ -646,7 +638,8 @@ export function ParteDiarioModal({ open, onOpenChange, empleadoId }: ParteDiario
                     <FormItem>
                       <FormLabel>Observaciones adicionales (opcional)</FormLabel>
                       <FormControl>
-                        <Textarea
+                        <TextareaWithIcon
+                          icon={AlignLeft}
                           placeholder="Algo más que quieras agregar..."
                           className="min-h-[80px] resize-none"
                           {...field}
