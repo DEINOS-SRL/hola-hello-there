@@ -159,7 +159,7 @@ export function EmpresaModalPro({ open, onOpenChange, empresa, onSuccess }: Empr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="default" className="max-h-[90vh] overflow-hidden">
+      <DialogContent size="lg" className="max-h-[90vh] overflow-hidden">
         <DialogHeader className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-500/10">

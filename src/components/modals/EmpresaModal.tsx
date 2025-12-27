@@ -110,8 +110,8 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] overflow-hidden">
-        <DialogHeader className="pb-4 border-b">
+      <DialogContent size="lg">
+        <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-primary">
             <Building2 className="h-6 w-6" />
             {isEditing ? 'Editar Empresa' : 'Nueva Empresa'}
