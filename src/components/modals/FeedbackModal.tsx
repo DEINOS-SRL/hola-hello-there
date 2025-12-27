@@ -1,23 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { MessageSquare, Send, Loader2, X, FileIcon, Upload } from 'lucide-react';
+import { MessageSquare, Send, Loader2, X, FileIcon, Upload, LayoutGrid, AlignLeft } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
+import { ModalTitle, SelectWithIcon, TextareaWithIcon } from '@/shared/components';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
@@ -237,10 +230,9 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         className="sm:max-h-[95vh] max-h-[90vh] overflow-hidden flex flex-col"
       >
         <DialogHeader className="pr-20 sm:pr-24 !pt-4 !pb-4 sm:!pt-4 sm:!pb-4">
-          <DialogTitle className="flex items-center gap-3 max-w-[calc(100%-3rem)] text-primary">
-            <MessageSquare className="h-5 w-5 text-primary ml-2" />
+          <ModalTitle icon={MessageSquare} className="max-w-[calc(100%-3rem)]">
             Enviar Feedback
-          </DialogTitle>
+          </ModalTitle>
           <DialogDescription className="max-w-[calc(100%-3rem)] pr-2 pl-2">
             Tu opinión nos ayuda a mejorar la plataforma
           </DialogDescription>
@@ -250,39 +242,42 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
           <div className="space-y-4 pt-8 pb-8">
           <div className="space-y-2">
             <Label htmlFor="tipo">Tipo de feedback</Label>
-            <Select value={tipo} onValueChange={setTipo} disabled={isSubmitting}>
-              <SelectTrigger id="tipo">
-                <SelectValue placeholder="Selecciona un tipo..." />
-              </SelectTrigger>
-              <SelectContent>
-                {feedbackTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SelectWithIcon
+              icon={MessageSquare}
+              placeholder="Selecciona un tipo..."
+              onValueChange={setTipo}
+              value={tipo}
+              disabled={isSubmitting}
+            >
+              {feedbackTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectWithIcon>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="modulo">Sección / Módulo (opcional)</Label>
-            <Select value={moduloReferencia} onValueChange={setModuloReferencia} disabled={isSubmitting}>
-              <SelectTrigger id="modulo">
-                <SelectValue placeholder="¿A qué sección se refiere?" />
-              </SelectTrigger>
-              <SelectContent>
-                {seccionesModulos.map((seccion) => (
-                  <SelectItem key={seccion.value} value={seccion.value}>
-                    {seccion.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SelectWithIcon
+              icon={LayoutGrid}
+              placeholder="¿A qué sección se refiere?"
+              onValueChange={setModuloReferencia}
+              value={moduloReferencia}
+              disabled={isSubmitting}
+            >
+              {seccionesModulos.map((seccion) => (
+                <SelectItem key={seccion.value} value={seccion.value}>
+                  {seccion.label}
+                </SelectItem>
+              ))}
+            </SelectWithIcon>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="mensaje">Mensaje</Label>
-            <Textarea
+            <TextareaWithIcon
+              icon={AlignLeft}
               id="mensaje"
               placeholder="Describe tu sugerencia, problema o consulta..."
               value={mensaje}

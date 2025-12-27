@@ -4,14 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, FileText, User, AlignLeft, CheckCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -21,19 +20,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { SelectItem } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { ModalTitle, InputWithIcon, TextareaWithIcon, SelectWithIcon } from '@/shared/components';
 import type { Presupuesto, EstadoPresupuesto } from '../types';
 import { useCreatePresupuesto, useUpdatePresupuesto, useNextNumeroPresupuesto } from '../hooks/usePresupuestos';
 
@@ -136,7 +128,9 @@ export function PresupuestoModal({ open, onOpenChange, presupuesto }: Presupuest
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Editar Presupuesto' : 'Nuevo Presupuesto'}</DialogTitle>
+          <ModalTitle icon={FileText}>
+            {isEditing ? 'Editar Presupuesto' : 'Nuevo Presupuesto'}
+          </ModalTitle>
           <DialogDescription>
             {isEditing 
               ? 'Modifica los datos del presupuesto' 
@@ -154,7 +148,7 @@ export function PresupuestoModal({ open, onOpenChange, presupuesto }: Presupuest
                   <FormItem>
                     <FormLabel>Número *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="PRES-2025-0001" />
+                      <InputWithIcon icon={FileText} {...field} placeholder="PRES-2025-0001" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -167,13 +161,13 @@ export function PresupuestoModal({ open, onOpenChange, presupuesto }: Presupuest
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona un estado" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
+                    <FormControl>
+                      <SelectWithIcon
+                        icon={CheckCircle}
+                        placeholder="Selecciona un estado"
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         {estadoOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             <div className="flex items-center gap-2">
@@ -182,8 +176,8 @@ export function PresupuestoModal({ open, onOpenChange, presupuesto }: Presupuest
                             </div>
                           </SelectItem>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </SelectWithIcon>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -197,7 +191,7 @@ export function PresupuestoModal({ open, onOpenChange, presupuesto }: Presupuest
                 <FormItem>
                   <FormLabel>Cliente *</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Nombre del cliente" />
+                    <InputWithIcon icon={User} {...field} placeholder="Nombre del cliente" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -211,7 +205,8 @@ export function PresupuestoModal({ open, onOpenChange, presupuesto }: Presupuest
                 <FormItem>
                   <FormLabel>Descripción</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <TextareaWithIcon 
+                      icon={AlignLeft}
                       {...field} 
                       placeholder="Descripción del presupuesto"
                       rows={3}
@@ -311,7 +306,8 @@ export function PresupuestoModal({ open, onOpenChange, presupuesto }: Presupuest
                 <FormItem>
                   <FormLabel>Observaciones</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <TextareaWithIcon 
+                      icon={AlignLeft}
                       {...field} 
                       placeholder="Observaciones adicionales"
                       rows={2}

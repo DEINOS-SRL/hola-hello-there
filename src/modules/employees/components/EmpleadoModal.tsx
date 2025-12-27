@@ -2,12 +2,11 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, CreditCard, Hash, Mail, Phone, Briefcase, Building, CalendarDays, MapPin, UserCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -17,16 +16,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { SelectItem } from '@/components/ui/select';
+import { ModalTitle, InputWithIcon, TextareaWithIcon, SelectWithIcon } from '@/shared/components';
 import type { Empleado } from '../types';
 
 const formSchema = z.object({
@@ -122,7 +114,9 @@ export function EmpleadoModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{empleado ? 'Editar Empleado' : 'Nuevo Empleado'}</DialogTitle>
+          <ModalTitle icon={User}>
+            {empleado ? 'Editar Empleado' : 'Nuevo Empleado'}
+          </ModalTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -134,7 +128,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Nombre *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Juan" {...field} />
+                      <InputWithIcon icon={User} placeholder="Juan" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -147,7 +141,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Apellido *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Pérez" {...field} />
+                      <InputWithIcon icon={User} placeholder="Pérez" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -163,7 +157,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>DNI</FormLabel>
                     <FormControl>
-                      <Input placeholder="12345678" {...field} />
+                      <InputWithIcon icon={CreditCard} placeholder="12345678" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -176,7 +170,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Legajo</FormLabel>
                     <FormControl>
-                      <Input placeholder="EMP-001" {...field} />
+                      <InputWithIcon icon={Hash} placeholder="EMP-001" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -192,7 +186,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="juan@empresa.com" {...field} />
+                      <InputWithIcon icon={Mail} type="email" placeholder="juan@empresa.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,7 +199,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <Input placeholder="+54 11 1234-5678" {...field} />
+                      <InputWithIcon icon={Phone} placeholder="+54 11 1234-5678" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -221,7 +215,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Cargo</FormLabel>
                     <FormControl>
-                      <Input placeholder="Desarrollador" {...field} />
+                      <InputWithIcon icon={Briefcase} placeholder="Desarrollador" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -234,7 +228,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Departamento</FormLabel>
                     <FormControl>
-                      <Input placeholder="Tecnología" {...field} />
+                      <InputWithIcon icon={Building} placeholder="Tecnología" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,7 +244,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Fecha de Nacimiento</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <InputWithIcon icon={CalendarDays} type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -263,7 +257,7 @@ export function EmpleadoModal({
                   <FormItem>
                     <FormLabel>Fecha de Ingreso</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <InputWithIcon icon={CalendarDays} type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -277,18 +271,18 @@ export function EmpleadoModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Estado</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar estado" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
+                  <FormControl>
+                    <SelectWithIcon
+                      icon={UserCheck}
+                      placeholder="Seleccionar estado"
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
                       <SelectItem value="activo">Activo</SelectItem>
                       <SelectItem value="licencia">En Licencia</SelectItem>
                       <SelectItem value="baja">Baja</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    </SelectWithIcon>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -301,7 +295,7 @@ export function EmpleadoModal({
                 <FormItem>
                   <FormLabel>Dirección</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Calle 123, Ciudad" {...field} />
+                    <TextareaWithIcon icon={MapPin} placeholder="Calle 123, Ciudad" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

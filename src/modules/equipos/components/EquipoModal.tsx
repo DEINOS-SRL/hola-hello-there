@@ -4,12 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, Truck, Hash, Type, AlignLeft, Boxes, Tag, Package, Barcode, MapPin, FileText, CheckCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -19,8 +18,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -37,6 +36,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { ModalTitle, InputWithIcon, TextareaWithIcon, SelectWithIcon } from '@/shared/components';
 import {
   useCreateEquipo,
   useUpdateEquipo,
@@ -238,9 +238,9 @@ export function EquipoModal({ open, onOpenChange, equipo }: EquipoModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <ModalTitle icon={Truck}>
             {equipo ? 'Editar Equipo' : 'Nuevo Equipo'}
-          </DialogTitle>
+          </ModalTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -253,7 +253,7 @@ export function EquipoModal({ open, onOpenChange, equipo }: EquipoModalProps) {
                   <FormItem>
                     <FormLabel>Código *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="EQ-0001" />
+                      <InputWithIcon icon={Hash} {...field} placeholder="EQ-0001" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -266,20 +266,20 @@ export function EquipoModal({ open, onOpenChange, equipo }: EquipoModalProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar estado" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
+                    <FormControl>
+                      <SelectWithIcon
+                        icon={CheckCircle}
+                        placeholder="Seleccionar estado"
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         {estadoOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </SelectWithIcon>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -293,7 +293,7 @@ export function EquipoModal({ open, onOpenChange, equipo }: EquipoModalProps) {
                 <FormItem>
                   <FormLabel>Nombre *</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Nombre del equipo" />
+                    <InputWithIcon icon={Type} {...field} placeholder="Nombre del equipo" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -307,7 +307,7 @@ export function EquipoModal({ open, onOpenChange, equipo }: EquipoModalProps) {
                 <FormItem>
                   <FormLabel>Descripción</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Descripción del equipo" rows={2} />
+                    <TextareaWithIcon icon={AlignLeft} {...field} placeholder="Descripción del equipo" rows={2} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
