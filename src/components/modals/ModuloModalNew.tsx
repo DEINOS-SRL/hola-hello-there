@@ -244,7 +244,7 @@ export function ModuloModalNew({ open, onOpenChange, modulo, onSuccess }: Modulo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[85vh] overflow-hidden">
+      <DialogContent size="xl" className="max-h-[85vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             <div className="flex items-center gap-2">

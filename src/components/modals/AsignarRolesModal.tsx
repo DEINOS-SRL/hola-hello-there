@@ -207,7 +207,7 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent size="md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-primary">
             <Shield className="h-6 w-6" />

@@ -206,7 +206,7 @@ export function SeccionModal({ open, onOpenChange, seccion, onSuccess }: Seccion
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden">
+      <DialogContent size="lg" className="max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             <div className="flex items-center gap-2">

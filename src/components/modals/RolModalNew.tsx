@@ -224,7 +224,7 @@ export function RolModalNew({ open, onOpenChange, rol, onSuccess }: RolModalProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[85vh] overflow-hidden">
+      <DialogContent size="lg" className="max-h-[85vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             <div className="flex items-center gap-2">
