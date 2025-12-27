@@ -19,7 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { NotificationsDropdown } from './NotificationsDropdown';
 import { FeedbackModal } from '@/components/modals/FeedbackModal';
 import { useFeedbacks } from '@/modules/security/hooks/useFeedbacks';
@@ -55,11 +55,39 @@ function ThemeToggleIcon() {
 export function AppHeader() {
   const { user, empresa, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [feedbackOpen, setFeedbackOpen] = React.useState(false);
   const { feedbacks } = useFeedbacks();
   const { isMobile, toggleSidebar } = useSidebarContext();
   
   const destacadosCount = feedbacks.filter(f => f.destacado && f.estado === 'pendiente').length;
+
+  // Detectar parámetro ?modal=feedback en la URL para abrir el modal
+  React.useEffect(() => {
+    const modalParam = searchParams.get('modal');
+    if (modalParam === 'feedback') {
+      setFeedbackOpen(true);
+    }
+  }, [searchParams]);
+
+  // Función para manejar el cambio del modal (sincroniza con URL)
+  const handleFeedbackModalChange = (open: boolean) => {
+    setFeedbackOpen(open);
+    if (!open) {
+      // Limpiar parámetro de la URL al cerrar
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('modal');
+      setSearchParams(newParams, { replace: true });
+    }
+  };
+
+  // Función para abrir el modal y actualizar la URL
+  const openFeedbackModal = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('modal', 'feedback');
+    setSearchParams(newParams, { replace: true });
+    setFeedbackOpen(true);
+  };
 
   const initials = user 
     ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase()
@@ -134,7 +162,7 @@ export function AppHeader() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setFeedbackOpen(true)}
+                onClick={openFeedbackModal}
               >
                 <MessageSquarePlus className="h-5 w-5 text-muted-foreground" />
               </Button>
@@ -147,7 +175,7 @@ export function AppHeader() {
 
         <ThemeToggleIcon />
         
-        <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+        <FeedbackModal open={feedbackOpen} onOpenChange={handleFeedbackModalChange} />
 
         <div className="h-6 w-px bg-border" />
 

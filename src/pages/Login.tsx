@@ -257,14 +257,14 @@ export default function Login() {
                     <div className="space-y-2">
                       <Label htmlFor="login-email">Correo electrónico</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                         <Input
                           id="login-email"
                           type="email"
                           placeholder="correo@ejemplo.com"
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
-                          className="pl-10"
+                          className="!pl-10 !pr-4 md:!pr-3"
                           disabled={isLoading}
                         />
                       </div>
@@ -273,14 +273,14 @@ export default function Login() {
                     <div className="space-y-2">
                       <Label htmlFor="login-password">Contraseña</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                         <Input
                           id="login-password"
                           type={showLoginPassword ? 'text' : 'password'}
                           placeholder="••••••••"
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
-                          className="pl-10 pr-10"
+                          className="!pl-10 !pr-10"
                           disabled={isLoading}
                         />
                         <button
@@ -342,14 +342,14 @@ export default function Login() {
                         <div className="space-y-2">
                           <Label htmlFor="recovery-email">Correo electrónico</Label>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                             <Input
                               id="recovery-email"
                               type="email"
                               placeholder="correo@ejemplo.com"
                               value={recoveryEmail}
                               onChange={(e) => setRecoveryEmail(e.target.value)}
-                              className="pl-10"
+                              className="!pl-10 !pr-4 md:!pr-3"
                               disabled={isRecoveryLoading}
                               autoFocus
                             />
@@ -402,14 +402,14 @@ export default function Login() {
                     <div className="space-y-2">
                       <Label htmlFor="signup-email">Correo electrónico</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                         <Input
                           id="signup-email"
                           type="email"
                           placeholder="correo@ejemplo.com"
                           value={signupEmail}
                           onChange={(e) => setSignupEmail(e.target.value)}
-                          className="pl-10"
+                          className="!pl-10 !pr-4 md:!pr-3"
                           disabled={isLoading}
                         />
                       </div>
@@ -418,14 +418,14 @@ export default function Login() {
                     <div className="space-y-2">
                       <Label htmlFor="signup-password">Contraseña</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                         <Input
                           id="signup-password"
                           type={showSignupPassword ? 'text' : 'password'}
                           placeholder="Mínimo 6 caracteres"
                           value={signupPassword}
                           onChange={(e) => setSignupPassword(e.target.value)}
-                          className="pl-10 pr-10"
+                          className="!pl-10 !pr-10"
                           disabled={isLoading}
                         />
                         <button

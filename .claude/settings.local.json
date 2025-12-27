@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash:*)",
+      "Bash(ssh -i ~/.ssh/clavesecreta root@137.184.0.21 \"cd /var/www/dnscloud && pm2 restart dnscloud && pm2 status\")",
+      "Bash(ssh:*)",
+      "Bash(supabase link:*)",
+      "Bash(export SUPABASE_ACCESS_TOKEN=sbp_734a57dd49d399a8f6fba279e01c532de59373d4)",
+      "Bash(npx supabase:*)",
+      "Bash(node check-schemas.cjs:*)",
+      "Bash(node export-full-schema.cjs:*)",
+      "Bash(node import-schema.cjs:*)",
+      "Bash(node import-schema-v2.cjs:*)",
+      "Bash(node fix-and-import.cjs:*)",
+      "Bash(node compare-schemas.cjs:*)",
+      "Bash(node create-missing-tables.cjs:*)"
+    ]
+  }
+}

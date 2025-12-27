@@ -1,0 +1,88 @@
+name: Deploy Database Migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'supabase/migrations/**'
+  workflow_dispatch: # Permite ejecutar manualmente desde GitHub
+
+jobs:
+  deploy-migrations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run migrations
+        env:
+          PGHOST: ${{ secrets.DB_HOST }}
+          PGPORT: ${{ secrets.DB_PORT }}
+          PGDATABASE: ${{ secrets.DB_NAME }}
+          PGUSER: ${{ secrets.DB_USER }}
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          echo "🚀 Ejecutando migraciones..."
+
+          # Verificar conexión a la base de datos
+          psql -c "SELECT version();" || exit 1
+
+          # Crear tabla de control de migraciones si no existe
+          psql -c "CREATE SCHEMA IF NOT EXISTS migrations;"
+          psql -c "CREATE TABLE IF NOT EXISTS migrations.applied_migrations (
+            id SERIAL PRIMARY KEY,
+            filename VARCHAR(255) UNIQUE NOT NULL,
+            applied_at TIMESTAMP DEFAULT NOW()
+          );"
+
+          echo "📋 Buscando migraciones pendientes..."
+
+          # Ejecutar todas las migraciones en orden
+          for migration_file in supabase/migrations/*.sql; do
+            filename=$(basename "$migration_file")
+
+            # Verificar si ya fue aplicada
+            applied=$(psql -t -c "SELECT COUNT(*) FROM migrations.applied_migrations WHERE filename = '$filename';")
+
+            if [ "$applied" -eq 0 ]; then
+              echo "▶️  Aplicando: $filename"
+
+              if psql -f "$migration_file"; then
+                # Registrar migración exitosa
+                psql -c "INSERT INTO migrations.applied_migrations (filename) VALUES ('$filename');"
+                echo "✅ Migración aplicada: $filename"
+              else
+                echo "❌ Error aplicando migración: $filename"
+                exit 1
+              fi
+            else
+              echo "⏭️  Migración ya aplicada: $filename"
+            fi
+          done
+
+          echo "🎉 Todas las migraciones fueron aplicadas exitosamente!"
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Migraciones deployadas exitosamente"
+          else
+            echo "❌ Error en el deploy de migraciones"
+          fi

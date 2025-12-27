@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink as RouterNavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { 
   Home, 
@@ -140,6 +140,7 @@ export function AppSidebar() {
   const { favoritos, isLoading: isLoadingFavoritos, toggleFavorito, isFavorito, reorderFavoritos, isAdding, isRemoving } = useFavoritos();
   const [favoritosExpanded, setFavoritosExpanded] = useState(true);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // Ref para el input de búsqueda
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -154,6 +155,33 @@ export function AppSidebar() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+
+  // Detectar parámetro ?modal=feedback en la URL para abrir el modal
+  useEffect(() => {
+    const modalParam = searchParams.get('modal');
+    if (modalParam === 'feedback') {
+      setFeedbackModalOpen(true);
+    }
+  }, [searchParams]);
+
+  // Función para manejar el cambio del modal (sincroniza con URL)
+  const handleFeedbackModalChange = (open: boolean) => {
+    setFeedbackModalOpen(open);
+    if (!open) {
+      // Limpiar parámetro de la URL al cerrar
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('modal');
+      setSearchParams(newParams, { replace: true });
+    }
+  };
+
+  // Función para abrir el modal y actualizar la URL
+  const openFeedbackModal = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('modal', 'feedback');
+    setSearchParams(newParams, { replace: true });
+    setFeedbackModalOpen(true);
+  };
 
   // Estado efectivo de colapsado (en mobile siempre expandido)
   // Considera hover-expand: si está colapsado pero hover-expanded, muestra como expandido
@@ -1225,6 +1253,89 @@ export function AppSidebar() {
         )}
       </div>
 
+      {/* Campo de búsqueda fijo - siempre visible cuando el sidebar está expandido */}
+      {!isCollapsed && !isHoverExpanded && (
+        <div className="px-2 pb-2 space-y-1 shrink-0">
+          <div className="flex items-center gap-1">
+            <div className={cn("relative flex-1 group", noResults && "animate-shake")}>
+              {isSearching ? (
+                <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary animate-spin pointer-events-none z-10" />
+              ) : (
+                <Search className={cn(
+                  "absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none z-10 transition-colors",
+                  noResults ? "text-destructive" : "text-sidebar-foreground/50 group-focus-within:text-primary"
+                )} />
+              )}
+              <Input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Buscar..."
+                value={moduleSearchInput}
+                onChange={(e) => setModuleSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    clearSearch();
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                className={cn(
+                  "h-8 pl-8 pr-14 md:pl-8 md:pr-14 text-xs bg-sidebar-accent/30 border-sidebar-border placeholder:text-sidebar-foreground/40 text-sidebar-foreground transition-all duration-200 focus:bg-sidebar-accent/60 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_8px_hsl(var(--primary)/0.15)]",
+                  noResults && "border-destructive/50 focus:border-destructive focus:ring-destructive/20",
+                )}
+              />
+              {/* Badge de atajo de teclado */}
+              {!moduleSearchInput && (
+                <kbd className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-sidebar-foreground/50 bg-sidebar-background/80 rounded border border-sidebar-border/50 pointer-events-none transition-opacity group-focus-within:opacity-0">
+                  {shortcutSearch}
+                </kbd>
+              )}
+              {moduleSearchInput && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            {/* Botón expandir/colapsar todos */}
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleAllModules}
+                  className="h-8 w-8 shrink-0 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                >
+                  {allExpanded ? (
+                    <ChevronsDownUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronsUpDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="z-[9999]">
+                <span>{allExpanded ? 'Colapsar todos' : 'Expandir todos'}</span>
+                <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
+                  {shortcutModules}
+                </kbd>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          {/* Contador de resultados y hint */}
+          {moduleSearch.trim() && (
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[10px] text-sidebar-foreground/50">
+                {filteredModules.length} de {visibleModules.length} módulos
+              </p>
+              <p className="text-[10px] text-sidebar-foreground/30">
+                <kbd className="px-1 py-0.5 text-[9px] font-mono bg-sidebar-accent/30 rounded">Esc</kbd> limpiar
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Separador antes del área scrolleable */}
       <div className="border-t border-sidebar-border mx-2 shrink-0" />
 
@@ -1233,99 +1344,6 @@ export function AppSidebar() {
 
         {/* Módulos dinámicos desde BD */}
         <div className="space-y-1">
-
-          {/* Filtro de búsqueda de módulos - transparente */}
-          {!isCollapsed && !isHoverExpanded && visibleModules.length > 3 && (
-            <div className="px-2 pb-2 space-y-1 mt-2">
-              <div className="flex items-center gap-1">
-                <Tooltip delayDuration={300}>
-                  <TooltipTrigger asChild>
-                    <div className={cn("relative flex-1 group", noResults && "animate-shake")}>
-                      {isSearching ? (
-                        <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary animate-spin pointer-events-none z-10" />
-                      ) : (
-                        <Search className={cn(
-                          "absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none z-10 transition-colors",
-                          noResults ? "text-destructive" : "text-sidebar-foreground/40 group-focus-within:text-primary"
-                        )} />
-                      )}
-                      <Input
-                        ref={searchInputRef}
-                        type="text"
-                        placeholder="Buscar..."
-                        value={moduleSearchInput}
-                        onChange={(e) => setModuleSearchInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Escape') {
-                            clearSearch();
-                            (e.target as HTMLInputElement).blur();
-                          }
-                        }}
-                        className={cn(
-                          "h-8 pl-8 pr-14 md:pl-8 md:pr-14 text-xs bg-transparent border-sidebar-border/50 placeholder:text-sidebar-foreground/30 text-sidebar-foreground transition-all duration-200 focus:bg-sidebar-accent/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_8px_hsl(var(--primary)/0.15)]",
-                          noResults && "border-destructive/50 focus:border-destructive focus:ring-destructive/20",
-                        )}
-                      />
-                      {/* Badge de atajo de teclado */}
-                      {!moduleSearchInput && (
-                        <kbd className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-sidebar-foreground/40 bg-sidebar-accent/50 rounded border border-sidebar-border/30 pointer-events-none transition-opacity group-focus-within:opacity-0">
-                          {shortcutSearch}
-                        </kbd>
-                      )}
-                      {moduleSearchInput && (
-                        <button
-                          onClick={clearSearch}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" sideOffset={4} className="z-[9999]">
-                    <div className="text-xs">
-                      <p className="font-medium">Buscar módulos</p>
-                      <p className="text-muted-foreground">Escribe para filtrar la lista de módulos</p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-                {/* Botón expandir/colapsar todos */}
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={toggleAllModules}
-                      className="h-8 w-8 shrink-0 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                    >
-                      {allExpanded ? (
-                        <ChevronsDownUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronsUpDown className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={8} className="z-[9999]">
-                    <span>{allExpanded ? 'Colapsar todos' : 'Expandir todos'}</span>
-                    <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-muted/50 rounded border border-border/50">
-                      {shortcutModules}
-                    </kbd>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              {/* Contador de resultados y hint */}
-              {moduleSearch.trim() && (
-                <div className="flex items-center justify-between px-1">
-                  <p className="text-[10px] text-sidebar-foreground/50">
-                    {filteredModules.length} de {visibleModules.length} módulos
-                  </p>
-                  <p className="text-[10px] text-sidebar-foreground/30">
-                    <kbd className="px-1 py-0.5 text-[9px] font-mono bg-sidebar-accent/30 rounded">Esc</kbd> limpiar
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
           
           {/* Botón expandir/colapsar en modo colapsado */}
           {isCollapsed && collapsibleModuleIds.length > 0 && (
@@ -1375,10 +1393,10 @@ export function AppSidebar() {
       <div className="p-2 border-t border-sidebar-border space-y-1">
         {/* Configuración con Popover */}
         <Popover>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                {collapsed ? (
+          {isCollapsed ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
                   <button
                     className={cn(
                       "flex items-center justify-center w-full p-2 rounded-md transition-all duration-200",
@@ -1388,27 +1406,27 @@ export function AppSidebar() {
                   >
                     <Settings className="h-5 w-5" />
                   </button>
-                ) : (
-                  <button
-                    className={cn(
-                      "flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-all duration-200",
-                      "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                      location.pathname.startsWith('/configuracion') && "bg-primary/10 text-primary font-medium"
-                    )}
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span>Configuración</span>
-                    <ChevronRight className="h-4 w-4 ml-auto" />
-                  </button>
-                )}
-              </PopoverTrigger>
-            </TooltipTrigger>
-            {collapsed && (
-              <TooltipContent side="right">
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="z-[9999]">
                 Configuración
               </TooltipContent>
-            )}
-          </Tooltip>
+            </Tooltip>
+          ) : (
+            <PopoverTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-all duration-200",
+                  "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  location.pathname.startsWith('/configuracion') && "bg-primary/10 text-primary font-medium"
+                )}
+              >
+                <Settings className="h-4 w-4 shrink-0" />
+                <span className="truncate text-left">Configuración</span>
+                <ChevronRight className="h-4 w-4 ml-auto shrink-0" />
+              </button>
+            </PopoverTrigger>
+          )}
           <PopoverContent 
             side="right" 
             align="end"
@@ -1446,32 +1464,32 @@ export function AppSidebar() {
         
         {/* Ayuda y Soporte con Popover */}
         <Popover>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                {collapsed ? (
+          {isCollapsed ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
                   <button
                     className="flex items-center justify-center w-full p-2 rounded-md text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   >
                     <HelpCircle className="h-5 w-5" />
                   </button>
-                ) : (
-                  <button
-                    className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    <span>Ayuda y Soporte</span>
-                    <ChevronRight className="h-4 w-4 ml-auto" />
-                  </button>
-                )}
-              </PopoverTrigger>
-            </TooltipTrigger>
-            {collapsed && (
-              <TooltipContent side="right">
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="z-[9999]">
                 Ayuda y Soporte
               </TooltipContent>
-            )}
-          </Tooltip>
+            </Tooltip>
+          ) : (
+            <PopoverTrigger asChild>
+              <button
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              >
+                <HelpCircle className="h-4 w-4 shrink-0" />
+                <span className="truncate text-left">Ayuda y Soporte</span>
+                <ChevronRight className="h-4 w-4 ml-auto shrink-0" />
+              </button>
+            </PopoverTrigger>
+          )}
           <PopoverContent 
             side="right" 
             align="end"
@@ -1497,7 +1515,7 @@ export function AppSidebar() {
               
               {/* Feedback */}
               <button
-                onClick={() => setFeedbackModalOpen(true)}
+                onClick={openFeedbackModal}
                 className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md transition-all duration-200 text-foreground/80 hover:bg-accent hover:text-foreground text-left"
               >
                 <MessageSquare className="h-5 w-5 text-primary" />
@@ -1513,7 +1531,7 @@ export function AppSidebar() {
       </div>
 
       {/* Modal de Feedback */}
-      <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
+      <FeedbackModal open={feedbackModalOpen} onOpenChange={handleFeedbackModalChange} />
     </aside>
   );
 }

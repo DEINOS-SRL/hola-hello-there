@@ -1,0 +1,135 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Permite ejecutar manualmente
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests (si existen)
+        run: npm test --if-present
+
+      - name: Build application
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+        run: npm run build
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run database migrations
+        env:
+          PGHOST: ${{ secrets.DB_HOST }}
+          PGPORT: ${{ secrets.DB_PORT }}
+          PGDATABASE: ${{ secrets.DB_NAME }}
+          PGUSER: ${{ secrets.DB_USER }}
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          echo "🗄️  Ejecutando migraciones de base de datos..."
+
+          # Crear schema y tabla de control si no existen
+          psql -c "CREATE SCHEMA IF NOT EXISTS migrations;"
+          psql -c "CREATE TABLE IF NOT EXISTS migrations.applied_migrations (
+            id SERIAL PRIMARY KEY,
+            filename VARCHAR(255) UNIQUE NOT NULL,
+            applied_at TIMESTAMP DEFAULT NOW(),
+            checksum VARCHAR(64)
+          );"
+
+          # Ejecutar migraciones pendientes
+          for migration_file in supabase/migrations/*.sql; do
+            if [ -f "$migration_file" ]; then
+              filename=$(basename "$migration_file")
+              checksum=$(md5sum "$migration_file" | cut -d' ' -f1)
+
+              # Verificar si ya fue aplicada
+              applied=$(psql -t -c "SELECT COUNT(*) FROM migrations.applied_migrations WHERE filename = '$filename';")
+
+              if [ "$applied" -eq 0 ]; then
+                echo "▶️  Aplicando: $filename"
+
+                if psql -f "$migration_file" 2>&1 | tee migration_output.log; then
+                  psql -c "INSERT INTO migrations.applied_migrations (filename, checksum) VALUES ('$filename', '$checksum');"
+                  echo "✅ $filename"
+                else
+                  echo "❌ Error en $filename"
+                  cat migration_output.log
+                  exit 1
+                fi
+              else
+                echo "⏭️  $filename (ya aplicada)"
+              fi
+            fi
+          done
+
+          echo "✅ Migraciones completadas"
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo "🚀 Iniciando deploy en VPS..."
+            cd /var/www/dnscloud
+
+            echo "📥 Descargando últimos cambios..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "📦 Instalando dependencias..."
+            npm install --production=false
+
+            echo "🔨 Construyendo aplicación..."
+            npm run build
+
+            echo "🔄 Reiniciando aplicación con PM2..."
+            pm2 restart dnscloud
+
+            echo "📊 Estado de PM2..."
+            pm2 status
+
+            echo "✅ Deploy completado!"
+
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verificando deployment..."
+          sleep 5
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://dnscloud.deinos.com.ar)
+
+          if [ "$response" = "200" ]; then
+            echo "✅ Aplicación respondiendo correctamente (HTTP $response)"
+          else
+            echo "⚠️  Aplicación responde con HTTP $response"
+          fi
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "🎉 Deploy exitoso a producción!"
+          else
+            echo "❌ Falló el deploy a producción"
+          fi
