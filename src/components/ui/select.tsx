@@ -24,8 +24,8 @@ const SelectTrigger = React.forwardRef<
       "transition-colors duration-200",
       // Mobile: más grande
       "h-12 px-4 py-3 text-base",
-      // Desktop: tamaño normal
-      "md:h-10 md:px-3 md:py-2 md:text-sm",
+      // Desktop: mantener altura/texto, sin reducir padding horizontal (evita solapamiento con iconos)
+      "md:h-10 md:py-2 md:text-sm",
       className,
     )}
     {...props}
