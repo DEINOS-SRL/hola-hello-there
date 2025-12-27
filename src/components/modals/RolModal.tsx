@@ -147,7 +147,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
                   <FormControl>
                     <div className="relative">
                       <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="Ej: Administrador, Supervisor..." className="pl-10" {...field} />
+                      <Input placeholder="Ej: Administrador, Supervisor..." className="pl-11" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -166,7 +166,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
                       <AlignLeft className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Textarea
                         placeholder="Descripción de las responsabilidades..."
-                        className="pl-10 min-h-[80px] resize-none"
+                        className="pl-11 min-h-[80px] resize-none"
                         {...field}
                       />
                     </div>
@@ -187,7 +187,7 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
                     value={field.value || "global"}
                   >
                     <FormControl>
-                      <SelectTrigger className="pl-10 relative">
+                      <SelectTrigger className="pl-11 relative">
                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         <SelectValue placeholder="Seleccionar alcance" />
                       </SelectTrigger>

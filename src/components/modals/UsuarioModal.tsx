@@ -166,7 +166,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                     <FormControl>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Input placeholder="Nombre" className="pl-10" {...field} />
+                        <Input placeholder="Nombre" className="pl-11" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -182,7 +182,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                     <FormControl>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Input placeholder="Apellido" className="pl-10" {...field} />
+                        <Input placeholder="Apellido" className="pl-11" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -200,7 +200,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                   <FormControl>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="usuario@empresa.com" type="email" className="pl-10" {...field} disabled={isEditing} />
+                      <Input placeholder="usuario@empresa.com" type="email" className="pl-11" {...field} disabled={isEditing} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -218,7 +218,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                     <FormControl>
                       <div className="relative">
                         <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Input placeholder="12.345.678" className="pl-10" {...field} />
+                        <Input placeholder="12.345.678" className="pl-11" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -234,7 +234,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                     <FormControl>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Input placeholder="+54 9 11 ..." className="pl-10" {...field} />
+                        <Input placeholder="+54 9 11 ..." className="pl-11" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -252,7 +252,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                   <FormControl>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="Calle 123, Ciudad" className="pl-10" {...field} />
+                      <Input placeholder="Calle 123, Ciudad" className="pl-11" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -268,7 +268,7 @@ export function UsuarioModal({ open, onOpenChange, usuario, onSuccess }: Usuario
                   <FormLabel>Empresa Asignada</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="pl-10 relative">
+                      <SelectTrigger className="pl-11 relative">
                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         <SelectValue placeholder="Seleccionar empresa" />
                       </SelectTrigger>

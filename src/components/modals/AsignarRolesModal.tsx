@@ -232,7 +232,7 @@ export function AsignarRolesModal({ open, onOpenChange, usuario, onSuccess }: As
             <div className="space-y-2">
               <Label className="text-sm font-medium">Módulo del Sistema</Label>
               <Select value={selectedModulo} onValueChange={setSelectedModulo}>
-                <SelectTrigger className="pl-10 relative bg-muted/30">
+                <SelectTrigger className="pl-11 relative bg-muted/30">
                   <Box className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <SelectValue placeholder="Seleccionar módulo" />
                 </SelectTrigger>

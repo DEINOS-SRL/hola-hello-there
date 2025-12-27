@@ -132,7 +132,7 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                   <FormControl>
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="Ej: Tech Solutions S.A." className="pl-10" {...field} />
+                      <Input placeholder="Ej: Tech Solutions S.A." className="pl-11" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -149,7 +149,7 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                   <FormControl>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="Ej: Av. Corrientes 1234, CABA" className="pl-10" {...field} />
+                      <Input placeholder="Ej: Av. Corrientes 1234, CABA" className="pl-11" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -168,7 +168,7 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                       <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Textarea 
                         placeholder="Ej: Lunes a Viernes de 9:00 a 18:00hs" 
-                        className="pl-10 min-h-[80px] resize-none" 
+                        className="pl-11 min-h-[80px] resize-none" 
                         {...field} 
                       />
                     </div>
@@ -187,7 +187,7 @@ export function EmpresaModal({ open, onOpenChange, empresa, onSuccess }: Empresa
                   <FormControl>
                     <div className="relative">
                       <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input placeholder="https://api.empresa.com/webhook" className="pl-10" {...field} />
+                      <Input placeholder="https://api.empresa.com/webhook" className="pl-11" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
